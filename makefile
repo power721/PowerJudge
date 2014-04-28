@@ -16,3 +16,6 @@ $(TARGET): $(OBJECTS)
 
 bin/%.o: src/%.c src/*.h
 	$(CXX) $< -c -o $@ $(CXXFLAGS)
+
+clean:
+	sudo rm -f bin/judge.o bin/powerjudge
