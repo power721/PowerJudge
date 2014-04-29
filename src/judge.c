@@ -14,7 +14,7 @@ int main(int argc, char *argv[], char *envp[])
 {
   nice(10); // 降低优先级
 
-  init_solution();
+  init();
 
   parse_arguments(argc, argv);
   chdir(oj_solution.work_dir);
@@ -80,29 +80,26 @@ void parse_arguments(int argc, char *argv[])
   sprintf(oj_solution.work_dir, "%s/%d", work_dir_root, oj_solution.sid);
   sprintf(oj_solution.data_dir, "%s/%d", data_dir_root, oj_solution.pid);
 
-  sprintf(oj_solution.source_file, "%s/Main.%s", oj_solution.work_dir, lang_ext[oj_solution.lang]);
-  if (access( oj_solution.source_file, F_OK ) == -1) {
+  char source_file[PATH_SIZE];
+  sprintf(source_file, "%s/Main.%s", oj_solution.work_dir, lang_ext[oj_solution.lang]);
+  if (access(source_file, F_OK ) == -1) {
     FM_LOG_FATAL("Source code file is missing.");
     exit(EXIT_NO_SOURCE_CODE);
   }
-  sprintf(oj_solution.exec_file, "%s/Main", oj_solution.work_dir);
   if (oj_solution.lang == LANG_JAVA) {
     oj_solution.memory_limit        *= java_memory_factor;
     oj_solution.time_limit          *= java_time_factor;
   }
   else if (oj_solution.lang == LANG_PYTHON) {
-    sprintf(oj_solution.exec_file, "%s/Main.py", oj_solution.work_dir);
     oj_solution.memory_limit        *= python_memory_factor;
     oj_solution.time_limit          *= python_time_factor;
   }
-  sprintf(oj_solution.stderr_file_executive, "%s/stderr_executive.txt", oj_solution.work_dir);
 
   print_solution();
 }
 
-void init_solution()
+void init()
 {
-  //memset((void *)&oj_solution, 0, sizeof(oj_solution));
   oj_solution.result = OJ_WAIT;
   oj_solution.time_limit = 1000;
   oj_solution.memory_limit = 65536;
@@ -327,6 +324,7 @@ int run_solution()
   char input_file[PATH_SIZE];
   char output_file_std[PATH_SIZE];
   char stdout_file_executive[PATH_SIZE];
+  char stderr_file_executive[PATH_SIZE];
 
   while (flag && (dirp = readdir(dp)) != NULL)
   {
@@ -336,10 +334,10 @@ int run_solution()
 
     num_of_test++;
 
-    prepare_files(dirp->d_name, namelen, input_file, output_file_std, stdout_file_executive);
+    prepare_files(dirp->d_name, namelen, input_file, output_file_std, stdout_file_executive, stderr_file_executive);
 
     FM_LOG_DEBUG("run case: %d", num_of_test);
-    flag = judge(input_file, output_file_std, stdout_file_executive);
+    flag = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
   }
 
   if ( oj_solution.lang == LANG_PYTHON) {
@@ -350,7 +348,7 @@ int run_solution()
   return num_of_test;
 }
 
-bool judge(const char *input_file, const char *output_file_std, const char *stdout_file_executive)
+bool judge(const char *input_file, const char *output_file_std, const char *stdout_file_executive, const char *stderr_file_executive)
 {
   struct rusage rused;
   pid_t executor = fork();
@@ -364,7 +362,7 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
     log_add_info("executor");
 
     //io redirect
-    io_redirect(input_file, stdout_file_executive);
+    io_redirect(input_file, stdout_file_executive, stderr_file_executive);
 
     // chroot & setuid
     set_security_option();
@@ -384,7 +382,7 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
       exit(EXIT_PRE_JUDGE);
     }
 
-    FM_LOG_TRACE("begin execute: %s", oj_solution.exec_file);
+    FM_LOG_TRACE("begin execute");
     log_close();
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0) {
       exit(EXIT_PRE_JUDGE_PTRACE);
@@ -570,7 +568,7 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
     }
   } //end of fork for judge process
 
-  if ( oj_solution.lang == LANG_PYTHON && file_size(oj_solution.stderr_file_executive)) {
+  if ( oj_solution.lang == LANG_PYTHON && file_size(stderr_file_executive)) {
     FM_LOG_TRACE("runtime error");
     oj_solution.result = OJ_RE;
   }
@@ -597,7 +595,7 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
 }
 
 void prepare_files(char *filename, int namelen, 
-                   char *infile, char *outfile, char *userfile)
+                   char *infile, char *outfile, char *userfile, char * stderrfile)
 {
   char  fname[PATH_SIZE];
   strncpy(fname, filename, namelen);
@@ -606,18 +604,19 @@ void prepare_files(char *filename, int namelen,
   sprintf(infile, "%s/%s.in", oj_solution.data_dir, fname);
   sprintf(outfile, "%s/%s.out", oj_solution.data_dir, fname);
   sprintf(userfile, "%s/%s.out", oj_solution.work_dir, fname);
+  sprintf(stderrfile, "%s/stderr_executive.txt", oj_solution.work_dir);
 
   FM_LOG_DEBUG("std input file: %s\n", infile);
   FM_LOG_DEBUG("std output file: %s\n", outfile);
   FM_LOG_DEBUG("user output file: %s\n", userfile);
 }
 
-void io_redirect(const char *input_file, const char *stdout_file_executive)
+void io_redirect(const char *input_file, const char *stdout_file_executive, const char *stderr_file_executive)
 {
   //io_redirect
   stdin  = freopen(input_file, "r", stdin);
   stdout = freopen(stdout_file_executive, "w", stdout);
-  stderr = freopen(oj_solution.stderr_file_executive, "w", stderr);
+  stderr = freopen(stderr_file_executive, "w", stderr);
   if (stdin == NULL || stdout == NULL || stderr == NULL) {
     FM_LOG_FATAL("error freopen: stdin(%p) stdout(%p), stderr(%p)",
                    stdin, stdout, stderr);

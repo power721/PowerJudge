@@ -71,12 +71,7 @@ struct oj_solution_t
   char work_dir[PATH_SIZE];
   char data_dir[PATH_SIZE];
 
-  char source_file[PATH_SIZE];
-  char exec_file[PATH_SIZE];
   char spj_exe_file[PATH_SIZE];
-
-  char stdout_file_executive[PATH_SIZE];
-  char stderr_file_executive[PATH_SIZE];
 
   char stdout_file_spj[PATH_SIZE];
 }oj_solution;
@@ -85,12 +80,12 @@ struct oj_solution_t
 void check_arguments();
 void parse_arguments(int argc, char *argv[]);
 void check_spj();
-void init_solution();
+void init();
 void print_solution();
 void prepare_files(char *filename, int namelen, 
-                   char *infile, char *outfile, char *userfile);
+                   char *infile, char *outfile, char *userfile, char * stderrfile);
 void timeout_hander(int signo);
-void io_redirect(const char *input_file, const char *stdout_file_executive);
+void io_redirect(const char *input_file, const char *stdout_file_executive, const char *stderr_file_executive);
 void set_limit(int fsize);
 void set_compile_limit();
 void set_security_option();
@@ -110,6 +105,6 @@ void output_result(int result, int time_usage, int memory_usage);
 
 void compile();
 int run_solution();
-bool judge(const char *input_file, const char *output_file_std, const char *stdout_file_executive);
+bool judge(const char *input_file, const char *output_file_std, const char *stdout_file_executive, const char *stderr_file_executive);
 
 #endif /* __JUDGE_H__ */
