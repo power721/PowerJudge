@@ -73,21 +73,8 @@ void parse_arguments(int argc, char *argv[])
   sprintf(log_file, "%s/oj-judge.log", work_dir_root);
   log_open(log_file);
   
-  if (!check_arguments()) {
-    exit(EXIT_MISS_PARAM);
-  }
+  check_arguments();
 
-  switch (oj_solution.lang) {
-    case LANG_C:
-    case LANG_CPP:
-    case LANG_PASCAL:
-    case LANG_JAVA:
-    case LANG_PYTHON:
-      break;
-    default:
-      FM_LOG_FATAL("Unknown language id: %d", oj_solution.lang);
-      exit(EXIT_BAD_PARAM);
-  }
   realpath(work_dir_root, oj_solution.work_dir);
   realpath(data_dir_root, oj_solution.data_dir);
   sprintf(oj_solution.work_dir, "%s/%d", oj_solution.work_dir, oj_solution.sid);
@@ -111,7 +98,7 @@ void parse_arguments(int argc, char *argv[])
   sprintf(oj_solution.stderr_file_executive, "%s/stderr_executive.txt", oj_solution.work_dir);
   //oj_solution.stdout_file_executive  = oj_solution.work_dir + "/" + basename(oj_solution.output_file_std);
 
-  //oj_solution.dump_to_log();
+  print_solution();
 }
 
 void init_solution()
@@ -122,25 +109,50 @@ void init_solution()
   strcpy(work_dir_root, ".");
 }
 
-bool check_arguments()
+void check_arguments()
 {
   if (oj_solution.sid == 0) {
     FM_LOG_FATAL("Miss parameter: solution id.");
-    return false;
+    exit(EXIT_MISS_PARAM);
   }
   if (oj_solution.pid == 0) {
     FM_LOG_FATAL("Miss parameter: problem id.");
-    return false;
+    exit(EXIT_MISS_PARAM);
   }
   if (oj_solution.lang == 0) {
     FM_LOG_FATAL("Miss parameter: language id.");
-    return false;
+    exit(EXIT_MISS_PARAM);
   }
   if (data_dir_root == NULL) {
     FM_LOG_FATAL("Miss parameter: data directory.");
-    return false;
+    exit(EXIT_MISS_PARAM);
   }
-  return true;
+
+  switch (oj_solution.lang) {
+    case LANG_C:
+    case LANG_CPP:
+    case LANG_PASCAL:
+    case LANG_JAVA:
+    case LANG_PYTHON:
+      break;
+    default:
+      FM_LOG_FATAL("Unknown language id: %d", oj_solution.lang);
+      exit(EXIT_BAD_PARAM);
+  }
+}
+
+void print_solution()
+{
+  FM_LOG_DEBUG("--solution information--");
+  FM_LOG_DEBUG("solution id   %d", oj_solution.sid);
+  FM_LOG_DEBUG("problem id    %d", oj_solution.pid);
+  FM_LOG_DEBUG("language      %s", languages[oj_solution.lang]);
+  FM_LOG_DEBUG("time limit    %d ms", oj_solution.time_limit);
+  FM_LOG_DEBUG("memory limit  %d KB", oj_solution.memory_limit);
+  FM_LOG_DEBUG("work dir      %s", oj_solution.work_dir);
+  FM_LOG_DEBUG("data dir      %s", oj_solution.data_dir);
+  //FM_LOG_DEBUG("spj           %s", spj ? "true" : "false");
+  FM_LOG_DEBUG("");
 }
 
 bool check_spj()
@@ -198,12 +210,12 @@ void compile()
         break;
 
       case LANG_PASCAL:
-        print_compiler(CP_J);
+        print_compiler(CP_PAS);
         execvp(CP_PAS[0], (char * const *) CP_PAS);
         break;
 
       case LANG_JAVA:
-        print_compiler(CP_PAS);
+        print_compiler(CP_J);
         execvp(CP_J[0], (char * const *) CP_J);
         break;
 

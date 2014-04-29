@@ -84,10 +84,11 @@ struct oj_solution_t
 }oj_solution;
 
 
-bool check_arguments();
+void check_arguments();
 void parse_arguments(int argc, char *argv[]);
 bool check_spj();
 void init_solution();
+void print_solution();
 void timeout_hander(int signo);
 void io_redirect();
 void set_limit();
