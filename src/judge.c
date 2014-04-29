@@ -62,10 +62,10 @@ void parse_arguments(int argc, char *argv[])
         oj_solution.lang              = atoi(optarg);
         break;
       case 'd': // Work directory
-        strncpy(work_dir_root, optarg, PATH_SIZE);
+        realpath(optarg, work_dir_root);
         break;
       case 'D': // Data directory path
-        strncpy(data_dir_root, optarg, PATH_SIZE);
+        realpath(optarg, data_dir_root);
         break;
       default:
         fprintf(stderr, "unknown option provided: -%c %s", opt, optarg);
@@ -77,10 +77,8 @@ void parse_arguments(int argc, char *argv[])
   
   check_arguments();
 
-  realpath(work_dir_root, oj_solution.work_dir);
-  realpath(data_dir_root, oj_solution.data_dir);
-  sprintf(oj_solution.work_dir, "%s/%d", oj_solution.work_dir, oj_solution.sid);
-  sprintf(oj_solution.data_dir, "%s/%d", oj_solution.data_dir, oj_solution.pid);
+  sprintf(oj_solution.work_dir, "%s/%d", work_dir_root, oj_solution.sid);
+  sprintf(oj_solution.data_dir, "%s/%d", data_dir_root, oj_solution.pid);
 
   sprintf(oj_solution.source_file, "%s/Main.%s", oj_solution.work_dir, lang_ext[oj_solution.lang]);
   if (access( oj_solution.source_file, F_OK ) == -1) {
@@ -109,6 +107,7 @@ void init_solution()
   oj_solution.time_limit = 1000;
   oj_solution.memory_limit = 65536;
   strcpy(work_dir_root, ".");
+  page_size = sysconf(_SC_PAGESIZE);
 }
 
 void check_arguments()
@@ -532,13 +531,13 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
 
       //MLE
       oj_solution.memory_usage = max(oj_solution.memory_usage,
-                    rused.ru_minflt * (getpagesize() / STD_KB));
-      //FM_LOG_DEBUG("memory_usage: %d %d %d", oj_solution.memory_usage, rused.ru_minflt, getpagesize() / STD_KB);
+                    rused.ru_minflt * (page_size / STD_KB));
+      //FM_LOG_DEBUG("memory_usage: %d %d %d", oj_solution.memory_usage, rused.ru_minflt, page_size / STD_KB);
       if (oj_solution.memory_usage > oj_solution.memory_limit)
       {
         oj_solution.result = OJ_MLE;
         FM_LOG_TRACE("memory limit exceeded: %d (fault: %d * %d)",
-                oj_solution.memory_usage, rused.ru_minflt, getpagesize());
+                oj_solution.memory_usage, rused.ru_minflt, page_size);
         ptrace(PTRACE_KILL, executor, NULL, NULL);
         break;
       }

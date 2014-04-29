@@ -7,10 +7,9 @@ const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-Wall",
                        "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.c", NULL };
 const char* CP_CC[] = { "g++", "-fno-asm", "-lm", "-static", "-Wall",
                         "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", NULL };
-const char* CP_PAS[] = { "fpc", "Main.pas",
-                         "-O2", "-Co", "-Cr", "-Ct", "-Ci", NULL };
+const char* CP_PAS[] = { "fpc", "Main.pas", "-O2", "-Co", "-Cr", "-Ct", "-Ci", NULL };
 const char* CP_J[] = { "javac", "Main.java", "-encoding", "UTF-8", NULL };
-const char* CP_PY[] = { "python","-c","import py_compile; py_compile.compile(r'Main.py')", NULL };
+const char* CP_PY[] = { "python", "-c", "import py_compile;py_compile.compile(r'Main.py')", NULL };
 
 
 // 配置
@@ -21,10 +20,10 @@ char work_dir_root[PATH_SIZE];
 char data_dir_root[PATH_SIZE];
 
 // judge本身的时限(ms)
-int judge_time_limit            = 15000;
+int judge_time_limit            = 15347;
 
 // 编译限制(ms)
-int compile_time_limit          = 5000; // HUST is 60s
+int compile_time_limit          = 5347; // HUST is 60s
 
 // 编译限制(MB)
 int compile_mem_limit           = 256; // HUST is 2048 MB
@@ -33,13 +32,13 @@ int compile_mem_limit           = 256; // HUST is 2048 MB
 int compile_output_limit        = 256;
 
 // SPJ时间限制(ms)
-int spj_time_limit              = 5000;
+int spj_time_limit              = 5347;
 
 // 程序运行的栈空间大小(KB)
 int stack_size_limit            = 8192; // HUST is 64 MB
 
 // ms
-int time_limit_addtion          = 314;
+int time_limit_addtion          = 347;
 
 int java_time_factor            = 3;
 
@@ -49,6 +48,8 @@ int python_time_factor          = 2;
 
 int python_memory_factor        = 2;
 // -- end of configruation --
+
+long page_size                  = 4096;
 
 struct oj_solution_t
 {
