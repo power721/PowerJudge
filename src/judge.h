@@ -3,7 +3,18 @@
 
 
 #include "log.h"
-#include "judge_core.h"
+#include "misc.h"
+
+
+// 编译选项
+const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-Wall",
+                       "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.c", NULL };
+const char* CP_CC[] = { "g++", "-fno-asm", "-lm", "-static", "-Wall",
+                        "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", NULL };
+const char* CP_PAS[] = { "fpc", "Main.pas", "-o", "Main",
+                         "-O2", "-Co", "-Cr", "-Ct", "-Ci", NULL };
+const char* CP_J[] = { "javac", "Main.java", "-encoding", "UTF-8", NULL };
+const char* CP_PY[] = { "python","-c","import py_compile; py_compile.compile(r'Main.py')", NULL };
 
 
 // 配置
@@ -82,7 +93,6 @@ void parse_arguments(int argc, char *argv[]);
 bool check_spj();
 void init_solution();
 void timeout_hander(int signo);
-int malarm(int which, int milliseconds);
 void io_redirect();
 void set_limit();
 void set_compile_limit();
@@ -103,7 +113,7 @@ void clean_workdir(const char *work_dir);
 bool is_valid_syscall(int lang, int syscall_id);
 void output_result(int result, int time_usage, int memory_usage);
 
-int compile();
+void compile();
 int judge();
 
 #endif /* __JUDGE_H__ */

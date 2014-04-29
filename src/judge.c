@@ -28,10 +28,7 @@ int main(int argc, char *argv[], char *envp[])
   }
   signal(SIGALRM, timeout_hander);
   
-
-  if (compile() == EXIT_OK) {
-
-  }
+  compile();
 
   return 0;
 }
@@ -76,18 +73,13 @@ void parse_arguments(int argc, char *argv[])
     exit(EXIT_MISS_PARAM);
   }
 
-  const char *ext = NULL;
   switch (oj_solution.lang) {
     case LANG_C:
-      ext = "c"; break;
     case LANG_CPP:
-      ext = "cc"; break;
     case LANG_PASCAL:
-      ext = "pas"; break;
     case LANG_JAVA:
-      ext = "java"; break;
     case LANG_PYTHON:
-      ext = "py"; break;
+      break;
     default:
       FM_LOG_FATAL("Unknown language id: %d", oj_solution.lang);
       exit(EXIT_BAD_PARAM);
@@ -95,7 +87,8 @@ void parse_arguments(int argc, char *argv[])
   sprintf(oj_solution.work_dir, "%s/%d", work_dir_root, oj_solution.sid);
   sprintf(oj_solution.data_dir, "%s/%d", data_dir_root, oj_solution.pid);
 
-  sprintf(oj_solution.source_file, "%s/Main.%s", oj_solution.work_dir, ext);
+  chdir(oj_solution.work_dir);
+  sprintf(oj_solution.source_file, "%s/Main.%s", oj_solution.work_dir, lang_ext[oj_solution.lang]);
   sprintf(oj_solution.exec_file, "%s/Main", oj_solution.work_dir);
   //oj_solution.output_limit           = filesize(oj_solution.output_file_std);
   if(oj_solution.lang == LANG_JAVA) {
@@ -162,87 +155,58 @@ void timeout_hander(int signo)
   }
 }
 
-//a simpler interface for setitimer
-//which can be ITIMER_REAL, ITIMER_VIRTUAL, ITIMER_PROF
-int malarm(int which, int milliseconds) {
-  struct itimerval t;
-  FM_LOG_TRACE("malarm: %d", milliseconds);
-  t.it_value.tv_sec       = milliseconds / 1000;
-  t.it_value.tv_usec      = milliseconds % 1000 * 1000;
-  t.it_interval.tv_sec    = 0;
-  t.it_interval.tv_usec   = 0;
-  return setitimer(which, &t, NULL);
-}
-
-int compile()
+void compile()
 {
   //compile
   pid_t compiler = fork();
   int status = 0;
- if (compiler < 0) {
+  if (compiler < 0) {
     FM_LOG_FATAL("error fork compiler");
     exit(EXIT_COMPILE_ERROR);
-  }
-  else if (compiler == 0) {
+  } else if (compiler == 0) {
     // run compiler
     log_add_info("compiler");
     static char buffer[1024];
     getcwd(buffer, 1024);
     FM_LOG_NOTICE("cwd = %s", buffer);
+
     set_compile_limit();
     stdout = freopen(oj_solution.stdout_file_compiler, "w", stdout);
     stderr = freopen(oj_solution.stderr_file_compiler, "w", stderr);
-
     if (stdout == NULL || stderr == NULL) {
       FM_LOG_FATAL("error freopen: stdout(%p), stderr(%p)", stdout, stderr);
       exit(EXIT_COMPILE_ERROR);
     }
 
-    //malarm(ITIMER_REAL, compile_time_limit);
     char buff[BUFF_SIZE];
     switch (oj_solution.lang) {
       case LANG_C:
-        FM_LOG_TRACE("start compile: gcc -fno-asm -lm -static -Wall -O2 -DONLINE_JUDGE -o %s %s",
-                oj_solution.exec_file, oj_solution.source_file);
-        execlp("/usr/bin/gcc", "gcc", "-fno-asm", "-lm", "-static", "-Wall", "-O2", "-DONLINE_JUDGE",
-               "-o", oj_solution.exec_file,
-               oj_solution.source_file,
-               NULL);
+        print_compiler(CP_C);
+        execvp(CP_C[0], (char * const *) CP_C);
         break;
 
       case LANG_CPP:
-        FM_LOG_TRACE("start compile: g++ -fno-asm -lm -static -Wall -O2 -DONLINE_JUDGE -o %s %s",
-                oj_solution.exec_file, oj_solution.source_file);
-        execlp("/usr/bin/g++", "g++", "-fno-asm", "-lm", "-static", "-Wall", "-O2", "-DONLINE_JUDGE",
-               "-o", oj_solution.exec_file,
-               oj_solution.source_file,
-               NULL);
-        break;
-
-      case LANG_JAVA:
-        FM_LOG_TRACE("start compile: javac %s -d %s -encoding UTF-8", oj_solution.source_file, oj_solution.work_dir);
-        execlp("javac", "javac",
-               oj_solution.source_file, "-d", oj_solution.work_dir, "-encoding", "UTF-8",
-               NULL);
+        print_compiler(CP_CC);
+        execvp(CP_CC[0], (char * const *) CP_CC);
         break;
 
       case LANG_PASCAL:
-        FM_LOG_TRACE("start compile: fpc -o %s %s -Co -Cr -Ct -Ci",
-                oj_solution.exec_file, oj_solution.source_file);
-        execlp("fpc", "fpc", oj_solution.source_file,
-                "-o", oj_solution.exec_file,
-                "-Co", "-Cr", "-Ct", "-Ci",
-               NULL);
+        print_compiler(CP_J);
+        execvp(CP_J[0], (char * const *) CP_J);
+        break;
+
+      case LANG_JAVA:
+        print_compiler(CP_PAS);
+        execvp(CP_PAS[0], (char * const *) CP_PAS);
         break;
 
       case LANG_PYTHON:
-        sprintf(buff, "import py_compile; py_compile.compile(r'%s')", oj_solution.source_file);
-        FM_LOG_TRACE("start compile: python python -c %s ", buff);
-            execlp("python", "python", "-c", buff, NULL);
+        print_compiler(CP_PY);
+        execvp(CP_PY[0], (char * const *) CP_PY);
         break;
     }
 
-    // execlp error
+    // execvp error
     FM_LOG_FATAL("exec error");
     exit(EXIT_COMPILE_ERROR);
   }
@@ -286,7 +250,6 @@ int compile()
       exit(EXIT_COMPILE_ERROR);
     }
   }
-  return 0;
 }
 
 void set_compile_limit()
