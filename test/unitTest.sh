@@ -121,15 +121,15 @@ runTest 5 "Python RE" "../bin/powerjudge -s 10025 -p 1000 -D ./data -d ./temp -t
 runTest 7 "Python CE" "../bin/powerjudge -s 10027 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
 
 # test int64
-runTest 1 "long long" "../bin/powerjudge -s 640 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
-runTest 1 "__int64"   "../bin/powerjudge -s 641 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
+runTest 0 "long long" "../bin/powerjudge -s 640 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
+runTest 0 "__int64"   "../bin/powerjudge -s 641 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 
 # test spj
-runTest 1 "SPJ AC" "../bin/powerjudge -s 1405 -p 1405 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
+runTest 0 "SPJ AC" "../bin/powerjudge -s 1405 -p 1405 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 
 echo -e "\nTotal Cases:" $((failed+passed))
 echo -e "\x1b[31mFAILED\x1b[0m: $failed"
 echo -e "\x1b[32mPASSED\x1b[0m: $passed"
 end=`date +%s`
 (( time=end-start ))
-echo "Time:  ${time}s"
+echo "Time:   ${time}s"

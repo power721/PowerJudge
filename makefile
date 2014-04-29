@@ -18,6 +18,7 @@ bin/%.o: src/%.c src/*.h
 
 .PHONY: test clean
 test:
+	chmod a+x test/unitTest.sh
 	cd test && ./unitTest.sh
 
 clean:
