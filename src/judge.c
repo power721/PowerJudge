@@ -16,8 +16,9 @@ int main(int argc, char *argv[], char *envp[])
   init_solution();
 
   parse_arguments(argc, argv);
+  chdir(oj_solution.work_dir);
 
-  FM_LOG_DEBUG("\n\x1b[31m-----Power Judge 1.0-----\x1b[0m");
+  FM_LOG_DEBUG("\n\x1b[31m----- Power Judge 1.0 -----\x1b[0m");
   if (geteuid() != 0) {
     FM_LOG_FATAL("please run as root, or set suid bit(chmod +4755)");
     exit(EXIT_UNPRIVILEGED);
@@ -80,8 +81,11 @@ void parse_arguments(int argc, char *argv[])
   sprintf(oj_solution.work_dir, "%s/%d", oj_solution.work_dir, oj_solution.sid);
   sprintf(oj_solution.data_dir, "%s/%d", oj_solution.data_dir, oj_solution.pid);
 
-  chdir(oj_solution.work_dir);
   sprintf(oj_solution.source_file, "%s/Main.%s", oj_solution.work_dir, lang_ext[oj_solution.lang]);
+  if( access( oj_solution.source_file, F_OK ) == -1 ) {
+    FM_LOG_FATAL("Source code file is missing.");
+    exit(EXIT_NO_SOURCE);
+  }
   sprintf(oj_solution.exec_file, "%s/Main", oj_solution.work_dir);
   //oj_solution.output_limit           = filesize(oj_solution.output_file_std);
   if(oj_solution.lang == LANG_JAVA) {
@@ -197,7 +201,6 @@ void compile()
       exit(EXIT_COMPILE_ERROR);
     }
 
-    char buff[BUFF_SIZE];
     switch (oj_solution.lang) {
       case LANG_C:
         print_compiler(CP_C);

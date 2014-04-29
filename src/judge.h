@@ -48,7 +48,7 @@ int java_memory_factor          = 3;
 int python_time_factor          = 2;
 
 int python_memory_factor        = 2;
-
+// -- end of configruation --
 
 struct oj_solution_t
 {

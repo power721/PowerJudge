@@ -1,7 +1,6 @@
 LD=g++
 CXX=g++
-INCLUDE=include/
-CXXFLAGS=-I $(INCLUDE) -g -Wall -O2
+CXXFLAGS=-g -Wall -O2
 LDFLAGS=
 TARGET=bin/powerjudge
 OBJECTS=bin/judge.o
