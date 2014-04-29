@@ -5,6 +5,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/ptrace.h>
+#include "log.h"
+#include "misc.h"
 #include "judge.h"
 
 int main(int argc, char *argv[], char *envp[])
@@ -29,6 +31,8 @@ int main(int argc, char *argv[], char *envp[])
   signal(SIGALRM, timeout_hander);
   
   compile();
+
+  output_result(OJ_AC, 0, 0);
 
   return 0;
 }
@@ -84,8 +88,10 @@ void parse_arguments(int argc, char *argv[])
       FM_LOG_FATAL("Unknown language id: %d", oj_solution.lang);
       exit(EXIT_BAD_PARAM);
   }
-  sprintf(oj_solution.work_dir, "%s/%d", work_dir_root, oj_solution.sid);
-  sprintf(oj_solution.data_dir, "%s/%d", data_dir_root, oj_solution.pid);
+  realpath(work_dir_root, oj_solution.work_dir);
+  realpath(data_dir_root, oj_solution.data_dir);
+  sprintf(oj_solution.work_dir, "%s/%d", oj_solution.work_dir, oj_solution.sid);
+  sprintf(oj_solution.data_dir, "%s/%d", oj_solution.data_dir, oj_solution.pid);
 
   chdir(oj_solution.work_dir);
   sprintf(oj_solution.source_file, "%s/Main.%s", oj_solution.work_dir, lang_ext[oj_solution.lang]);
@@ -110,6 +116,7 @@ void parse_arguments(int argc, char *argv[])
 
 void init_solution()
 {
+  oj_solution.result = OJ_WAIT;
   oj_solution.time_limit = 1000;
   oj_solution.memory_limit = 65536;
   strcpy(work_dir_root, ".");
@@ -192,12 +199,12 @@ void compile()
 
       case LANG_PASCAL:
         print_compiler(CP_J);
-        execvp(CP_J[0], (char * const *) CP_J);
+        execvp(CP_PAS[0], (char * const *) CP_PAS);
         break;
 
       case LANG_JAVA:
         print_compiler(CP_PAS);
-        execvp(CP_PAS[0], (char * const *) CP_PAS);
+        execvp(CP_J[0], (char * const *) CP_J);
         break;
 
       case LANG_PYTHON:

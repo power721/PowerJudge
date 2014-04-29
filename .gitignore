@@ -17,5 +17,6 @@
 *.app
 
 bin/
+test/temp/
 *.log
 *.class

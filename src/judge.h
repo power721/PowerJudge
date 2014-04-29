@@ -2,10 +2,6 @@
 #define __JUDGE_H__
 
 
-#include "log.h"
-#include "misc.h"
-
-
 // 编译选项
 const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-Wall",
                        "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.c", NULL };

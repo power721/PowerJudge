@@ -38,7 +38,7 @@ char result_str[][10] = {
   "CE",
   "RF",
   "SE",
-  "VE"
+  "VE",
   "WAIT"
 };
 
