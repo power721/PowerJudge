@@ -7,7 +7,7 @@ const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-Wall",
                        "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.c", NULL };
 const char* CP_CC[] = { "g++", "-fno-asm", "-lm", "-static", "-Wall",
                         "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", NULL };
-const char* CP_PAS[] = { "fpc", "Main.pas", "-o", "Main",
+const char* CP_PAS[] = { "fpc", "Main.pas",
                          "-O2", "-Co", "-Cr", "-Ct", "-Ci", NULL };
 const char* CP_J[] = { "javac", "Main.java", "-encoding", "UTF-8", NULL };
 const char* CP_PY[] = { "python","-c","import py_compile; py_compile.compile(r'Main.py')", NULL };
@@ -83,12 +83,14 @@ struct oj_solution_t
 
 void check_arguments();
 void parse_arguments(int argc, char *argv[]);
-bool check_spj();
+void check_spj();
 void init_solution();
 void print_solution();
+void prepare_files(char *filename, int namelen, 
+                   char *infile, char *outfile, char *userfile);
 void timeout_hander(int signo);
-void io_redirect();
-void set_limit();
+void io_redirect(const char *input_file, const char *stdout_file_executive);
+void set_limit(int fsize);
 void set_compile_limit();
 void set_security_option();
 
@@ -99,15 +101,14 @@ int oj_compare_output_spj(
   const char *file_exec, //user output
   const char *spj_exec,  //path of spj
   const char *file_spj);
-void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *path);
 int oj_compare_output(const char *file_std, const char *file_exec);
 void copy_shell_runtime(const char *work_dir);
 void copy_python_runtime(const char *work_dir);
 void clean_workdir(const char *work_dir);
-bool is_valid_syscall(int lang, int syscall_id);
 void output_result(int result, int time_usage, int memory_usage);
 
 void compile();
-int judge();
+int run_solution();
+bool judge(const char *input_file, const char *output_file_std, const char *stdout_file_executive);
 
 #endif /* __JUDGE_H__ */

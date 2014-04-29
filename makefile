@@ -23,3 +23,4 @@ test:
 
 clean:
 	sudo rm -f bin/judge.o bin/powerjudge
+	sudo rm -rf test/temp

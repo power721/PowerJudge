@@ -64,6 +64,7 @@ char result_str[][10] = {
 #define EXIT_PRE_JUDGE         9
 #define EXIT_PRE_JUDGE_PTRACE  10
 #define EXIT_PRE_JUDGE_EXECLP  11
+#define EXIT_PRE_JUDGE_DAA     12
 #define EXIT_SET_LIMIT         15
 #define EXIT_SET_SECURITY      17
 #define EXIT_JUDGE             21

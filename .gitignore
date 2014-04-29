@@ -13,7 +13,7 @@
 
 # Executables
 *.exe
-*.out
+a.out
 *.app
 
 bin/

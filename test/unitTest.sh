@@ -38,6 +38,8 @@ function init()
   cp code/1000/1000_RE.java temp/10015/Main.java
   mkdir temp/10017
   cp code/1000/1000_CE.java temp/10017/Main.java
+  mkdir temp/20010
+  cp code/1000/1000_thread.java temp/20010/Main.java
 
   mkdir temp/10025
   cp code/1000/1000_RE.py temp/10025/Main.py
@@ -115,6 +117,7 @@ runTest 2 "Java TLE" "../bin/powerjudge -s 10012 -p 1000 -D ./data -d ./temp -t 
 runTest 3 "Java MLE" "../bin/powerjudge -s 10013 -p 1000 -D ./data -d ./temp -t 1000 -m 1024  -l 4"
 runTest 5 "Java RE"  "../bin/powerjudge -s 10015 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
 runTest 7 "Java CE"  "../bin/powerjudge -s 10017 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
+runTest 0 "Java Thread"  "../bin/powerjudge -s 20010 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
 
 # test Python
 runTest 5 "Python RE" "../bin/powerjudge -s 10025 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
