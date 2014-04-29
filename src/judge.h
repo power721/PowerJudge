@@ -70,9 +70,6 @@ struct oj_solution_t
   char work_dir[PATH_SIZE];
   char data_dir[PATH_SIZE];
 
-  char stdout_file_compiler[PATH_SIZE];
-  char stderr_file_compiler[PATH_SIZE];
-
   char source_file[PATH_SIZE];
   char exec_file[PATH_SIZE];
   char spj_exe_file[PATH_SIZE];

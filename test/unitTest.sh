@@ -6,9 +6,6 @@ function init()
 {
   passed=0
   failed=0
-  if [[ -e temp/10010/Main.java ]]; then
-    return
-  fi;
   mkdir -p temp/10000
   cp code/1000/1000_AC.cpp temp/10000/Main.cc
   mkdir temp/10001

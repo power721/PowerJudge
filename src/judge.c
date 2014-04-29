@@ -82,23 +82,21 @@ void parse_arguments(int argc, char *argv[])
   sprintf(oj_solution.data_dir, "%s/%d", oj_solution.data_dir, oj_solution.pid);
 
   sprintf(oj_solution.source_file, "%s/Main.%s", oj_solution.work_dir, lang_ext[oj_solution.lang]);
-  if( access( oj_solution.source_file, F_OK ) == -1 ) {
+  if (access( oj_solution.source_file, F_OK ) == -1) {
     FM_LOG_FATAL("Source code file is missing.");
-    exit(EXIT_NO_SOURCE);
+    exit(EXIT_NO_SOURCE_CODE);
   }
   sprintf(oj_solution.exec_file, "%s/Main", oj_solution.work_dir);
-  //oj_solution.output_limit           = filesize(oj_solution.output_file_std);
-  if(oj_solution.lang == LANG_JAVA) {
+  //oj_solution.output_limit           = file_size(oj_solution.output_file_std);
+  if (oj_solution.lang == LANG_JAVA) {
     oj_solution.memory_limit        *= java_memory_factor;
     oj_solution.time_limit          *= java_time_factor;
   }
-  else if(oj_solution.lang == LANG_PYTHON) {
+  else if (oj_solution.lang == LANG_PYTHON) {
     sprintf(oj_solution.exec_file, "%s/Main.py", oj_solution.work_dir);
     oj_solution.memory_limit        *= python_memory_factor;
     oj_solution.time_limit          *= python_time_factor;
   }
-  sprintf(oj_solution.stdout_file_compiler, "%s/stdout_compiler.txt", oj_solution.work_dir);
-  sprintf(oj_solution.stderr_file_compiler, "%s/stderr_compiler.txt", oj_solution.work_dir);
   sprintf(oj_solution.stderr_file_executive, "%s/stderr_executive.txt", oj_solution.work_dir);
   //oj_solution.stdout_file_executive  = oj_solution.work_dir + "/" + basename(oj_solution.output_file_std);
 
@@ -162,7 +160,7 @@ void print_solution()
 bool check_spj()
 {
   sprintf(oj_solution.spj_exe_file, "%s/%d/spj", oj_solution.data_dir, oj_solution.pid);
-  if( access( oj_solution.spj_exe_file, F_OK ) != -1 ) {
+  if (access( oj_solution.spj_exe_file, F_OK ) != -1) {
     // file exists
     oj_solution.spj = 1;
     sprintf(oj_solution.stdout_file_spj, "%s/stdout_spj.txt", oj_solution.work_dir);
@@ -183,19 +181,22 @@ void compile()
   //compile
   pid_t compiler = fork();
   int status = 0;
+  char stdout_compiler[PATH_SIZE];
+  char stderr_compiler[PATH_SIZE];
   if (compiler < 0) {
     FM_LOG_FATAL("error fork compiler");
     exit(EXIT_COMPILE_ERROR);
-  } else if (compiler == 0) {
+  }
+  else if (compiler == 0) {
     // run compiler
     log_add_info("compiler");
-    static char buffer[1024];
-    getcwd(buffer, 1024);
-    FM_LOG_NOTICE("cwd = %s", buffer);
 
     set_compile_limit();
-    stdout = freopen(oj_solution.stdout_file_compiler, "w", stdout);
-    stderr = freopen(oj_solution.stderr_file_compiler, "w", stderr);
+
+    sprintf(stdout_compiler, "%s/stdout_compiler.txt", oj_solution.work_dir);
+    sprintf(stderr_compiler, "%s/stderr_compiler.txt", oj_solution.work_dir);
+    stdout = freopen(stdout_compiler, "w", stdout);
+    stderr = freopen(stderr_compiler, "w", stderr);
     if (stdout == NULL || stderr == NULL) {
       FM_LOG_FATAL("error freopen: stdout(%p), stderr(%p)", stdout, stderr);
       exit(EXIT_COMPILE_ERROR);
@@ -206,22 +207,18 @@ void compile()
         print_compiler(CP_C);
         execvp(CP_C[0], (char * const *) CP_C);
         break;
-
       case LANG_CPP:
         print_compiler(CP_CC);
         execvp(CP_CC[0], (char * const *) CP_CC);
         break;
-
       case LANG_PASCAL:
         print_compiler(CP_PAS);
         execvp(CP_PAS[0], (char * const *) CP_PAS);
         break;
-
       case LANG_JAVA:
         print_compiler(CP_J);
         execvp(CP_J[0], (char * const *) CP_J);
         break;
-
       case LANG_PYTHON:
         print_compiler(CP_PY);
         execvp(CP_PY[0], (char * const *) CP_PY);
@@ -259,7 +256,7 @@ void compile()
       if (WIFSIGNALED(status)) {
         FM_LOG_WARNING("compiler limit exceeded");
         output_result(OJ_CE, 0, 0);
-        stderr = freopen(oj_solution.stderr_file_compiler, "w", stderr);
+        stderr = freopen(stderr_compiler, "w", stderr);
         fprintf(stderr, "Compiler Limit Exceeded\n");
         exit(EXIT_OK);
       }
@@ -276,8 +273,8 @@ void compile()
 
 void set_compile_limit()
 {
-  if(oj_solution.lang == LANG_JAVA) return;
-  if(oj_solution.lang == LANG_PYTHON) return;
+  if (oj_solution.lang == LANG_JAVA) return;
+  if (oj_solution.lang == LANG_PYTHON) return;
 
   int cpu = (compile_time_limit + 999) / 1000;
   int mem = compile_mem_limit * STD_MB;

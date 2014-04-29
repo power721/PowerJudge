@@ -16,5 +16,9 @@ $(TARGET): $(OBJECTS)
 bin/%.o: src/%.c src/*.h
 	$(CXX) $< -c -o $@ $(CXXFLAGS)
 
+.PHONY: test clean
+test:
+	cd test && ./unitTest.sh
+
 clean:
 	sudo rm -f bin/judge.o bin/powerjudge

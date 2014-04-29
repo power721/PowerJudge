@@ -4,7 +4,7 @@
 #include "judge_core.h"
 
 int malarm(int which, int milliseconds);
-long files_ize(const char *filename);
+long file_size(const char *filename);
 int execute_cmd(const char *format, ...);
 void print_compiler(const char * options[]);
 
