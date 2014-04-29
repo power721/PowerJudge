@@ -8,6 +8,16 @@ long file_size(const char *filename);
 int execute_cmd(const char *format, ...);
 void print_compiler(const char * options[]);
 
+
+long file_size(const char *filename) {
+  struct stat st; 
+
+  if (stat(filename, &st) == 0)
+    return st.st_size;
+
+  return 0; 
+}
+
 //a simpler interface for setitimer
 //which can be ITIMER_REAL, ITIMER_VIRTUAL, ITIMER_PROF
 int malarm(int which, int milliseconds) {

@@ -153,8 +153,6 @@ void print_solution()
   FM_LOG_DEBUG("memory limit  %d KB", oj_solution.memory_limit);
   FM_LOG_DEBUG("work dir      %s", oj_solution.work_dir);
   FM_LOG_DEBUG("data dir      %s", oj_solution.data_dir);
-  //FM_LOG_DEBUG("spj           %s", spj ? "true" : "false");
-  FM_LOG_DEBUG("");
 }
 
 bool check_spj()
@@ -178,13 +176,12 @@ void timeout_hander(int signo)
 
 void compile()
 {
-  //compile
-  pid_t compiler = fork();
-  int status = 0;
   char stdout_compiler[PATH_SIZE];
   char stderr_compiler[PATH_SIZE];
+  pid_t compiler = fork();
+
   if (compiler < 0) {
-    FM_LOG_FATAL("error fork compiler");
+    FM_LOG_FATAL("fork compiler failed");
     exit(EXIT_COMPILE_ERROR);
   }
   else if (compiler == 0) {
@@ -226,19 +223,24 @@ void compile()
     }
 
     // execvp error
-    FM_LOG_FATAL("exec error");
+    FM_LOG_FATAL("execvp compiler error");
     exit(EXIT_COMPILE_ERROR);
   }
   else {
     // Judger
-    pid_t w = waitpid(compiler, &status, WUNTRACED);
-    if (w == -1) {
+    int status = 0;
+    if (waitpid(compiler, &status, WUNTRACED) == -1) {
       FM_LOG_FATAL("waitpid error");
       exit(EXIT_COMPILE_ERROR);
     }
 
     FM_LOG_TRACE("compiler finished");
-    if (WIFEXITED(status)) {
+    if (oj_solution.lang == LANG_PYTHON && file_size(stderr_compiler)) {
+      FM_LOG_TRACE("compile error");
+      output_result(OJ_CE, 0, 0);
+      exit(EXIT_OK);
+    }
+    if (WIFEXITED(status)) { // normal termination
       if (EXIT_SUCCESS == WEXITSTATUS(status)) {
         FM_LOG_TRACE("compile succeeded");
       }
@@ -253,14 +255,14 @@ void compile()
       }
     }
     else {
-      if (WIFSIGNALED(status)) {
+      if (WIFSIGNALED(status)) { // killed by signal
         FM_LOG_WARNING("compiler limit exceeded");
         output_result(OJ_CE, 0, 0);
-        stderr = freopen(stderr_compiler, "w", stderr);
+        stderr = freopen(stderr_compiler, "a", stderr);
         fprintf(stderr, "Compiler Limit Exceeded\n");
         exit(EXIT_OK);
       }
-      else if (WIFSTOPPED(status)) {
+      else if (WIFSTOPPED(status)) { // stopped by signal
         FM_LOG_WARNING("stopped by signal %d\n", WSTOPSIG(status));
       }
       else {
@@ -283,26 +285,24 @@ void set_compile_limit()
 
   lim.rlim_cur = lim.rlim_max = cpu;
   if (setrlimit(RLIMIT_CPU, &lim) < 0) {
-    FM_LOG_FATAL("error setrlimit for RLIMIT_CPU");
+    FM_LOG_FATAL("setrlimit RLIMIT_CPU failed");
     exit(EXIT_SET_LIMIT);
   }
 
   lim.rlim_cur = lim.rlim_max = mem;
   if (setrlimit(RLIMIT_AS, &lim) < 0) {
-    perror("setrlimit");
+    FM_LOG_FATAL("setrlimit RLIMIT_AS failed");
     exit(EXIT_SET_LIMIT);
   }
 
-  /*
   // File size limit control
   lim.rlim_max = compile_output_limit * STD_MB;
   lim.rlim_cur = lim.rlim_max;
   if (setrlimit(RLIMIT_FSIZE, &lim) < 0)
   {
-      FM_LOG_WARNING("setrlimit RLIMIT_FSIZE failed");
-      exit(EXIT_SET_LIMIT);
+    FM_LOG_WARNING("setrlimit RLIMIT_FSIZE failed");
+    exit(EXIT_SET_LIMIT);
   }
-  */
 
   FM_LOG_TRACE("set compile limit ok");
 }
