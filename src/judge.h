@@ -77,14 +77,14 @@ struct oj_solution_t
 }oj_solution;
 
 
+void init();
 void check_arguments();
 void parse_arguments(int argc, char *argv[]);
-void check_spj();
-void init();
+void timeout_hander(int signo);
 void print_solution();
+void check_spj();
 void prepare_files(char *filename, int namelen, 
                    char *infile, char *outfile, char *userfile, char * stderrfile);
-void timeout_hander(int signo);
 void io_redirect(const char *input_file, const char *stdout_file_executive, const char *stderr_file_executive);
 void set_limit(int fsize);
 void set_compile_limit();

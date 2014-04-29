@@ -606,9 +606,9 @@ void prepare_files(char *filename, int namelen,
   sprintf(userfile, "%s/%s.out", oj_solution.work_dir, fname);
   sprintf(stderrfile, "%s/stderr_executive.txt", oj_solution.work_dir);
 
-  FM_LOG_DEBUG("std input file: %s\n", infile);
-  FM_LOG_DEBUG("std output file: %s\n", outfile);
-  FM_LOG_DEBUG("user output file: %s\n", userfile);
+  FM_LOG_DEBUG("std input file: %s", infile);
+  FM_LOG_DEBUG("std output file: %s", outfile);
+  FM_LOG_DEBUG("user output file: %s", userfile);
 }
 
 void io_redirect(const char *input_file, const char *stdout_file_executive, const char *stderr_file_executive)
