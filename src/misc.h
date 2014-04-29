@@ -28,7 +28,6 @@ long file_size(const char *filename) {
 
   if (stat(filename, &st) == 0)
     return (long)st.st_size;
-
   return 0; 
 }
 
@@ -66,7 +65,8 @@ int strincmp(const char *s1, const char *s2, int n)
 
 //a simpler interface for setitimer
 //which can be ITIMER_REAL, ITIMER_VIRTUAL, ITIMER_PROF
-int malarm(int which, int milliseconds) {
+int malarm(int which, int milliseconds)
+{
   struct itimerval t;
   FM_LOG_TRACE("malarm: %d", milliseconds);
   t.it_value.tv_sec       = milliseconds / 1000;
@@ -80,8 +80,7 @@ void print_compiler(const char * options[])
 {
   int i = 0;
   char buff[BUFF_SIZE] = {0};
-  while (options[i] != NULL)
-  {
+  while (options[i] != NULL) {
     sprintf(buff, "%s %s", buff, options[i]);
     i++;
   }
@@ -173,10 +172,12 @@ bool is_valid_syscall(int lang, int syscall_id)
   in_syscall = !in_syscall;
   if (syscalls[syscall_id] == 0) {
     return false;
-  } else if (syscalls[syscall_id] > 0) {
+  }
+  else if (syscalls[syscall_id] > 0) {
     if (in_syscall == false)
       syscalls[syscall_id]--;
-  } else {
+  }
+  else {
     ;
   }
   return true;

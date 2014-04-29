@@ -2,10 +2,10 @@
 
 int main()
 {
-    int a, b;
-    while (~scanf("%d %d", &a, &b))
+    unsigned int a, b;
+    while (~scanf("%u %u", &a, &b))
     {
-        printf("%d\n", a-b);
+        printf("%u\n", a+b);
     }
     return 0;
 }

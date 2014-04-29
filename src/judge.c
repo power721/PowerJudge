@@ -19,11 +19,11 @@ int main(int argc, char *argv[], char *envp[])
   parse_arguments(argc, argv);
   chdir(oj_solution.work_dir);
 
-  FM_LOG_DEBUG("\n\x1b[31m----- Power Judge 1.0 -----\x1b[0m");
   if (geteuid() != 0) {
     FM_LOG_FATAL("please run as root, or set suid bit(chmod +4755)");
     exit(EXIT_UNPRIVILEGED);
   }
+  FM_LOG_DEBUG("\n\x1b[31m----- Power Judge 1.0 -----\x1b[0m");
 
   judge_time_limit += oj_solution.time_limit;
   if (EXIT_SUCCESS != malarm(ITIMER_REAL, judge_time_limit)) {
@@ -326,8 +326,7 @@ int run_solution()
   char stdout_file_executive[PATH_SIZE];
   char stderr_file_executive[PATH_SIZE];
 
-  while (flag && (dirp = readdir(dp)) != NULL)
-  {
+  while (flag && (dirp = readdir(dp)) != NULL) {
     namelen = isInFile(dirp->d_name); // check if the file is *.in
     if (namelen == 0)
       continue;
@@ -402,8 +401,7 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
     // execlp error
     exit(EXIT_PRE_JUDGE_EXECLP);
   }
-  else
-  {
+  else {
     //Judger
     int status          = 0;
     int syscall_id      = 0;
@@ -412,24 +410,19 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
     init_syscalls(oj_solution.lang);
 
     FM_LOG_TRACE("start judging...");
-    while (true)
-    {
-      if (wait4(executor, &status, 0, &rused) < 0)
-      {
+    while (true) {
+      if (wait4(executor, &status, 0, &rused) < 0) {
         FM_LOG_FATAL("wait4 failed, %d:%s", errno, strerror(errno));
         exit(EXIT_JUDGE);
       }
 
-      if (WIFEXITED(status))
-      {
+      if (WIFEXITED(status)) {
         if (oj_solution.lang != LANG_JAVA
-          || WEXITSTATUS(status) == EXIT_SUCCESS)
-        {
+          || WEXITSTATUS(status) == EXIT_SUCCESS) {
           // AC PE WA
           FM_LOG_TRACE("normal quit");
           int result;
-          if (oj_solution.spj)
-          {
+          if (oj_solution.spj) {
             // use SPJ
             result = oj_compare_output_spj( input_file,
                                             output_file_std,
@@ -437,33 +430,28 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
                                             oj_solution.spj_exe_file,
                                             oj_solution.stdout_file_spj);
           }
-          else
-          {
+          else {
             //compare file
             result = oj_compare_output(output_file_std,
                                        stdout_file_executive);
           }
           // WA
-          if (result == OJ_WA)
-          {
+          if (result == OJ_WA) {
             // set WA
             oj_solution.result = OJ_WA;
           }
           //AC or PE
-          else if (oj_solution.result != OJ_PE)
-          {
+          else if (oj_solution.result != OJ_PE) {
             oj_solution.result = result;
           }
-          else /* (oj_solution.result == OJ_PE) */
-          {
+          else /* (oj_solution.result == OJ_PE) */ {
             // PE
             oj_solution.result = OJ_PE;
           }
           FM_LOG_TRACE("case result: %d, problem result: %d",
                         result, oj_solution.result);
         }
-        else
-        {
+        else {
           // null 0 return
           FM_LOG_TRACE("abnormal quit, exit_code: %d", WEXITSTATUS(status));
           oj_solution.result = OJ_RE;
@@ -473,16 +461,13 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
 
       // RE/TLE/OLE
       if ( WIFSIGNALED(status) ||
-          (WIFSTOPPED(status) && WSTOPSIG(status) != SIGTRAP))
-      {
+          (WIFSTOPPED(status) && WSTOPSIG(status) != SIGTRAP)) {
         int signo = 0;
-        if (WIFSIGNALED(status))
-        {
+        if (WIFSIGNALED(status)) {
           signo = WTERMSIG(status);
           FM_LOG_TRACE("child signaled by %d, %s", signo, strsignal(signo));
         }
-        else
-        {
+        else {
           signo = WSTOPSIG(status);
           FM_LOG_TRACE("child stopped by %d, %s", signo, strsignal(signo));
         }
@@ -530,9 +515,9 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
       //MLE
       oj_solution.memory_usage = max(oj_solution.memory_usage,
                     rused.ru_minflt * (page_size / STD_KB));
+      // TODO check why memory exceed too much
       //FM_LOG_DEBUG("memory_usage: %d %d %d", oj_solution.memory_usage, rused.ru_minflt, page_size / STD_KB);
-      if (oj_solution.memory_usage > oj_solution.memory_limit)
-      {
+      if (oj_solution.memory_usage > oj_solution.memory_limit) {
         oj_solution.result = OJ_MLE;
         FM_LOG_TRACE("memory limit exceeded: %d (fault: %d * %d)",
                 oj_solution.memory_usage, rused.ru_minflt, page_size);
@@ -541,8 +526,7 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
       }
 
       // check syscall
-      if (ptrace(PTRACE_GETREGS, executor, NULL, &regs) < 0)
-      {
+      if (ptrace(PTRACE_GETREGS, executor, NULL, &regs) < 0) {
         FM_LOG_FATAL("ptrace(PTRACE_GETREGS) failed, %d: %s",
                       errno, strerror(errno));
         exit(EXIT_JUDGE);
@@ -552,16 +536,14 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
 #else
       syscall_id = regs.orig_rax;
 #endif
-      if (syscall_id > 0 && !is_valid_syscall(oj_solution.lang, syscall_id))
-      {
+      if (syscall_id > 0 && !is_valid_syscall(oj_solution.lang, syscall_id)) {
         FM_LOG_TRACE("restricted function, syscall_id: %d", syscall_id);
         oj_solution.result = OJ_RF;
         ptrace(PTRACE_KILL, executor, NULL, NULL);
         break;
       }
 
-      if (ptrace(PTRACE_SYSCALL, executor, NULL, NULL) < 0)
-      {
+      if (ptrace(PTRACE_SYSCALL, executor, NULL, NULL) < 0) {
         FM_LOG_FATAL("ptrace(PTRACE_SYSCALL) failed");
         exit(EXIT_JUDGE);
       }
@@ -576,17 +558,14 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
   oj_solution.time_usage += (rused.ru_utime.tv_sec * 1000 +
                           rused.ru_utime.tv_usec / 1000);
 
-  if(oj_solution.time_usage > oj_solution.time_limit)
-  {
+  if(oj_solution.time_usage > oj_solution.time_limit) {
     oj_solution.result = OJ_TLE;
   }
 
   if (oj_solution.result != OJ_AC &&
-      oj_solution.result != OJ_PE)
-  {
+      oj_solution.result != OJ_PE) {
     FM_LOG_TRACE("not ac/pe, no need to continue");
-    if (oj_solution.result == OJ_TLE)
-    {
+    if (oj_solution.result == OJ_TLE) {
       oj_solution.time_usage = oj_solution.time_limit;
     }
     return false;
@@ -650,8 +629,7 @@ void set_limit(int fsize)
     // process control
     lim.rlim_max = 1;
     lim.rlim_cur = lim.rlim_max;
-    if (setrlimit(RLIMIT_NPROC, &lim) < 0)
-    {
+    if (setrlimit(RLIMIT_NPROC, &lim) < 0) {
       FM_LOG_FATAL("setrlimit RLIMIT_NPROC failed");
       exit(EXIT_SET_LIMIT);
     }
@@ -699,7 +677,6 @@ void set_security_option()
     FM_LOG_FATAL("getcwd failed, %d: %s", errno, strerror(errno));
     exit(EXIT_SET_SECURITY);
   }
-  FM_LOG_TRACE("cwd: %s", cwd);
   if(oj_solution.lang != LANG_JAVA) {
     if (EXIT_SUCCESS != chroot(cwd)) {
       FM_LOG_FATAL("chroot(%s) failed, %d: %s", cwd, errno, strerror(errno));
