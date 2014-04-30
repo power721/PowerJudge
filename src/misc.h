@@ -4,6 +4,8 @@
 #include <ctype.h>
 #include "judge_core.h"
 
+#define is_space_char(a) ((a == ' ') || (a == '\t') || (a == '\n'))
+
 int max(int a, int b);
 long file_size(const char *filename);
 int isInFile(const char *filename);
@@ -60,7 +62,7 @@ int strincmp(const char *s1, const char *s2, int n)
     ++s1;
     ++s2;
   }
-  return(0);
+  return 0;
 }
 
 //a simpler interface for setitimer
@@ -81,8 +83,7 @@ void print_compiler(const char * options[])
   int i = 0;
   char buff[BUFF_SIZE] = {0};
   while (options[i] != NULL) {
-    sprintf(buff, "%s %s", buff, options[i]);
-    i++;
+    sprintf(buff, "%s %s", buff, options[i++]);
   }
   FM_LOG_TRACE(buff);
 }
@@ -90,12 +91,11 @@ void print_compiler(const char * options[])
 int execute_cmd(const char * fmt, ...)
 {
   char cmd[BUFF_SIZE];
-  int ret = 0;
   va_list ap;
 
   va_start(ap, fmt);
   vsprintf(cmd, fmt, ap);
-  ret = system(cmd);
+  int ret = system(cmd);
   va_end(ap);
   return ret;
 }

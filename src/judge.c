@@ -1,13 +1,3 @@
-#include <sys/wait.h>
-#include <sys/reg.h>
-#include <sys/user.h>
-#include <sys/syscall.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/ptrace.h>
-#include <dirent.h>
-#include "log.h"
-#include "misc.h"
 #include "judge.h"
 
 int main(int argc, char *argv[], char *envp[])
@@ -18,12 +8,12 @@ int main(int argc, char *argv[], char *envp[])
 
   parse_arguments(argc, argv);
 
-  if (geteuid() != 0) {
+  if (geteuid() != 0) { // user is not root
     FM_LOG_FATAL("please run as root, or set suid bit(chmod +4755)");
     exit(EXIT_UNPRIVILEGED);
   }
 
-  if (EXIT_SUCCESS != chdir(oj_solution.work_dir)) {
+  if (EXIT_SUCCESS != chdir(oj_solution.work_dir)) { // change directory
     FM_LOG_FATAL("chdir(%s) failed, %d: %s",
                    oj_solution.work_dir, errno, strerror(errno));
     exit(EXIT_SET_SECURITY);
@@ -44,6 +34,15 @@ int main(int argc, char *argv[], char *envp[])
   return 0;
 }
 
+void init()
+{
+  oj_solution.result = OJ_WAIT;
+  oj_solution.time_limit = 1000;
+  oj_solution.memory_limit = 65536;
+  strcpy(work_dir_root, ".");
+  page_size = sysconf(_SC_PAGESIZE);
+}
+
 void parse_arguments(int argc, char *argv[])
 {
   int opt;
@@ -51,7 +50,7 @@ void parse_arguments(int argc, char *argv[])
 
   while ((opt = getopt(argc, argv, "s:p:t:m:l:d:D:")) != -1) {
     switch (opt) {
-      case 's': // solution ID
+      case 's': // Solution ID
         oj_solution.sid               = atoi(optarg);
         break;
       case 'p': // Problem ID
@@ -63,13 +62,13 @@ void parse_arguments(int argc, char *argv[])
       case 'm': // Memory limit
         oj_solution.memory_limit      = atoi(optarg);
         break;
-      case 'l': // Language
+      case 'l': // Language ID
         oj_solution.lang              = atoi(optarg);
         break;
       case 'd': // Work directory
         realpath(optarg, work_dir_root);
         break;
-      case 'D': // Data directory path
+      case 'D': // Data directory
         realpath(optarg, data_dir_root);
         break;
       default:
@@ -91,43 +90,35 @@ void parse_arguments(int argc, char *argv[])
     FM_LOG_FATAL("Source code file is missing.");
     exit(EXIT_NO_SOURCE_CODE);
   }
+
   if (oj_solution.lang == LANG_JAVA) {
-    oj_solution.memory_limit        *= java_memory_factor;
-    oj_solution.time_limit          *= java_time_factor;
+    oj_solution.memory_limit    *= java_memory_factor;
+    oj_solution.time_limit      *= java_time_factor;
   }
   else if (oj_solution.lang == LANG_PYTHON) {
-    oj_solution.memory_limit        *= python_memory_factor;
-    oj_solution.time_limit          *= python_time_factor;
+    oj_solution.memory_limit    *= python_memory_factor;
+    oj_solution.time_limit      *= python_time_factor;
   }
 
   print_solution();
 }
 
-void init()
-{
-  oj_solution.result = OJ_WAIT;
-  oj_solution.time_limit = 1000;
-  oj_solution.memory_limit = 65536;
-  strcpy(work_dir_root, ".");
-  page_size = sysconf(_SC_PAGESIZE);
-}
-
 void check_arguments()
 {
   if (oj_solution.sid == 0) {
-    FM_LOG_FATAL("Miss parameter: solution id.");
+    FM_LOG_FATAL("Miss parameter: solution id");
     exit(EXIT_MISS_PARAM);
   }
   if (oj_solution.pid == 0) {
-    FM_LOG_FATAL("Miss parameter: problem id.");
+    FM_LOG_FATAL("Miss parameter: problem id");
     exit(EXIT_MISS_PARAM);
   }
   if (oj_solution.lang == 0) {
-    FM_LOG_FATAL("Miss parameter: language id.");
+    FM_LOG_FATAL("Miss parameter: language id");
     exit(EXIT_MISS_PARAM);
   }
   if (data_dir_root == NULL) {
-    FM_LOG_FATAL("Miss parameter: data directory.");
+    FM_LOG_FATAL("Miss parameter: data directory");
     exit(EXIT_MISS_PARAM);
   }
 
@@ -146,7 +137,7 @@ void check_arguments()
 
 void print_solution()
 {
-  FM_LOG_DEBUG("--solution information--");
+  FM_LOG_DEBUG("-- Solution Information --");
   FM_LOG_DEBUG("solution id   %d", oj_solution.sid);
   FM_LOG_DEBUG("problem id    %d", oj_solution.pid);
   FM_LOG_DEBUG("language      %s", languages[oj_solution.lang]);
@@ -154,15 +145,6 @@ void print_solution()
   FM_LOG_DEBUG("memory limit  %d KB", oj_solution.memory_limit);
   FM_LOG_DEBUG("work dir      %s", oj_solution.work_dir);
   FM_LOG_DEBUG("data dir      %s", oj_solution.data_dir);
-}
-
-void check_spj()
-{
-  sprintf(oj_solution.spj_exe_file, "%s/spj", oj_solution.data_dir);
-  if (access( oj_solution.spj_exe_file, F_OK ) != -1) {
-    // file exists
-    oj_solution.spj = true;
-  }
 }
 
 void timeout_hander(int signo)
@@ -190,6 +172,7 @@ void compile()
     log_add_info("compiler");
 
     set_compile_limit();
+
     stdout = freopen(stdout_compiler, "w", stdout);
     stderr = freopen(stderr_compiler, "w", stderr);
     if (stdout == NULL || stderr == NULL) {
@@ -231,7 +214,6 @@ void compile()
       FM_LOG_FATAL("waitpid for compiler failed");
       exit(EXIT_COMPILE_ERROR);
     }
-
     FM_LOG_TRACE("compiler finished");
 
     if (oj_solution.lang == LANG_PYTHON && file_size(stderr_compiler) > 0) {
@@ -250,7 +232,7 @@ void compile()
         exit(EXIT_OK);
       }
       else {
-        FM_LOG_FATAL(" compiler unknown exit status %d", WEXITSTATUS(status));
+        FM_LOG_FATAL("compiler unknown exit status %d", WEXITSTATUS(status));
         exit(EXIT_COMPILE_ERROR);
       }
     }
@@ -259,7 +241,7 @@ void compile()
         FM_LOG_WARNING("compiler limit exceeded");
         output_result(OJ_CE, 0, 0);
         stderr = freopen(stderr_compiler, "a", stderr);
-        fprintf(stderr, "Compiler Limit Exceeded\n");
+        fprintf(stderr, "Compiler Limit Exceeded\n"); // why ??
         exit(EXIT_OK);
       }
       else if (WIFSTOPPED(status)) { // stopped by signal
@@ -278,26 +260,25 @@ void set_compile_limit()
   if (oj_solution.lang == LANG_JAVA) return;
   if (oj_solution.lang == LANG_PYTHON) return;
 
-  int cpu = (compile_time_limit + 999) / 1000;
-  int mem = compile_mem_limit * STD_MB;
+  int cpu_time = compile_time_limit;
+  int memory   = compile_memory_limit * STD_MB;
+  int fsize    = compile_fsize_limit * STD_MB;
 
   rlimit lim;
 
-  lim.rlim_cur = lim.rlim_max = cpu;
+  lim.rlim_cur = lim.rlim_max = cpu_time;
   if (setrlimit(RLIMIT_CPU, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_CPU failed");
     exit(EXIT_SET_LIMIT);
   }
 
-  lim.rlim_cur = lim.rlim_max = mem;
+  lim.rlim_cur = lim.rlim_max = memory;
   if (setrlimit(RLIMIT_AS, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_AS failed");
     exit(EXIT_SET_LIMIT);
   }
 
-  // File size limit control
-  lim.rlim_max = compile_output_limit * STD_MB;
-  lim.rlim_cur = lim.rlim_max;
+  lim.rlim_cur = lim.rlim_max = fsize;
   if (setrlimit(RLIMIT_FSIZE, &lim) < 0)
   {
     FM_LOG_WARNING("setrlimit RLIMIT_FSIZE failed");
@@ -323,24 +304,25 @@ int run_solution()
   check_spj();
 
   bool flag = true;
-  int namelen;
   int num_of_test = 0;
   char input_file[PATH_SIZE];
   char output_file_std[PATH_SIZE];
   char stdout_file_executive[PATH_SIZE];
   char stderr_file_executive[PATH_SIZE];
 
+  FM_LOG_TRACE("start run solution");
   while (flag && (dirp = readdir(dp)) != NULL) {
-    namelen = isInFile(dirp->d_name); // check if the file is *.in
+    int namelen = isInFile(dirp->d_name); // check if the file is *.in
     if (namelen == 0)
       continue;
 
-    num_of_test++;
-
+    // TODO check if the out file is here
     prepare_files( dirp->d_name, namelen, input_file, output_file_std,
                    stdout_file_executive, stderr_file_executive );
 
+    num_of_test++;
     FM_LOG_DEBUG("run case: %d", num_of_test);
+
     flag = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
   }
 
@@ -364,17 +346,16 @@ bool judge( const char *input_file,
     FM_LOG_FATAL("fork executor failed");
     exit(EXIT_PRE_JUDGE);
   }
-  else if (executor == 0) {
-    // child process
+  else if (executor == 0) { // child process
     log_add_info("executor");
 
-    //io redirect
+    // io redirect
     io_redirect(input_file, stdout_file_executive, stderr_file_executive);
 
     // chroot & setuid
     set_security_option();
 
-    // set memory, time and output limit etc.
+    // set memory, time and file size limit etc.
     set_limit(file_size(output_file_std));
 
     FM_LOG_DEBUG("time limit: %d, time usage: %d, time limit addtion: %d",
@@ -394,12 +375,13 @@ bool judge( const char *input_file,
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0) {
       exit(EXIT_PRE_JUDGE_PTRACE);
     }
+
     // load program
     if (oj_solution.lang == LANG_JAVA) {
-      execvp(EXEC_J[0], (char * const *)EXEC_J);
+      execvp(EXEC_J[0], (char * const *) EXEC_J);
     }
     else if (oj_solution.lang == LANG_PYTHON) {
-      execv(EXEC_PY[0], (char * const *)EXEC_PY); // execvp is incorrect
+      execv(EXEC_PY[0], (char * const *) EXEC_PY); // execvp is incorrect
     }
     else {
       execl("./Main", "Main", NULL);
@@ -416,7 +398,6 @@ bool judge( const char *input_file,
 
     init_syscalls(oj_solution.lang);
 
-    FM_LOG_TRACE("start judging...");
     while (true) {
       if (wait4(executor, &status, 0, &rused) < 0) {
         FM_LOG_FATAL("wait4 executor failed, %d:%s", errno, strerror(errno));
@@ -437,28 +418,26 @@ bool judge( const char *input_file,
                                             oj_solution.spj_exe_file);
           }
           else {
-            //compare file
-            result = oj_compare_output(output_file_std,
-                                       stdout_file_executive);
+            // compare file
+            result = oj_compare_output( output_file_std,
+                                        stdout_file_executive);
           }
           // WA
           if (result == OJ_WA) {
-            // set WA
             oj_solution.result = OJ_WA;
           }
-          //AC or PE
+          // AC or PE
           else if (oj_solution.result != OJ_PE) {
             oj_solution.result = result;
           }
           else /* (oj_solution.result == OJ_PE) */ {
-            // PE
             oj_solution.result = OJ_PE;
           }
           FM_LOG_TRACE("case result: %d, problem result: %d",
                         result, oj_solution.result);
         }
         else {
-          // null 0 return
+          // not return 0
           FM_LOG_TRACE("abnormal quit, exit_code: %d", WEXITSTATUS(status));
           oj_solution.result = OJ_RE;
         }
@@ -479,20 +458,20 @@ bool judge( const char *input_file,
         }
         switch (signo)
         {
-          //TLE
+          // TLE
           case SIGALRM:
           case SIGXCPU:
           case SIGVTALRM:
-          case SIGKILL: //During startup program terminated with signal SIGKILL, Killed.
+          case SIGKILL: // During startup program terminated with signal SIGKILL, Killed.
               FM_LOG_TRACE("time limit exceeded");
               oj_solution.result = OJ_TLE;
               break;
-          //OLE
+          // OLE
           case SIGXFSZ:
-              FM_LOG_TRACE("file limit exceeded");
+              FM_LOG_TRACE("file size limit exceeded");
               oj_solution.result = OJ_OLE;
               break;
-          //RE
+          // RE
           case SIGSEGV:
               oj_solution.result = OJ_RE;
               fprintf(stderr, "Segmentation Fault\n");
@@ -513,14 +492,14 @@ bool judge( const char *input_file,
               oj_solution.result = OJ_RE;
               fprintf(stderr, "Other Exception: %s\n", strsignal(signo));
               break;
-        } //end of swtich
+        } // end of swtich
         ptrace(PTRACE_KILL, executor, NULL, NULL);
         break;
-      } //end of  "if (WIFSIGNALED(status) ...)"
+      } // end of  "if (WIFSIGNALED(status) ...)"
 
-      //MLE
+      // MLE
       oj_solution.memory_usage = max(oj_solution.memory_usage,
-                    rused.ru_minflt * (page_size / STD_KB));
+                                      rused.ru_minflt * (page_size / STD_KB));
       // TODO check why memory exceed too much
       //FM_LOG_DEBUG("memory_usage: %d %d %d", oj_solution.memory_usage, rused.ru_minflt, page_size / STD_KB);
       if (oj_solution.memory_usage > oj_solution.memory_limit) {
@@ -553,16 +532,16 @@ bool judge( const char *input_file,
         FM_LOG_FATAL("ptrace(PTRACE_SYSCALL) failed");
         exit(EXIT_JUDGE);
       }
-    }
-  } //end of fork for judge process
+    } // end of while
+  } // end of fork for judge process
 
   if ( oj_solution.lang == LANG_PYTHON && file_size(stderr_file_executive)) {
     FM_LOG_TRACE("runtime error");
     oj_solution.result = OJ_RE;
   }
 
-  oj_solution.time_usage += (rused.ru_utime.tv_sec * 1000 +
-                          rused.ru_utime.tv_usec / 1000);
+  oj_solution.time_usage += ( rused.ru_utime.tv_sec * 1000 +
+                              rused.ru_utime.tv_usec / 1000 );
 
   if(oj_solution.time_usage > oj_solution.time_limit) {
     oj_solution.result = OJ_TLE;
@@ -570,7 +549,7 @@ bool judge( const char *input_file,
 
   if (oj_solution.result != OJ_AC &&
       oj_solution.result != OJ_PE) {
-    FM_LOG_TRACE("not ac/pe, no need to continue");
+    FM_LOG_TRACE("not AC/PE, no need to continue");
     if (oj_solution.result == OJ_TLE) {
       oj_solution.time_usage = oj_solution.time_limit;
     }
@@ -579,10 +558,21 @@ bool judge( const char *input_file,
   return true;
 }
 
-void prepare_files(char *filename, int namelen, 
-                   char *infile, char *outfile, char *userfile, char * stderrfile)
+void check_spj()
 {
-  char  fname[PATH_SIZE];
+  sprintf(oj_solution.spj_exe_file, "%s/spj", oj_solution.data_dir);
+  if (access( oj_solution.spj_exe_file, F_OK ) != -1) {
+    // spj file exists
+    oj_solution.spj = true;
+    FM_LOG_TRACE("Special Judged");
+  }
+}
+
+void prepare_files( char *filename, int namelen, 
+                    char *infile, char *outfile, 
+                    char *userfile, char *stderrfile )
+{
+  char fname[PATH_SIZE];
   strncpy(fname, filename, namelen);
   fname[namelen] = 0;
 
@@ -591,8 +581,8 @@ void prepare_files(char *filename, int namelen,
   sprintf(userfile, "%s/%s.out", oj_solution.work_dir, fname);
   sprintf(stderrfile, "%s/stderr_executive.txt", oj_solution.work_dir);
 
-  FM_LOG_DEBUG("std input file: %s", infile);
-  FM_LOG_DEBUG("std output file: %s", outfile);
+  FM_LOG_DEBUG("std  input  file: %s", infile);
+  FM_LOG_DEBUG("std  output file: %s", outfile);
   FM_LOG_DEBUG("user output file: %s", userfile);
 }
 
@@ -617,8 +607,8 @@ void set_limit(int fsize)
   rlimit lim;
 
   // Set CPU time limit round up
-  lim.rlim_max = (oj_solution.time_limit - oj_solution.time_usage + 999) / 1000 + 1; //硬限制
-  lim.rlim_cur = lim.rlim_max; //软限制
+  lim.rlim_max = (oj_solution.time_limit - oj_solution.time_usage + 999) / 1000 + 1;
+  lim.rlim_cur = lim.rlim_max;
   if (setrlimit(RLIMIT_CPU, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_CPU failed");
     exit(EXIT_SET_LIMIT);
@@ -635,8 +625,7 @@ void set_limit(int fsize)
     }
 
     // process control
-    lim.rlim_max = 1;
-    lim.rlim_cur = lim.rlim_max;
+    lim.rlim_cur = lim.rlim_max = 1;
     if (setrlimit(RLIMIT_NPROC, &lim) < 0) {
       FM_LOG_FATAL("setrlimit RLIMIT_NPROC failed");
       exit(EXIT_SET_LIMIT);
@@ -644,27 +633,22 @@ void set_limit(int fsize)
   }
 
   // Stack space
-  lim.rlim_max = stack_size_limit * STD_KB;
-  lim.rlim_cur = lim.rlim_max;
+  lim.rlim_cur = lim.rlim_max = stack_size_limit * STD_KB;
   if (setrlimit(RLIMIT_STACK, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_STACK failed");
     exit(EXIT_SET_LIMIT);
   }
 
   // Output file size limit
-  lim.rlim_max = fsize + (fsize>>3) + STD_MB;
-  lim.rlim_cur = lim.rlim_max;
+  lim.rlim_cur = lim.rlim_max = fsize + (fsize>>3) + STD_MB;
   if (setrlimit(RLIMIT_FSIZE, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed");
     exit(EXIT_SET_LIMIT);
   }
 
-  FM_LOG_TRACE("set limit ok");
+  FM_LOG_TRACE("set execute limit ok");
 }
 
-/*
- * chroot & setuid
- */
 void set_security_option()
 {
   struct passwd *nobody = getpwnam("nobody");
@@ -688,7 +672,7 @@ void set_security_option()
   }
 
   /*if(oj_solution.lang != LANG_JAVA)*/ {
-    // setgid
+    // setgid, must before setuid
     if (EXIT_SUCCESS != setgid(nobody->pw_gid)) {
       FM_LOG_FATAL("setgid(%d) failed, %d: %s",
                     nobody->pw_gid, errno, strerror(errno));
@@ -703,7 +687,8 @@ void set_security_option()
     }
 
     // set real, effective and saved user ID
-    if (EXIT_SUCCESS != setresuid(nobody->pw_uid, nobody->pw_uid, 
+    if (EXIT_SUCCESS != setresuid(nobody->pw_uid, 
+                                  nobody->pw_uid, 
                                   nobody->pw_uid)) {
       FM_LOG_FATAL("setresuid(%d) failed, %d: %s",
                      nobody->pw_uid, errno, strerror(errno));
@@ -716,24 +701,20 @@ void set_security_option()
 
 // Run spj
 int oj_compare_output_spj(
-  const char *file_in,  //std input
-  const char *file_std, //std output
-  const char *file_exec, //user output
-  const char *spj_exec)  //path of spj
+              const char *file_in,   // std input
+              const char *file_std,  // std output
+              const char *file_exec, // user output
+              const char *spj_exec)  // path of spj
 {
   FM_LOG_TRACE("start compare spj");
   pid_t pid_spj = fork();
-  int status = 0;
   if (pid_spj < 0) {
     FM_LOG_FATAL("fork for spj failed");
     exit(EXIT_COMPARE_SPJ);
   }
-  else if (pid_spj == 0) {
+  else if (pid_spj == 0) { // child process
     log_add_info("spj");
-    if (stdin == NULL || stdout == NULL) {
-      FM_LOG_FATAL("failed to open files: stdin(%p), stdout(%p)", stdin, stdout);
-      exit(EXIT_COMPARE_SPJ);
-    }
+
     // Set spj timeout
     if (EXIT_SUCCESS == malarm(ITIMER_REAL, spj_time_limit)) {
       FM_LOG_TRACE("load spj: %s", spj_exec);
@@ -747,13 +728,14 @@ int oj_compare_output_spj(
     }
   }
   else {
-    if (waitpid(pid_spj, &status, WUNTRACED) < 0) {
+    int status = 0;
+    if (waitpid(pid_spj, &status, 0) < 0) {
       FM_LOG_FATAL("waitpid for spj failed, %d:%s", errno, strerror(errno));
       exit(EXIT_COMPARE_SPJ);
     }
+
     if (WIFEXITED(status)) {
-      switch (WEXITSTATUS(status))
-      {
+      switch (WEXITSTATUS(status)) {
         case SPJ_AC:
           return OJ_AC;
         case SPJ_PE:
@@ -776,33 +758,36 @@ int oj_compare_output_spj(
   exit(EXIT_COMPARE_SPJ);
 }
 
-int oj_compare_output(const char *file_std, const char *file_exec) {
+int oj_compare_output(const char *file_std, const char *file_exec)
+{
   FM_LOG_TRACE("start compare");
   FILE *fp_std = fopen(file_std, "r");
   if (fp_std == NULL) {
     FM_LOG_FATAL("open standard output failed: %s", file_std);
     exit(EXIT_COMPARE);
   }
+  
   FILE *fp_exe = fopen(file_exec, "r");
   if (fp_exe == NULL) {
-    FM_LOG_FATAL("open executor's output failed: %s", file_exec);
+    FM_LOG_FATAL("open user output failed: %s", file_exec);
     exit(EXIT_COMPARE);
   }
+
   int a, b, Na = 0, Nb = 0;
   enum {
     AC = OJ_AC,
     PE = OJ_PE,
     WA = OJ_WA
   } status = AC;
+
   while (true) {
-    while((a = fgetc(fp_std)) == '\r');
+    while((a = fgetc(fp_std)) == '\r'); // \r, \n ??
     while((b = fgetc(fp_exe)) == '\r');
     Na++, Nb++;
 
     // deal with '\r' and '\n'
     if (a == '\r') a = '\n';
     if (b == '\r') b = '\n';
-#define is_space_char(a) ((a == ' ') || (a == '\t') || (a == '\n'))
 
     if (feof(fp_std) && feof(fp_exe)) {
       break;
@@ -858,7 +843,8 @@ int oj_compare_output(const char *file_std, const char *file_exec) {
         break;
       }
     }
-  }
+  } // end of while
+
   if (status == WA) {
     make_diff_out(fp_std, fp_exe, a, b, oj_solution.work_dir, file_std);
   }

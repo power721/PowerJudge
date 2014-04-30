@@ -81,6 +81,7 @@ char result_str[][10] = {
 #define SPJ_PE                 1
 #define SPJ_WA                 2
 
+
 // 程序语言
 #define LANG_UNKNOWN           0
 #define LANG_C                 1
@@ -88,7 +89,8 @@ char result_str[][10] = {
 #define LANG_PASCAL            3
 #define LANG_JAVA              4
 #define LANG_PYTHON            5
-const char languages[][10]  = {"unknown", "c", "c++", "pascal", "java", "python"};
-const char lang_ext[][10] = {"", "c", "cc", "pas", "java", "py"};
+
+const char languages[][10]  = { "unknown", "c", "c++", "pascal", "java", "python" };
+const char lang_ext[][10]   = { "", "c", "cc", "pas", "java", "py" };
 
 #endif /* __JUDGE_CORE_H__ */
