@@ -74,13 +74,11 @@ struct oj_solution_t
   int lang;         // language id
   int time_limit;   // ms
   int memory_limit; // KB
-  int output_limit; // B
 
   int result;
-  int status;
 
   int time_usage;    // ms
-  int memory_usage; // KB
+  int memory_usage;  // KB
 
   bool spj;
 
@@ -99,20 +97,19 @@ void print_solution();
 void check_spj();
 void prepare_files(char *filename, int namelen, 
                    char *infile, char *outfile, 
-                   char *userfile, char * stderrfile);
-void io_redirect(
-      const char *input_file, 
-      const char *stdout_file_executive, 
-      const char *stderr_file_executive);
+                   char *userfile, char *errfile);
+void io_redirect(const char *input_file, 
+                 const char *stdout_file_executive, 
+                 const char *stderr_file_executive);
 void set_limit(int fsize);
 void set_compile_limit();
 void set_security_option();
 
 int oj_compare_output_spj(const char *file_in,  //std input
-                          const char *file_std, //std output
-                          const char *file_exec, //user output
+                          const char *file_out, //std output
+                          const char *file_user, //user output
                           const char *spj_exec);  //path of spj
-int oj_compare_output(const char *file_std, const char *file_exec);
+int oj_compare_output(const char *file_out, const char *file_user);
 void fix_java_result(const char *stdout_file, const char *stderr_file);
 void output_result(int result, int time_usage, int memory_usage);
 

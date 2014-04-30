@@ -573,7 +573,7 @@ void check_spj()
 
 void prepare_files( char *filename, int namelen, 
                     char *infile, char *outfile, 
-                    char *userfile, char *stderrfile )
+                    char *userfile, char *errfile )
 {
   char fname[PATH_SIZE];
   strncpy(fname, filename, namelen);
@@ -582,7 +582,7 @@ void prepare_files( char *filename, int namelen,
   sprintf(infile, "%s/%s.in", oj_solution.data_dir, fname);
   sprintf(outfile, "%s/%s.out", oj_solution.data_dir, fname);
   sprintf(userfile, "%s/%s.out", oj_solution.work_dir, fname);
-  sprintf(stderrfile, "%s/stderr_executive.txt", oj_solution.work_dir);
+  sprintf(errfile, "%s/stderr_executive.txt", oj_solution.work_dir);
 
   FM_LOG_DEBUG("std  input  file: %s", infile);
   FM_LOG_DEBUG("std  output file: %s", outfile);
@@ -643,7 +643,7 @@ void set_limit(int fsize)
   }
 
   // Output file size limit
-  lim.rlim_cur = lim.rlim_max = fsize + (fsize>>3) + STD_MB;
+  lim.rlim_cur = lim.rlim_max = fsize + (fsize >> 3) + STD_MB;
   if (setrlimit(RLIMIT_FSIZE, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed");
     exit(EXIT_SET_LIMIT);
@@ -705,8 +705,8 @@ void set_security_option()
 // Run spj
 int oj_compare_output_spj(
               const char *file_in,   // std input
-              const char *file_std,  // std output
-              const char *file_exec, // user output
+              const char *file_out,  // std output
+              const char *file_user, // user output
               const char *spj_exec)  // path of spj
 {
   FM_LOG_TRACE("start compare spj");
@@ -722,7 +722,7 @@ int oj_compare_output_spj(
     if (EXIT_SUCCESS == malarm(ITIMER_REAL, spj_time_limit)) {
       FM_LOG_TRACE("load spj: %s", spj_exec);
       log_close();
-      execlp(spj_exec, spj_exec, file_in, file_std, file_exec, NULL);
+      execlp(spj_exec, spj_exec, file_in, file_out, file_user, NULL);
       exit(EXIT_COMPARE_SPJ_FORK);
     }
     else {
@@ -761,18 +761,18 @@ int oj_compare_output_spj(
   exit(EXIT_COMPARE_SPJ);
 }
 
-int oj_compare_output(const char *file_std, const char *file_exec)
+int oj_compare_output(const char *file_out, const char *file_user)
 {
   FM_LOG_TRACE("start compare");
-  FILE *fp_std = fopen(file_std, "r");
+  FILE *fp_std = fopen(file_out, "r");
   if (fp_std == NULL) {
-    FM_LOG_FATAL("open standard output failed: %s", file_std);
+    FM_LOG_FATAL("open standard output failed: %s", file_out);
     exit(EXIT_COMPARE);
   }
 
-  FILE *fp_exe = fopen(file_exec, "r");
+  FILE *fp_exe = fopen(file_user, "r");
   if (fp_exe == NULL) {
-    FM_LOG_FATAL("open user output failed: %s", file_exec);
+    FM_LOG_FATAL("open user output failed: %s", file_user);
     exit(EXIT_COMPARE);
   }
 
@@ -849,7 +849,7 @@ int oj_compare_output(const char *file_std, const char *file_exec)
   } // end of while
 
   if (status == WA) {
-    make_diff_out(fp_std, fp_exe, a, b, oj_solution.work_dir, file_std);
+    make_diff_out(fp_std, fp_exe, a, b, oj_solution.work_dir, file_out);
   }
   fclose(fp_std);
   fclose(fp_exe);

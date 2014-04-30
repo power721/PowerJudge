@@ -78,7 +78,7 @@ int malarm(int which, int milliseconds)
   return setitimer(which, &t, NULL);
 }
 
-void print_compiler(const char * options[])
+void print_compiler(const char *options[])
 {
   int i = 0;
   char buff[BUFF_SIZE] = {0};
@@ -88,7 +88,7 @@ void print_compiler(const char * options[])
   FM_LOG_TRACE(buff);
 }
 
-int execute_cmd(const char * fmt, ...)
+int execute_cmd(const char *fmt, ...)
 {
   char cmd[BUFF_SIZE];
   va_list ap;
@@ -100,7 +100,7 @@ int execute_cmd(const char * fmt, ...)
   return ret;
 }
 
-void copy_shell_runtime(const char * work_dir)
+void copy_shell_runtime(const char *work_dir)
 {
   execute_cmd("/bin/mkdir %s/lib", work_dir);
   execute_cmd("/bin/mkdir %s/bin", work_dir);
@@ -117,7 +117,7 @@ void copy_shell_runtime(const char * work_dir)
   execute_cmd("/bin/cp /bin/bash %s/bin/bash", work_dir);
 }
 
-void copy_python_runtime(const char * work_dir)
+void copy_python_runtime(const char *work_dir)
 {
   copy_shell_runtime(work_dir);
   execute_cmd("/bin/mkdir -p %s/usr/include", work_dir);
@@ -128,7 +128,7 @@ void copy_python_runtime(const char * work_dir)
   execute_cmd("/bin/cp -a /usr/lib/libpython* %s/usr/lib/", work_dir);
 }
 
-void clean_workdir(const char * work_dir)
+void clean_workdir(const char *work_dir)
 {
   execute_cmd("rm -Rf %s/lib", work_dir);
   execute_cmd("rm -Rf %s/lib32", work_dir);
