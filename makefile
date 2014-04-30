@@ -1,6 +1,6 @@
 LD=g++
 CXX=g++
-CXXFLAGS=-g -Wall -O2 -DLOG_LEVEL=LOG_NOTICE
+CXXFLAGS=-g -Wall -O2 -DLOG_LEVEL=LOG_DEBUG
 LDFLAGS=
 TARGET=bin/powerjudge
 OBJECTS=bin/judge.o

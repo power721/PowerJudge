@@ -67,6 +67,9 @@ function init()
 
   mkdir temp/10009
   cp code/1000/1000_AC.cpp temp/10009/Main.cc
+
+  mkdir temp/1002
+  cp code/1000/1000_AC.cpp temp/1002/Main.cc
 } 2> error.log
 
 resultStr=(
@@ -140,6 +143,9 @@ runTest 0 "__int64"   "../bin/powerjudge -s 641 -p 1000 -D ./data -d ./temp -t 1
 # test spj
 runTest 0 "SPJ AC" "../bin/powerjudge -s 14050 -p 1405 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 runTest 4 "SPJ WA" "../bin/powerjudge -s 14054 -p 1405 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
+
+# test empty data dir
+runTest 0 "empty data dir"  "../bin/powerjudge -s 1002 -p 1002 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 
 echo -e "\nTotal Cases:" $((failed+passed))
 echo -e "\x1b[31mFAILED\x1b[0m: $failed"
