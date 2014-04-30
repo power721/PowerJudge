@@ -64,6 +64,9 @@ function init()
   cp code/1405/1405.cc temp/14050/Main.cc
   mkdir temp/14054
   cp code/1405/1405_WA.cc temp/14054/Main.cc
+
+  mkdir temp/10009
+  cp code/1000/1000_AC.cpp temp/10009/Main.cc
 } 2> error.log
 
 resultStr=(
@@ -86,7 +89,11 @@ function runTest()
   local result=`$3`
   echo "Test $2:"
   read -a array <<< "$result"
+  if [ -z "$array" ]; then
+    array=(9 -1 -1)
+  fi
   echo -e "Result: ${resultStr[$array]}  Time: ${array[1]} MS  Memory: ${array[2]} KB"
+
   if [ "$array" = "$1" ]; then
     echo -e "\x1b[32mPASS\x1b[0m"
     ((passed++))
@@ -108,6 +115,7 @@ runTest 5 "RE"  "../bin/powerjudge -s 10005 -p 1000 -D ./data -d ./temp -t 1000 
 runTest 6 "OLE" "../bin/powerjudge -s 10006 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 runTest 7 "CE"  "../bin/powerjudge -s 10007 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 runTest 8 "RF"  "../bin/powerjudge -s 10008 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
+runTest 9 "SE"  "../bin/powerjudge -s 10009 -p 1001 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 runTest 0 "Pascal AC" "../bin/powerjudge -s 1003 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 3"
 runTest 0 "Java AC"   "../bin/powerjudge -s 1004 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
 runTest 0 "Python AC" "../bin/powerjudge -s 1005 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
