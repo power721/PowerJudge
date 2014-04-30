@@ -162,7 +162,6 @@ void check_spj()
   if (access( oj_solution.spj_exe_file, F_OK ) != -1) {
     // file exists
     oj_solution.spj = true;
-    sprintf(oj_solution.stdout_file_spj, "%s/stdout_spj.txt", oj_solution.work_dir);
   }
 }
 
@@ -229,7 +228,7 @@ void compile()
     // Judger
     int status = 0;
     if (waitpid(compiler, &status, WUNTRACED) == -1) {
-      FM_LOG_FATAL("waitpid error");
+      FM_LOG_FATAL("waitpid for compiler failed");
       exit(EXIT_COMPILE_ERROR);
     }
 
@@ -420,7 +419,7 @@ bool judge( const char *input_file,
     FM_LOG_TRACE("start judging...");
     while (true) {
       if (wait4(executor, &status, 0, &rused) < 0) {
-        FM_LOG_FATAL("wait4 failed, %d:%s", errno, strerror(errno));
+        FM_LOG_FATAL("wait4 executor failed, %d:%s", errno, strerror(errno));
         exit(EXIT_JUDGE);
       }
 
@@ -435,8 +434,7 @@ bool judge( const char *input_file,
             result = oj_compare_output_spj( input_file,
                                             output_file_std,
                                             stdout_file_executive,
-                                            oj_solution.spj_exe_file,
-                                            oj_solution.stdout_file_spj);
+                                            oj_solution.spj_exe_file);
           }
           else {
             //compare file
@@ -721,8 +719,7 @@ int oj_compare_output_spj(
   const char *file_in,  //std input
   const char *file_std, //std output
   const char *file_exec, //user output
-  const char *spj_exec,  //path of spj
-  const char *file_spj)
+  const char *spj_exec)  //path of spj
 {
   FM_LOG_TRACE("start compare spj");
   pid_t pid_spj = fork();
@@ -733,8 +730,6 @@ int oj_compare_output_spj(
   }
   else if (pid_spj == 0) {
     log_add_info("spj");
-    stdin  = freopen(file_exec, "r", stdin);
-    stdout = freopen(file_spj,  "w", stdout);
     if (stdin == NULL || stdout == NULL) {
       FM_LOG_FATAL("failed to open files: stdin(%p), stdout(%p)", stdin, stdout);
       exit(EXIT_COMPARE_SPJ);
@@ -752,41 +747,21 @@ int oj_compare_output_spj(
     }
   }
   else {
-    if (wait4(pid_spj, &status, 0, NULL) < 0) {
-      FM_LOG_FATAL("wait4 failed, %d:%s", errno, strerror(errno));
+    if (waitpid(pid_spj, &status, WUNTRACED) < 0) {
+      FM_LOG_FATAL("waitpid for spj failed, %d:%s", errno, strerror(errno));
       exit(EXIT_COMPARE_SPJ);
     }
     if (WIFEXITED(status)) {
-      // exit successfully
-      if (WEXITSTATUS(status) == EXIT_SUCCESS) {
-        // return 0
-        FILE *fp = fopen(file_spj, "r");
-        if (fp == NULL) {
-          FM_LOG_FATAL("open stdout_file_spj failed");
-          exit(EXIT_COMPARE_SPJ);
-        }
-        char buff[20];
-        fscanf(fp, "%19s", buff);
-        FM_LOG_TRACE("spj result: %s", buff);
-        // TODO use return value as result?
-        if (strincmp(buff, "AC", 2) == 0) {
+      switch (WEXITSTATUS(status))
+      {
+        case SPJ_AC:
           return OJ_AC;
-        }
-        else if (strincmp(buff, "PE", 2) == 0) {
+        case SPJ_PE:
           return OJ_PE;
-        }
-        else if (strincmp(buff, "WA", 2) == 0) {
+        case SPJ_WA:
           return OJ_WA;
-        }
-        else {
-          FM_LOG_FATAL("unknown spj output");
-          exit(EXIT_COMPARE_SPJ);
-        }
-      }
-      else {
-        // return not 0
-        FM_LOG_FATAL("spj abnormal termination, "
-                       "exit code: %d", WEXITSTATUS(status));
+        default:
+          return OJ_SE;
       }
     }
     else if (WIFSIGNALED(status) && WTERMSIG(status) == SIGALRM) {

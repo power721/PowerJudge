@@ -3,7 +3,7 @@
 int main()
 {
 	int n;
-	int a, b;
+	int a;
 	while (~scanf("%d", &n))
 	{
 		for (a=2; ; ++a)

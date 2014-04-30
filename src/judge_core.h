@@ -77,6 +77,10 @@ char result_str[][10] = {
 
 #define GCC_COMPILE_ERROR      1
 
+#define SPJ_AC                 0
+#define SPJ_PE                 1
+#define SPJ_WA                 2
+
 // 程序语言
 #define LANG_UNKNOWN           0
 #define LANG_C                 1

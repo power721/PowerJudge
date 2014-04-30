@@ -76,8 +76,6 @@ struct oj_solution_t
   char data_dir[PATH_SIZE];
 
   char spj_exe_file[PATH_SIZE];
-
-  char stdout_file_spj[PATH_SIZE];
 }oj_solution;
 
 
@@ -98,8 +96,7 @@ int oj_compare_output_spj(
   const char *file_in,  //std input
   const char *file_std, //std output
   const char *file_exec, //user output
-  const char *spj_exec,  //path of spj
-  const char *file_spj);
+  const char *spj_exec);  //path of spj
 int oj_compare_output(const char *file_std, const char *file_exec);
 void output_result(int result, int time_usage, int memory_usage);
 
