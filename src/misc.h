@@ -1,5 +1,5 @@
-#ifndef __HELPER_H__
-#define __HELPER_H__
+#ifndef __MISC_H__
+#define __MISC_H__
 
 #include <ctype.h>
 #include "judge_core.h"
@@ -25,7 +25,8 @@ int max(int a, int b)
   return a > b ? a : b;
 }
 
-long file_size(const char *filename) {
+long file_size(const char *filename)
+{
   struct stat st; 
 
   if (stat(filename, &st) == 0)
@@ -107,12 +108,12 @@ void copy_shell_runtime(const char *work_dir)
   execute_cmd("/bin/mkdir %s/bin", work_dir);
   execute_cmd("/bin/cp /lib/* %s/lib/", work_dir);
   execute_cmd("/bin/cp -a /lib/i386-linux-gnu %s/lib/", work_dir);
-  #ifndef __i386
+#ifndef __i386
   execute_cmd("/bin/mkdir %s/lib64", work_dir);
   execute_cmd("/bin/cp -a /lib/x86_64-linux-gnu %s/lib/", work_dir);
   execute_cmd("/bin/cp /lib64/* %s/lib64/", work_dir);
   execute_cmd("/bin/cp -a /lib32 %s/", work_dir);
-  #endif
+#endif
   execute_cmd("/bin/cp /bin/busybox %s/bin/", work_dir);
   execute_cmd("/bin/ln -s /bin/busybox %s/bin/sh", work_dir);
   execute_cmd("/bin/cp /bin/bash %s/bin/bash", work_dir);
@@ -171,8 +172,9 @@ bool is_valid_syscall(int lang, int syscall_id)
     return false;
   }
   else if (syscalls[syscall_id] > 0) {
-    if (in_syscall == false)
+    if (in_syscall == false) {
       syscalls[syscall_id]--;
+    }
   }
   else {
     ;
@@ -180,4 +182,4 @@ bool is_valid_syscall(int lang, int syscall_id)
   return true;
 }
 
-#endif
+#endif /* __MISC_H__ */

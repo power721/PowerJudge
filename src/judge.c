@@ -591,13 +591,13 @@ void prepare_files( char *filename, int namelen,
 }
 
 void io_redirect( const char *input_file, 
-                  const char *stdout_file_executive, 
-                  const char *stderr_file_executive )
+                  const char *stdout_file, 
+                  const char *stderr_file )
 {
   //io_redirect
   stdin  = freopen(input_file, "r", stdin);
-  stdout = freopen(stdout_file_executive, "w", stdout);
-  stderr = freopen(stderr_file_executive, "w", stderr);
+  stdout = freopen(stdout_file, "w", stdout);
+  stderr = freopen(stderr_file, "w", stderr);
   if (stdin == NULL || stdout == NULL || stderr == NULL) {
     FM_LOG_FATAL("error freopen: stdin(%p) stdout(%p), stderr(%p)",
                    stdin, stdout, stderr);

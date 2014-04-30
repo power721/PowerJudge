@@ -63,7 +63,7 @@ int java_memory_factor          = 3;
 int python_time_factor          = 2;
 
 int python_memory_factor        = 2;
-// -- end of configruation --
+/* -- end of configruation -- */
 
 long page_size;
 
@@ -95,11 +95,11 @@ void parse_arguments(int argc, char *argv[]);
 void timeout_hander(int signo);
 void print_solution();
 void check_spj();
-void prepare_files(char *filename, int namelen, 
+void prepare_files(char *filen_ame, int namelen, 
                    char *infile, char *outfile, char *userfile);
 void io_redirect(const char *input_file, 
-                 const char *stdout_file_executive, 
-                 const char *stderr_file_executive);
+                 const char *stdout_file, 
+                 const char *stderr_file);
 void set_limit(int fsize);
 void set_compile_limit();
 void set_security_option();

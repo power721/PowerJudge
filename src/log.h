@@ -61,7 +61,7 @@ static char LOG_LEVEL_NOTE[][10] =
 #define FM_LOG_DEBUG(x...)   log_write(LOG_DEBUG, __FILE__, __LINE__, ##x)
 #define FM_LOG_TRACE(x...)   log_write(LOG_TRACE, __FILE__, __LINE__, ##x)
 #define FM_LOG_NOTICE(x...)  log_write(LOG_NOTICE, __FILE__, __LINE__, ##x)
-#define FM_LOG_MONITOR(x...)  log_write(LOG_MONITOR, __FILE__, __LINE__, ##x)
+#define FM_LOG_MONITOR(x...) log_write(LOG_MONITOR, __FILE__, __LINE__, ##x)
 #define FM_LOG_WARNING(x...) log_write(LOG_WARNING, __FILE__, __LINE__, ##x)
 #define FM_LOG_FATAL(x...)   log_write(LOG_FATAL, __FILE__, __LINE__, ##x)
 
@@ -86,9 +86,9 @@ int log_open(const char* filename)
   log_fp = fopen(log_filename, "a");
   if (log_fp == NULL)
   {
-      fprintf(stderr, "log_file: %s", log_filename);
-      perror("can't not open log file");
-      exit(1);
+    fprintf(stderr, "log_file: %s", log_filename);
+    perror("cannot open log file");
+    exit(1);
   }
 
   atexit(log_close);
@@ -118,7 +118,7 @@ void log_close()
 }
 
 static void log_write(int level, const char *file,
-        const int line, const char *fmt, ...)
+                      const int line, const char *fmt, ...)
 {
   if (LOG_LEVEL < level) return;
   if (log_opened == 0)
@@ -145,19 +145,18 @@ static void log_write(int level, const char *file,
 
   size_t count = snprintf(buffer, LOG_BUFFER_SIZE,
           "%s [%s] [#%d] [%s:%d]%s %s\n",
-          LOG_LEVEL_NOTE[level], datetime, getpid(), file, line, log_extra_info, log_buffer);
-  int log_fd = log_fp->_fileno;
+          LOG_LEVEL_NOTE[level], datetime, getpid(), 
+          file, line, log_extra_info, log_buffer);
 
+  int log_fd = log_fp->_fileno;
   if (flock(log_fd, LOCK_EX) == 0)
   {
-      if (level < LOG_MONITOR)
-        fprintf(stderr, "%s\n", log_buffer);
-      if (write(log_fd, buffer, count) < 0)
-      {
-        perror("write log error");
-        exit(1);
-      }
-      flock(log_fd, LOCK_UN);
+    if (write(log_fd, buffer, count) < 0)
+    {
+      perror("write log error");
+      exit(1);
+    }
+    flock(log_fd, LOCK_UN);
   }
   else
   {
@@ -172,4 +171,4 @@ void log_add_info(const char *info)
   snprintf(log_extra_info + len, LOG_BUFFER_SIZE - len, " [%s]", info);
 }
 
-#endif
+#endif /* __LOG_H__ */
