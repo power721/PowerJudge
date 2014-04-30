@@ -18,5 +18,6 @@ a.out
 
 bin/
 test/temp/
+spj
 *.log
 *.class

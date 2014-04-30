@@ -56,6 +56,7 @@ char result_str[][10] = {
 // 退出原因
 #define EXIT_OK                0
 #define EXIT_UNPRIVILEGED      1
+#define EXIT_CHDIR             2
 #define EXIT_BAD_PARAM         3
 #define EXIT_MISS_PARAM        4
 #define EXIT_VERY_FIRST        5

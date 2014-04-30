@@ -18,6 +18,7 @@ bin/%.o: src/%.c src/*.h
 
 .PHONY: test clean
 test:
+	g++ -o test/data/1405/spj test/data/1405/spj.cc
 	chmod a+x test/unitTest.sh
 	cd test && ./unitTest.sh
 

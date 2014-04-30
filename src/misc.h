@@ -87,10 +87,9 @@ void print_compiler(const char * options[])
   FM_LOG_TRACE(buff);
 }
 
-// copy from HUST
 int execute_cmd(const char * fmt, ...)
 {
-  char cmd[1024];
+  char cmd[BUFF_SIZE];
   int ret = 0;
   va_list ap;
 
@@ -101,7 +100,6 @@ int execute_cmd(const char * fmt, ...)
   return ret;
 }
 
-// copy from HUST and changed
 void copy_shell_runtime(const char * work_dir)
 {
   execute_cmd("/bin/mkdir %s/lib", work_dir);
@@ -119,7 +117,6 @@ void copy_shell_runtime(const char * work_dir)
   execute_cmd("/bin/cp /bin/bash %s/bin/bash", work_dir);
 }
 
-// copy from HUST and changed
 void copy_python_runtime(const char * work_dir)
 {
   copy_shell_runtime(work_dir);
@@ -131,7 +128,6 @@ void copy_python_runtime(const char * work_dir)
   execute_cmd("/bin/cp -a /usr/lib/libpython* %s/usr/lib/", work_dir);
 }
 
-// copy from HUST
 void clean_workdir(const char * work_dir)
 {
   execute_cmd("rm -Rf %s/lib", work_dir);
@@ -147,7 +143,7 @@ void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, con
 {
   FM_LOG_TRACE("make_diff_out");
   FILE *out;
-  char buf[256];
+  char buf[BUFF_SIZE];
   sprintf(buf, "%s/diff.out", work_dir);
   out = fopen(buf, "a+");
   fprintf(out, "=================%s\n", basename(path));

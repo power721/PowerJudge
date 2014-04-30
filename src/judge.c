@@ -17,11 +17,16 @@ int main(int argc, char *argv[], char *envp[])
   init();
 
   parse_arguments(argc, argv);
-  chdir(oj_solution.work_dir);
 
   if (geteuid() != 0) {
     FM_LOG_FATAL("please run as root, or set suid bit(chmod +4755)");
     exit(EXIT_UNPRIVILEGED);
+  }
+
+  if (EXIT_SUCCESS != chdir(oj_solution.work_dir)) {
+    FM_LOG_FATAL("chdir(%s) failed, %d: %s",
+                   oj_solution.work_dir, errno, strerror(errno));
+    exit(EXIT_SET_SECURITY);
   }
   FM_LOG_DEBUG("\n\x1b[31m----- Power Judge 1.0 -----\x1b[0m");
 
@@ -333,7 +338,8 @@ int run_solution()
 
     num_of_test++;
 
-    prepare_files(dirp->d_name, namelen, input_file, output_file_std, stdout_file_executive, stderr_file_executive);
+    prepare_files( dirp->d_name, namelen, input_file, output_file_std,
+                   stdout_file_executive, stderr_file_executive );
 
     FM_LOG_DEBUG("run case: %d", num_of_test);
     flag = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
@@ -347,7 +353,10 @@ int run_solution()
   return num_of_test;
 }
 
-bool judge(const char *input_file, const char *output_file_std, const char *stdout_file_executive, const char *stderr_file_executive)
+bool judge( const char *input_file, 
+            const char *output_file_std, 
+            const char *stdout_file_executive, 
+            const char *stderr_file_executive )
 {
   struct rusage rused;
   pid_t executor = fork();
@@ -388,17 +397,16 @@ bool judge(const char *input_file, const char *output_file_std, const char *stdo
     }
     // load program
     if (oj_solution.lang == LANG_JAVA) {
-      //execlp("java", "java", "-Xms256m", "-Xmx512m", "-Xss8m", "-Djava.security.manager", "-Djava.security.policy==../../java.policy", "Main", NULL);
-      execlp("java", "java", "-Djava.security.manager", "-Djava.security.policy=../java.policy", "-cp", "./", "Main", NULL);
+      execvp(EXEC_J[0], (char * const *)EXEC_J);
     }
     else if (oj_solution.lang == LANG_PYTHON) {
-      execl("python", "python", "Main.py", NULL); // execlp is incorrect
+      execv(EXEC_PY[0], (char * const *)EXEC_PY); // execvp is incorrect
     }
     else {
       execl("./Main", "Main", NULL);
     }
 
-    // execlp error
+    // exec error
     exit(EXIT_PRE_JUDGE_EXECLP);
   }
   else {
@@ -590,7 +598,9 @@ void prepare_files(char *filename, int namelen,
   FM_LOG_DEBUG("user output file: %s", userfile);
 }
 
-void io_redirect(const char *input_file, const char *stdout_file_executive, const char *stderr_file_executive)
+void io_redirect( const char *input_file, 
+                  const char *stdout_file_executive, 
+                  const char *stderr_file_executive )
 {
   //io_redirect
   stdin  = freopen(input_file, "r", stdin);
@@ -618,13 +628,13 @@ void set_limit(int fsize)
 
   if (oj_solution.lang <= LANG_PASCAL) {
     // Memory control
-    /*lim.rlim_max = (STD_MB << 6) + oj_solution.memory_limit * (STD_KB << 1);
+    lim.rlim_max = (STD_MB << 10) + oj_solution.memory_limit * STD_KB;
     lim.rlim_cur = lim.rlim_max;
     if (setrlimit(RLIMIT_AS, &lim) < 0)
     {
       FM_LOG_FATAL("setrlimit RLIMIT_AS failed");
       exit(EXIT_SET_LIMIT);
-    }*/
+    }
 
     // process control
     lim.rlim_max = 1;
@@ -665,19 +675,14 @@ void set_security_option()
     exit(EXIT_SET_SECURITY);
   }
 
-  //chdir + chroot
-  if (EXIT_SUCCESS != chdir(oj_solution.work_dir)) {
-    FM_LOG_FATAL("chdir(%s) failed, %d: %s",
-                   oj_solution.work_dir, errno, strerror(errno));
-    exit(EXIT_SET_SECURITY);
-  }
-
-  char cwd[1025], *tmp = getcwd(cwd, 1024);
-  if (tmp == NULL) {
-    FM_LOG_FATAL("getcwd failed, %d: %s", errno, strerror(errno));
-    exit(EXIT_SET_SECURITY);
-  }
   if(oj_solution.lang != LANG_JAVA) {
+    char cwd[PATH_SIZE], *tmp = getcwd(cwd, PATH_SIZE-1);
+    if (tmp == NULL) {
+      FM_LOG_FATAL("getcwd failed, %d: %s", errno, strerror(errno));
+      exit(EXIT_SET_SECURITY);
+    }
+    
+    // chroot, current directory will be the root dir
     if (EXIT_SUCCESS != chroot(cwd)) {
       FM_LOG_FATAL("chroot(%s) failed, %d: %s", cwd, errno, strerror(errno));
       exit(EXIT_SET_SECURITY);
@@ -685,14 +690,14 @@ void set_security_option()
   }
 
   /*if(oj_solution.lang != LANG_JAVA)*/ {
-    //setgid
+    // setgid
     if (EXIT_SUCCESS != setgid(nobody->pw_gid)) {
       FM_LOG_FATAL("setgid(%d) failed, %d: %s",
                     nobody->pw_gid, errno, strerror(errno));
       exit(EXIT_SET_SECURITY);
     }
 
-    //setuid
+    // setuid
     if (EXIT_SUCCESS != setuid(nobody->pw_uid)) {
       FM_LOG_FATAL("setuid(%d) failed, %d: %s",
                     nobody->pw_uid, errno, strerror(errno));
@@ -894,5 +899,6 @@ void output_result(int result, int time_usage, int memory_usage)
 {
   FM_LOG_TRACE("result(%d): %s, time: %d ms, memory: %d KB", 
     result, result_str[result], time_usage, memory_usage);
-  printf("%d %d %d\n", result, time_usage, memory_usage); // this is judge result for Web app
+  // this is judge result for Web app
+  printf("%d %d %d\n", result, time_usage, memory_usage);
 }

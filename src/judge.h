@@ -11,6 +11,10 @@ const char* CP_PAS[] = { "fpc", "Main.pas", "-O2", "-Co", "-Cr", "-Ct", "-Ci", N
 const char* CP_J[] = { "javac", "Main.java", "-encoding", "UTF-8", NULL };
 const char* CP_PY[] = { "python", "-c", "import py_compile;py_compile.compile(r'Main.py')", NULL };
 
+// "-Xms512m", "-Xmx512m", "-Xss256k"
+const char* EXEC_J[] = { "java", "-Djava.security.manager", 
+                         "-Djava.security.policy=../java.policy", "-cp", "./", "Main", NULL }; 
+const char* EXEC_PY[] = { "python", "Main.py", NULL };
 
 // 配置
 char log_file[PATH_SIZE];
@@ -90,7 +94,6 @@ void set_limit(int fsize);
 void set_compile_limit();
 void set_security_option();
 
-int strincmp(const char *s1, const char *s2, int n);
 int oj_compare_output_spj(
   const char *file_in,  //std input
   const char *file_std, //std output
@@ -98,13 +101,14 @@ int oj_compare_output_spj(
   const char *spj_exec,  //path of spj
   const char *file_spj);
 int oj_compare_output(const char *file_std, const char *file_exec);
-void copy_shell_runtime(const char *work_dir);
-void copy_python_runtime(const char *work_dir);
-void clean_workdir(const char *work_dir);
 void output_result(int result, int time_usage, int memory_usage);
 
 void compile();
 int run_solution();
-bool judge(const char *input_file, const char *output_file_std, const char *stdout_file_executive, const char *stderr_file_executive);
+bool judge(
+  const char *input_file, 
+  const char *output_file_std, 
+  const char *stdout_file_executive, 
+  const char *stderr_file_executive);
 
 #endif /* __JUDGE_H__ */
