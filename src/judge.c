@@ -138,11 +138,11 @@ void check_arguments()
 void print_solution()
 {
   FM_LOG_DEBUG("-- Solution Information --");
-  FM_LOG_DEBUG("solution id   %d", oj_solution.sid);
-  FM_LOG_DEBUG("problem id    %d", oj_solution.pid);
-  FM_LOG_DEBUG("language      %s", languages[oj_solution.lang]);
-  FM_LOG_DEBUG("time limit    %d ms", oj_solution.time_limit);
-  FM_LOG_DEBUG("memory limit  %d KB", oj_solution.memory_limit);
+  FM_LOG_MONITOR("solution id   %d", oj_solution.sid);
+  FM_LOG_TRACE("problem id    %d", oj_solution.pid);
+  FM_LOG_TRACE("language      %s", languages[oj_solution.lang]);
+  FM_LOG_TRACE("time limit    %d ms", oj_solution.time_limit);
+  FM_LOG_TRACE("memory limit  %d KB", oj_solution.memory_limit);
   FM_LOG_DEBUG("work dir      %s", oj_solution.work_dir);
   FM_LOG_DEBUG("data dir      %s", oj_solution.data_dir);
 }
@@ -214,7 +214,7 @@ void compile()
       FM_LOG_FATAL("waitpid for compiler failed");
       exit(EXIT_COMPILE_ERROR);
     }
-    FM_LOG_TRACE("compiler finished");
+    FM_LOG_DEBUG("compiler finished");
 
     if (oj_solution.lang == LANG_PYTHON && file_size(stderr_compiler) > 0) {
       FM_LOG_TRACE("compile error");
@@ -224,7 +224,7 @@ void compile()
 
     if (WIFEXITED(status)) { // normal termination
       if (EXIT_SUCCESS == WEXITSTATUS(status)) {
-        FM_LOG_TRACE("compile succeeded");
+        FM_LOG_DEBUG("compile succeeded");
       }
       else if (GCC_COMPILE_ERROR == WEXITSTATUS(status)) {
         FM_LOG_TRACE("compile error");
@@ -245,10 +245,10 @@ void compile()
         exit(EXIT_OK);
       }
       else if (WIFSTOPPED(status)) { // stopped by signal
-        FM_LOG_WARNING("stopped by signal %d\n", WSTOPSIG(status));
+        FM_LOG_FATAL("stopped by signal %d\n", WSTOPSIG(status));
       }
       else {
-        FM_LOG_WARNING("unknown stop reason, status(%d)", status);
+        FM_LOG_FATAL("unknown stop reason, status(%d)", status);
       }
       exit(EXIT_COMPILE_ERROR);
     }
@@ -281,11 +281,11 @@ void set_compile_limit()
   lim.rlim_cur = lim.rlim_max = fsize;
   if (setrlimit(RLIMIT_FSIZE, &lim) < 0)
   {
-    FM_LOG_WARNING("setrlimit RLIMIT_FSIZE failed");
+    FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed");
     exit(EXIT_SET_LIMIT);
   }
 
-  FM_LOG_TRACE("set compile limit ok");
+  FM_LOG_DEBUG("set compile limit ok");
 }
 
 int run_solution()
@@ -309,19 +309,19 @@ int run_solution()
   char output_file_std[PATH_SIZE];
   char stdout_file_executive[PATH_SIZE];
   char stderr_file_executive[PATH_SIZE];
+  sprintf(stderr_file_executive, "%s/stderr_executive.txt", oj_solution.work_dir);
 
-  FM_LOG_TRACE("start run solution");
+  FM_LOG_DEBUG("start run solution");
   while (flag && (dirp = readdir(dp)) != NULL) {
     int namelen = isInFile(dirp->d_name); // check if the file is *.in
     if (namelen == 0)
       continue;
 
     // TODO check if the out file is here
-    prepare_files( dirp->d_name, namelen, input_file, output_file_std,
-                   stdout_file_executive, stderr_file_executive );
+    prepare_files( dirp->d_name, namelen, input_file, output_file_std, stdout_file_executive);
 
     num_of_test++;
-    FM_LOG_DEBUG("run case: %d", num_of_test);
+    FM_LOG_TRACE("run case: %d", num_of_test);
 
     flag = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
   }
@@ -434,12 +434,12 @@ bool judge( const char *input_file,
           else /* (oj_solution.result == OJ_PE) */ {
             oj_solution.result = OJ_PE;
           }
-          FM_LOG_TRACE("case result: %d, problem result: %d",
+          FM_LOG_NOTICE("case result: %d, problem result: %d",
                         result, oj_solution.result);
         }
         else {
           // not return 0
-          FM_LOG_TRACE("abnormal quit, exit_code: %d", WEXITSTATUS(status));
+          FM_LOG_NOTICE("abnormal quit, exit_code: %d", WEXITSTATUS(status));
           oj_solution.result = OJ_RE;
         }
         break;
@@ -451,11 +451,11 @@ bool judge( const char *input_file,
         int signo = 0;
         if (WIFSIGNALED(status)) {
           signo = WTERMSIG(status);
-          FM_LOG_TRACE("child signaled by %d, %s", signo, strsignal(signo));
+          FM_LOG_NOTICE("child signaled by %d, %s", signo, strsignal(signo));
         }
         else {
           signo = WSTOPSIG(status);
-          FM_LOG_TRACE("child stopped by %d, %s", signo, strsignal(signo));
+          FM_LOG_NOTICE("child stopped by %d, %s", signo, strsignal(signo));
         }
         switch (signo)
         {
@@ -491,6 +491,7 @@ bool judge( const char *input_file,
               break;
           default:
               oj_solution.result = OJ_RE;
+              FM_LOG_TRACE("Runtime Error");
               fprintf(stderr, "Other Exception: %s\n", strsignal(signo));
               break;
         } // end of swtich
@@ -505,7 +506,7 @@ bool judge( const char *input_file,
       //FM_LOG_DEBUG("memory_usage: %d %d %d", oj_solution.memory_usage, rused.ru_minflt, page_size / STD_KB);
       if (oj_solution.memory_usage > oj_solution.memory_limit) {
         oj_solution.result = OJ_MLE;
-        FM_LOG_TRACE("memory limit exceeded: %d (fault: %d * %d)",
+        FM_LOG_NOTICE("memory limit exceeded: %d (fault: %d * %d)",
                 oj_solution.memory_usage, rused.ru_minflt, page_size);
         ptrace(PTRACE_KILL, executor, NULL, NULL);
         break;
@@ -523,7 +524,7 @@ bool judge( const char *input_file,
       syscall_id = regs.orig_rax;
 #endif
       if (syscall_id > 0 && !is_valid_syscall(oj_solution.lang, syscall_id)) {
-        FM_LOG_TRACE("restricted function, syscall_id: %d", syscall_id);
+        FM_LOG_NOTICE("restricted function, syscall_id: %d", syscall_id);
         oj_solution.result = OJ_RF;
         ptrace(PTRACE_KILL, executor, NULL, NULL);
         break;
@@ -537,7 +538,7 @@ bool judge( const char *input_file,
   } // end of fork for judge process
 
   if ( oj_solution.lang == LANG_PYTHON && file_size(stderr_file_executive)) {
-    FM_LOG_TRACE("runtime error");
+    FM_LOG_TRACE("Runtime Error");
     oj_solution.result = OJ_RE;
   }
 
@@ -545,12 +546,13 @@ bool judge( const char *input_file,
                               rused.ru_utime.tv_usec / 1000 );
 
   if (oj_solution.time_usage > oj_solution.time_limit) {
+    FM_LOG_TRACE("Time Limit Exceeded");
     oj_solution.result = OJ_TLE;
   }
 
   if (oj_solution.result != OJ_AC &&
       oj_solution.result != OJ_PE) {
-    FM_LOG_TRACE("not AC/PE, no need to continue");
+    FM_LOG_NOTICE("not AC/PE, no need to continue");
     if (oj_solution.result == OJ_TLE) {
       oj_solution.time_usage = oj_solution.time_limit;
     }
@@ -568,13 +570,12 @@ void check_spj()
   if (access( oj_solution.spj_exe_file, F_OK ) != -1) {
     // spj file exists
     oj_solution.spj = true;
-    FM_LOG_TRACE("Special Judged");
+    FM_LOG_MONITOR("Special Judged");
   }
 }
 
 void prepare_files( char *filename, int namelen, 
-                    char *infile, char *outfile, 
-                    char *userfile, char *errfile )
+                    char *infile, char *outfile, char *userfile)
 {
   char fname[PATH_SIZE];
   strncpy(fname, filename, namelen);
@@ -583,7 +584,6 @@ void prepare_files( char *filename, int namelen,
   sprintf(infile, "%s/%s.in", oj_solution.data_dir, fname);
   sprintf(outfile, "%s/%s.out", oj_solution.data_dir, fname);
   sprintf(userfile, "%s/%s.out", oj_solution.work_dir, fname);
-  sprintf(errfile, "%s/stderr_executive.txt", oj_solution.work_dir);
 
   FM_LOG_DEBUG("std  input  file: %s", infile);
   FM_LOG_DEBUG("std  output file: %s", outfile);
@@ -891,7 +891,7 @@ void fix_java_result(const char *stdout_file, const char *stderr_file)
 //Output result
 void output_result(int result, int time_usage, int memory_usage)
 {
-  FM_LOG_TRACE("result(%d): %s, time: %d ms, memory: %d KB", 
+  FM_LOG_MONITOR("result(%d): %s, time: %d ms, memory: %d KB", 
     result, result_str[result], time_usage, memory_usage);
   // this is judge result for Web app
   printf("%d %d %d\n", result, time_usage, memory_usage);

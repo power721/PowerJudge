@@ -40,6 +40,10 @@
 #include <error.h>
 #include <sys/file.h>
 
+#ifndef LOG_LEVEL
+#define LOG_LEVEL LOG_DEBUG
+#endif
+
 int log_open(const char *filename);
 void log_close();
 static void log_write(int, const char *, const int, const char *, ...);
@@ -57,7 +61,7 @@ static char LOG_LEVEL_NOTE[][10] =
 #define FM_LOG_DEBUG(x...)   log_write(LOG_DEBUG, __FILE__, __LINE__, ##x)
 #define FM_LOG_TRACE(x...)   log_write(LOG_TRACE, __FILE__, __LINE__, ##x)
 #define FM_LOG_NOTICE(x...)  log_write(LOG_NOTICE, __FILE__, __LINE__, ##x)
-#define FM_LOG_MONITOR(x...) log_write(LOG_MONITOR, __FILE__ __LINE__, ##x)
+#define FM_LOG_MONITOR(x...)  log_write(LOG_MONITOR, __FILE__, __LINE__, ##x)
 #define FM_LOG_WARNING(x...) log_write(LOG_WARNING, __FILE__, __LINE__, ##x)
 #define FM_LOG_FATAL(x...)   log_write(LOG_FATAL, __FILE__, __LINE__, ##x)
 
@@ -90,7 +94,7 @@ int log_open(const char* filename)
   atexit(log_close);
   log_opened = 1;
   log_extra_info[0] = 0;
-  FM_LOG_NOTICE("log_open");
+  FM_LOG_TRACE("log_open");
   return 1;
 }
 
@@ -116,6 +120,7 @@ void log_close()
 static void log_write(int level, const char *file,
         const int line, const char *fmt, ...)
 {
+  if (LOG_LEVEL < level) return;
   if (log_opened == 0)
   {
     fprintf(stderr, "log_open not called yet!\n");

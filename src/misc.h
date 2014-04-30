@@ -86,7 +86,7 @@ void print_compiler(const char *options[])
     strcat(buff, options[i++]);
     strcat(buff, " ");
   }
-  FM_LOG_TRACE(buff);
+  FM_LOG_DEBUG(buff);
 }
 
 int execute_cmd(const char *fmt, ...)
@@ -142,7 +142,7 @@ void clean_workdir(const char *work_dir)
 // not very helpful, should diff line by line and give line number
 void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path)
 {
-  FM_LOG_TRACE("make_diff_out");
+  FM_LOG_DEBUG("make_diff_out");
   FILE *out;
   char buf[BUFF_SIZE];
   sprintf(buf, "%s/diff.out", work_dir);

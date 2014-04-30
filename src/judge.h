@@ -96,8 +96,7 @@ void timeout_hander(int signo);
 void print_solution();
 void check_spj();
 void prepare_files(char *filename, int namelen, 
-                   char *infile, char *outfile, 
-                   char *userfile, char *errfile);
+                   char *infile, char *outfile, char *userfile);
 void io_redirect(const char *input_file, 
                  const char *stdout_file_executive, 
                  const char *stderr_file_executive);
