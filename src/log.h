@@ -99,11 +99,12 @@ void log_close()
 {
   if (log_opened)
   {
+    char buff[256];
     char buf[128] = "log_close\n";
     if (!log_extra_info[0]) {
-      sprintf(buf, "%s%s", buf, "--------------------------------------------------------------------------------\n");
+      sprintf(buff, "%s%s", buf, "--------------------------------------------------------------------------------\n");
     }
-    FM_LOG_TRACE(buf);
+    FM_LOG_TRACE(buff);
     fclose(log_fp);
     free(log_filename);
     log_fp       = NULL;
@@ -126,10 +127,10 @@ static void log_write(int level, const char *file,
   struct timeval tv;
   now = time(NULL);
 
-  strftime(datetime, 99, "%Y-%m-%d %H:%M:%S", localtime(&now));
+  strftime(buffer, 99, "%Y-%m-%d %H:%M:%S", localtime(&now));
   if (gettimeofday(&tv, NULL) == 0)
   {
-    sprintf(datetime, "%s.%06ld", datetime, tv.tv_usec);
+    sprintf(datetime, "%s.%06ld", buffer, tv.tv_usec);
   }
 
   va_list ap;

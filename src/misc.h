@@ -83,7 +83,8 @@ void print_compiler(const char *options[])
   int i = 0;
   char buff[BUFF_SIZE] = {0};
   while (options[i] != NULL) {
-    sprintf(buff, "%s %s", buff, options[i++]);
+    strcat(buff, options[i++]);
+    strcat(buff, " ");
   }
   FM_LOG_TRACE(buff);
 }

@@ -331,6 +331,7 @@ int run_solution()
   }
     
   output_result(oj_solution.result, oj_solution.time_usage, oj_solution.memory_usage);
+  closedir(dp);
   return num_of_test;
 }
 
