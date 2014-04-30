@@ -65,7 +65,7 @@ int python_time_factor          = 2;
 int python_memory_factor        = 2;
 // -- end of configruation --
 
-long page_size                  = 4096;
+long page_size;
 
 struct oj_solution_t
 {

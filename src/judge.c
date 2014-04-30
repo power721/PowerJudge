@@ -643,7 +643,7 @@ void set_limit(int fsize)
   }
 
   // Output file size limit
-  lim.rlim_cur = lim.rlim_max = fsize + (fsize >> 3) + STD_MB;
+  lim.rlim_cur = lim.rlim_max = fsize + (fsize >> 3) + (STD_MB << 3);
   if (setrlimit(RLIMIT_FSIZE, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed");
     exit(EXIT_SET_LIMIT);
