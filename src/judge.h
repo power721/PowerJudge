@@ -113,6 +113,7 @@ int oj_compare_output_spj(const char *file_in,  //std input
                           const char *file_exec, //user output
                           const char *spj_exec);  //path of spj
 int oj_compare_output(const char *file_std, const char *file_exec);
+void fix_java_result(const char *stdout_file, const char *stderr_file);
 void output_result(int result, int time_usage, int memory_usage);
 
 void compile();

@@ -543,7 +543,7 @@ bool judge( const char *input_file,
   oj_solution.time_usage += ( rused.ru_utime.tv_sec * 1000 +
                               rused.ru_utime.tv_usec / 1000 );
 
-  if(oj_solution.time_usage > oj_solution.time_limit) {
+  if (oj_solution.time_usage > oj_solution.time_limit) {
     oj_solution.result = OJ_TLE;
   }
 
@@ -552,6 +552,9 @@ bool judge( const char *input_file,
     FM_LOG_TRACE("not AC/PE, no need to continue");
     if (oj_solution.result == OJ_TLE) {
       oj_solution.time_usage = oj_solution.time_limit;
+    }
+    if (oj_solution.lang == LANG_JAVA) {
+      fix_java_result(stdout_file_executive, stderr_file_executive);
     }
     return false;
   }
@@ -657,7 +660,7 @@ void set_security_option()
     exit(EXIT_SET_SECURITY);
   }
 
-  if(oj_solution.lang != LANG_JAVA) {
+  if (oj_solution.lang != LANG_JAVA) {
     char cwd[PATH_SIZE], *tmp = getcwd(cwd, PATH_SIZE-1);
     if (tmp == NULL) {
       FM_LOG_FATAL("getcwd failed, %d: %s", errno, strerror(errno));
@@ -671,7 +674,7 @@ void set_security_option()
     }
   }
 
-  /*if(oj_solution.lang != LANG_JAVA)*/ {
+  /*if (oj_solution.lang != LANG_JAVA)*/ {
     // setgid, must before setuid
     if (EXIT_SUCCESS != setgid(nobody->pw_gid)) {
       FM_LOG_FATAL("setgid(%d) failed, %d: %s",
@@ -766,7 +769,7 @@ int oj_compare_output(const char *file_std, const char *file_exec)
     FM_LOG_FATAL("open standard output failed: %s", file_std);
     exit(EXIT_COMPARE);
   }
-  
+
   FILE *fp_exe = fopen(file_exec, "r");
   if (fp_exe == NULL) {
     FM_LOG_FATAL("open user output failed: %s", file_exec);
@@ -781,8 +784,8 @@ int oj_compare_output(const char *file_std, const char *file_exec)
   } status = AC;
 
   while (true) {
-    while((a = fgetc(fp_std)) == '\r'); // \r, \n ??
-    while((b = fgetc(fp_exe)) == '\r');
+    while ((a = fgetc(fp_std)) == '\r'); // \r, \n ??
+    while ((b = fgetc(fp_exe)) == '\r');
     Na++, Nb++;
 
     // deal with '\r' and '\n'
@@ -853,6 +856,39 @@ int oj_compare_output(const char *file_std, const char *file_exec)
   FM_LOG_TRACE("compare finished, result = %s",
                status == AC ? "AC" : (status == PE ? "PE" : "WA"));
   return status;
+}
+
+void fix_java_result(const char *stdout_file, const char *stderr_file)
+{
+  if (oj_solution.result == OJ_RE || oj_solution.result == OJ_MLE) {
+    return;
+  }
+
+  int comp_res = execute_cmd("/bin/grep 'java.lang.OutOfMemoryError' %s", stderr_file);
+  if (!comp_res) {
+    oj_solution.result = OJ_MLE;
+    oj_solution.memory_usage = oj_solution.memory_limit * STD_KB;
+    return;
+  }
+
+  comp_res = execute_cmd("/bin/grep 'java.lang.OutOfMemoryError' %s", stdout_file);
+  if (!comp_res) {
+    oj_solution.result = OJ_MLE;
+    oj_solution.memory_usage = oj_solution.memory_limit * STD_KB;
+    return;
+  }
+
+  comp_res = execute_cmd("/bin/grep 'Exception' %s", stderr_file);
+  if (!comp_res) {
+    oj_solution.result = OJ_RE;
+    return;
+  }
+
+  comp_res = execute_cmd("/bin/grep 'Could not create' %s", stderr_file);
+  if (!comp_res) {
+    oj_solution.result = OJ_RE;
+    return;
+  }
 }
 
 //Output result
