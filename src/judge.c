@@ -747,19 +747,19 @@ int oj_compare_output_spj(
         case SPJ_WA:
           return OJ_WA;
         default:
-          return OJ_SE;
+          return OJ_VE;
       }
     }
     else if (WIFSIGNALED(status) && WTERMSIG(status) == SIGALRM) {
       // recv SIGNALRM
-      FM_LOG_FATAL("spj: time out");
+      LOG_WARNING("spj: time out");
     }
     else {
       // spj RE
-      FM_LOG_FATAL("unkown termination, status = %d", status);
+      LOG_WARNING("unkown termination, status = %d", status);
     }
   }
-  exit(EXIT_COMPARE_SPJ);
+  return OJ_VE;
 }
 
 int oj_compare_output(const char *file_out, const char *file_user)
