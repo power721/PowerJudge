@@ -553,7 +553,7 @@ bool judge( const char *input_file,
     if (oj_solution.result == OJ_TLE) {
       oj_solution.time_usage = oj_solution.time_limit;
     }
-    if (oj_solution.lang == LANG_JAVA) {
+    if (oj_solution.lang == LANG_JAVA && oj_solution.result == OJ_WA) {
       fix_java_result(stdout_file_executive, stderr_file_executive);
     }
     return false;
@@ -860,10 +860,6 @@ int oj_compare_output(const char *file_std, const char *file_exec)
 
 void fix_java_result(const char *stdout_file, const char *stderr_file)
 {
-  if (oj_solution.result == OJ_RE || oj_solution.result == OJ_MLE) {
-    return;
-  }
-
   int comp_res = execute_cmd("/bin/grep 'java.lang.OutOfMemoryError' %s", stderr_file);
   if (!comp_res) {
     oj_solution.result = OJ_MLE;
