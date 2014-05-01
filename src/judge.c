@@ -304,6 +304,7 @@ void run_solution()
   check_spj();
 
   bool flag = true;
+  int first_failed_test = 0;
   int num_of_test = 0;
   char input_file[PATH_SIZE];
   char output_file_std[PATH_SIZE];
@@ -324,13 +325,16 @@ void run_solution()
     FM_LOG_TRACE("run case: %d", num_of_test);
 
     flag = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
+    if (!first_failed_test && oj_solution.result != OJ_AC) {
+      first_failed_test = num_of_test; // this is not usefull, need remove
+    }
   }
 
   if ( oj_solution.lang == LANG_PYTHON) {
     clean_workdir(oj_solution.work_dir);
   }
     
-  output_result(oj_solution.result, oj_solution.time_usage, oj_solution.memory_usage, num_of_test);
+  output_result(oj_solution.result, oj_solution.time_usage, oj_solution.memory_usage, first_failed_test);
   closedir(dp);
 }
 
