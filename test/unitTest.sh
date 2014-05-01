@@ -65,8 +65,8 @@ function init()
   mkdir temp/14054
   cp code/1405/1405_WA.cc temp/14054/Main.cc
 
-  #mkdir temp/10009
-  #cp code/1000/1000_AC.cpp temp/10009/Main.cc
+  mkdir temp/10009
+  cp code/1000/1000_AC.cpp temp/10009/Main.cc
 
   mkdir temp/1002
   cp code/1000/1000_AC.cpp temp/1002/Main.cc
@@ -118,7 +118,7 @@ runTest 5 "RE"  "../bin/powerjudge -s 10005 -p 1000 -D ./data -d ./temp -t 1000 
 runTest 6 "OLE" "../bin/powerjudge -s 10006 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 runTest 7 "CE"  "../bin/powerjudge -s 10007 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 runTest 8 "RF"  "../bin/powerjudge -s 10008 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
-#runTest 9 "SE"  "../bin/powerjudge -s 10009 -p 1001 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
+runTest 9 "SE"  "../bin/powerjudge -s 10009 -p 1001 -D /.data -d ./temp -t 1000 -m 65535 -l 2"
 runTest 0 "Pascal AC" "../bin/powerjudge -s 1003 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 3"
 runTest 0 "Java AC"   "../bin/powerjudge -s 1004 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
 runTest 0 "Python AC" "../bin/powerjudge -s 1005 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"

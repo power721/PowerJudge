@@ -66,13 +66,19 @@ void parse_arguments(int argc, char *argv[])
         oj_solution.memory_limit      = atoi(optarg);
         break;
       case 'd': // Work directory
-        realpath(optarg, work_dir_root);
+        if (realpath(optarg, work_dir_root) == NULL) {
+          fprintf(stderr, "resolve work dir failed:%s\n", strerror(errno));
+          exit(EXIT_BAD_PARAM);
+        }
         break;
       case 'D': // Data directory
-        realpath(optarg, data_dir_root);
+        if (realpath(optarg, data_dir_root) == NULL) {
+          fprintf(stderr, "resolve data dir failed: %s\n", strerror(errno));
+          exit(EXIT_BAD_PARAM);
+        }
         break;
       default:
-        fprintf(stderr, "unknown option provided: -%c %s", opt, optarg);
+        fprintf(stderr, "unknown option provided: -%c %s\n", opt, optarg);
         exit(EXIT_BAD_PARAM);
       }
   }

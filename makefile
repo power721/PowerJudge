@@ -10,17 +10,19 @@ $(TARGET): $(OBJECTS)
 	$(LD) $(OBJECTS) -o $@ $(LDFLAGS)
 	sudo chown root:root $(TARGET)
 	sudo chmod 4755 $(TARGET)
-	sudo cp $(TARGET) /usr/local/bin/
-	sudo chmod 4755 /usr/local/bin/powerjudge
 
 bin/%.o: src/%.c src/*.h
 	$(CXX) $< -c -o $@ $(CXXFLAGS)
 
-.PHONY: test clean
+.PHONY: test install clean
 test:
 	g++ -o test/data/1405/spj test/data/1405/spj.cc
 	chmod a+x test/unitTest.sh
 	cd test && ./unitTest.sh
+
+install:
+	sudo cp $(TARGET) /usr/local/bin/
+	sudo chmod 4755 /usr/local/bin/powerjudge
 
 clean:
 	sudo rm -f bin/judge.o bin/powerjudge

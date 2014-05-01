@@ -9,7 +9,6 @@
 int max(int a, int b);
 long file_size(const char *filename);
 int isInFile(const char *filename);
-int strincmp(const char *s1, const char *s2, int n);
 int malarm(int which, int milliseconds);
 void print_compiler(const char * options[]);
 int execute_cmd(const char *format, ...);
@@ -45,27 +44,6 @@ int isInFile(const char *filename)
   else {
     return len - 3;
   }
-}
-
-// copied from
-// http://csourcesearch.net/c/fid471AEC75A44B4EB7F79BAB9F1C5DE7CA616177E5.aspx
-int strincmp(const char *s1, const char *s2, int n)
-{
-  /* case insensitive comparison */
-  int d;
-  while (--n >= 0) {
-#ifdef ASCII_CTYPE
-    if (!isascii(*s1) || !isascii(*s2))
-      d = *s1 - *s2;
-    else
-#endif
-      d = (tolower((unsigned char)*s1) - tolower((unsigned char)*s2));
-    if ( d != 0 || *s1 == '\0' || *s2 == '\0' )
-      return d;
-    ++s1;
-    ++s2;
-  }
-  return 0;
 }
 
 //a simpler interface for setitimer
