@@ -300,6 +300,8 @@ void run_solution()
     copy_python_runtime(oj_solution.work_dir);
   }
 
+  check_spj();
+
   struct dirent **namelist;
   int num_of_test;
 
@@ -308,8 +310,6 @@ void run_solution()
     FM_LOG_FATAL("scan data directory failed");
     exit(EXIT_PRE_JUDGE_DAA);
   }
-
-  check_spj();
 
   bool flag = true;
   int first_failed_test = 0;
@@ -587,6 +587,9 @@ int data_filter(const struct dirent *dirp)
   int namelen = isInFile(dirp->d_name); // check if the file is *.in
   if (namelen == 0)
     return 0;
+
+  if (oj_solution.spj)
+    return 1;
   
   char fname[PATH_SIZE];
   char outfile[PATH_SIZE];
