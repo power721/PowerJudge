@@ -1,23 +1,25 @@
 #PowerJudge
-<p>Judge Core for PowerOJ on Linux platform.</p>
-<p>Based on UESTC and HUST judge core.</p>
+Judge Core for PowerOJ on Linux platform.
+
+Based on UESTC and HUST judge core.
 
 ## Description:
-<p>auto get data files from data directory.</p>
-<p>judge_fast doesn't use ptrace and no RF result, use chroot and setuid for permission control. </p>
+auto get data files from data directory.
+
+judge_fast doesn't use ptrace and no RF result, use chroot and setuid for permission control. 
 
 
-## Build:
+##Build:
     make
 
     make -e FAST_JUDGE=1 -e LOG_LEVEL=LOG_NOTICE
 
 
-## Test:
+##Test:
     make test
 
 
-## Install:
+##Install:
     make install
 
 
