@@ -218,7 +218,7 @@ void compile()
 
     if (oj_solution.lang == LANG_PYTHON && file_size(stderr_compiler) > 0) {
       FM_LOG_TRACE("compile error");
-      output_result(OJ_CE, 0, 0);
+      output_result(OJ_CE, 0, 0, 0);
       exit(EXIT_OK);
     }
 
@@ -228,7 +228,7 @@ void compile()
       }
       else if (GCC_COMPILE_ERROR == WEXITSTATUS(status)) {
         FM_LOG_TRACE("compile error");
-        output_result(OJ_CE, 0, 0);
+        output_result(OJ_CE, 0, 0, 0);
         exit(EXIT_OK);
       }
       else {
@@ -239,7 +239,7 @@ void compile()
     else {
       if (WIFSIGNALED(status)) { // killed by signal
         FM_LOG_WARNING("compiler limit exceeded");
-        output_result(OJ_CE, 0, 0);
+        output_result(OJ_CE, 0, 0, 0);
         stderr = freopen(stderr_compiler, "a", stderr);
         fprintf(stderr, "Compiler Limit Exceeded\n"); // why ??
         exit(EXIT_OK);
@@ -288,7 +288,7 @@ void set_compile_limit()
   FM_LOG_DEBUG("set compile limit ok");
 }
 
-int run_solution()
+void run_solution()
 {
   if (oj_solution.lang == LANG_PYTHON) {
     copy_python_runtime(oj_solution.work_dir);
@@ -330,9 +330,8 @@ int run_solution()
     clean_workdir(oj_solution.work_dir);
   }
     
-  output_result(oj_solution.result, oj_solution.time_usage, oj_solution.memory_usage);
+  output_result(oj_solution.result, oj_solution.time_usage, oj_solution.memory_usage, num_of_test);
   closedir(dp);
-  return num_of_test;
 }
 
 bool judge( const char *input_file, 
@@ -891,10 +890,10 @@ void fix_java_result(const char *stdout_file, const char *stderr_file)
 }
 
 //Output result
-void output_result(int result, int time_usage, int memory_usage)
+void output_result(int result, int time_usage, int memory_usage, int test)
 {
   FM_LOG_MONITOR("result(%d): %s, time: %d ms, memory: %d KB", 
     result, result_str[result], time_usage, memory_usage);
   // this is judge result for Web app
-  printf("%d %d %d\n", result, time_usage, memory_usage);
+  printf("%d %d %d %d\n", result, time_usage, memory_usage, test);
 }

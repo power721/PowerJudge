@@ -110,10 +110,10 @@ int oj_compare_output_spj(const char *file_in,  //std input
                           const char *spj_exec);  //path of spj
 int oj_compare_output(const char *file_out, const char *file_user);
 void fix_java_result(const char *stdout_file, const char *stderr_file);
-void output_result(int result, int time_usage, int memory_usage);
+void output_result(int result, int time_usage, int memory_usage, int test);
 
 void compile();
-int run_solution();
+void run_solution();
 bool judge(const char *input_file, 
            const char *output_file_std, 
            const char *stdout_file_executive, 
