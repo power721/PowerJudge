@@ -103,12 +103,11 @@ void log_close()
 {
   if (log_opened)
   {
-    char buff[256];
-    char buf[128] = "log_close\n";
+    char buf[256] = "log_close\n";
     if (!log_extra_info[0]) {
-      sprintf(buff, "%s%s", buf, "--------------------------------------------------------------------------------\n");
+      strcat(buf, "--------------------------------------------------------------------------------\n");
     }
-    FM_LOG_TRACE(buff);
+    FM_LOG_TRACE(buf);
     fclose(log_fp);
     free(log_filename);
     log_fp       = NULL;

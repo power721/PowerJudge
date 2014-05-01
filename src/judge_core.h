@@ -26,6 +26,7 @@
 #define OJ_SE       9
 #define OJ_VE       10
 #define OJ_WAIT     11
+#define OJ_RUN      12
 
 char result_str[][10] = {
   "AC",

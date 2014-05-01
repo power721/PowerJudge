@@ -100,7 +100,7 @@ void prepare_files(char *filen_ame, int namelen,
 void io_redirect(const char *input_file, 
                  const char *stdout_file, 
                  const char *stderr_file);
-void set_limit(int fsize);
+void set_limit(long fsize);
 void set_compile_limit();
 void set_security_option();
 

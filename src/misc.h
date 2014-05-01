@@ -29,8 +29,10 @@ long file_size(const char *filename)
 {
   struct stat st; 
 
-  if (stat(filename, &st) == 0)
-    return (long)st.st_size;
+  if (!stat(filename, &st)) {
+    return st.st_size;
+  }
+  
   return 0; 
 }
 

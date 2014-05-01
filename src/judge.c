@@ -56,14 +56,14 @@ void parse_arguments(int argc, char *argv[])
       case 'p': // Problem ID
         oj_solution.pid               = atoi(optarg);
         break;
+      case 'l': // Language ID
+        oj_solution.lang              = atoi(optarg);
+        break;
       case 't': // Time limit
         oj_solution.time_limit        = atoi(optarg);
         break;
       case 'm': // Memory limit
         oj_solution.memory_limit      = atoi(optarg);
-        break;
-      case 'l': // Language ID
-        oj_solution.lang              = atoi(optarg);
         break;
       case 'd': // Work directory
         realpath(optarg, work_dir_root);
@@ -350,6 +350,7 @@ bool judge( const char *input_file,
   else if (executor == 0) { // child process
     log_add_info("executor");
 
+    long fsize = file_size(output_file_std);
     // io redirect
     io_redirect(input_file, stdout_file_executive, stderr_file_executive);
 
@@ -357,7 +358,7 @@ bool judge( const char *input_file,
     set_security_option();
 
     // set memory, time and file size limit etc.
-    set_limit(file_size(output_file_std));
+    set_limit(fsize); // must after set_security_option()
 
     FM_LOG_DEBUG("time limit: %d, time usage: %d, time limit addtion: %d",
             oj_solution.time_limit, oj_solution.time_usage,
@@ -606,7 +607,7 @@ void io_redirect( const char *input_file,
   FM_LOG_TRACE("io redirect ok!");
 }
 
-void set_limit(int fsize)
+void set_limit(long fsize)
 {
   rlimit lim;
 
@@ -649,6 +650,7 @@ void set_limit(int fsize)
     FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed");
     exit(EXIT_SET_LIMIT);
   }
+  FM_LOG_DEBUG("File size limit: %d", lim.rlim_max);
 
   FM_LOG_TRACE("set execute limit ok");
 }
