@@ -138,7 +138,7 @@ runTest 7 "Python CE" "../bin/powerjudge -s 10027 -p 1000 -D ./data -d ./temp -t
 
 # test int64
 runTest 0 "long long" "../bin/powerjudge -s 640 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
-runTest 0 "__int64"   "../bin/powerjudge -s 641 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
+runTest 7 "__int64"   "../bin/powerjudge -s 641 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 
 # test spj
 runTest 0 "SPJ AC" "../bin/powerjudge -s 14050 -p 1405 -D ./data -d ./temp -t 1000 -m 65535 -l 2"

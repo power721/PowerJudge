@@ -311,8 +311,7 @@ int init_syscalls(int lang)
 {
   int i;
   int *p = NULL;
-  switch (lang)
-  {
+  switch (lang) {
     case LANG_C:
     case LANG_CPP:
       p = SC_C;
@@ -331,8 +330,7 @@ int init_syscalls(int lang)
       return 1;
   }
   memset(syscalls, 0, sizeof(syscalls));
-  for (i = 0; p[i] != SYSCALLS_END; i += 2)
-  {
+  for (i = 0; p[i] != SYSCALLS_END; i += 2) {
     syscalls[p[i]] = p[i+1];
   }
   return 0;

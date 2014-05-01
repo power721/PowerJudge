@@ -96,7 +96,7 @@ void timeout_hander(int signo);
 void print_solution();
 void check_spj();
 int data_filter(const struct dirent *dirp);
-void prepare_files(char *filen_ame, 
+void prepare_files(const char *filen_ame, 
                    char *infile, 
                    char *outfile, 
                    char *userfile);
