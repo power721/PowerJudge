@@ -1,9 +1,17 @@
 LD=g++
 CXX=g++
-CXXFLAGS=-g -Wall -O2 -DLOG_LEVEL=LOG_DEBUG
+CXXFLAGS=-g -Wall -O2
 LDFLAGS=
 TARGET=bin/powerjudge
 OBJECTS=bin/judge.o
+
+ifdef LOG_LEVEL
+	CXXFLAGS+= -DLOG_LEVEL=${LOG_LEVEL}
+endif
+
+ifdef FAST_JUDGE
+	CXXFLAGS+= -DFAST_JUDGE
+endif
 
 all: $(TARGET)
 $(TARGET): $(OBJECTS)

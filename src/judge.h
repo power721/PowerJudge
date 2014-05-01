@@ -122,4 +122,9 @@ bool judge(const char *input_file,
            const char *stdout_file_executive, 
            const char *stderr_file_executive);
 
+bool judge_fast( const char *input_file, 
+                 const char *output_file_std, 
+                 const char *stdout_file_executive, 
+                 const char *stderr_file_executive );
+
 #endif /* __JUDGE_H__ */
