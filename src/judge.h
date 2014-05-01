@@ -19,12 +19,12 @@ const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-Wall",
 const char* CP_CC[] = { "g++", "-fno-asm", "-lm", "-static", "-Wall",
                         "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", NULL };
 const char* CP_PAS[] = { "fpc", "Main.pas", "-O2", "-Co", "-Cr", "-Ct", "-Ci", NULL };
-const char* CP_J[] = { "javac", "Main.java", "-encoding", "UTF-8", NULL };
+const char* CP_J[] = { "javac", "Main.java", "-g:none", "-Xlint", "-encoding", "UTF-8", NULL };
 const char* CP_PY[] = { "python", "-c", "import py_compile;py_compile.compile(r'Main.py')", NULL };
 
 // "-Xms512m", "-Xmx512m", "-Xss256k"
 const char* EXEC_J[] = { "java", "-Djava.security.manager", 
-                         "-Djava.security.policy=../java.policy", "-cp", "./", "Main", NULL };
+                         "-Djava.security.policy=../java.policy", "Main", NULL };
 const char* EXEC_PY[] = { "python", "Main.py", NULL };
 
 
@@ -95,8 +95,11 @@ void parse_arguments(int argc, char *argv[]);
 void timeout_hander(int signo);
 void print_solution();
 void check_spj();
-void prepare_files(char *filen_ame, int namelen, 
-                   char *infile, char *outfile, char *userfile);
+int data_filter(const struct dirent *dirp);
+void prepare_files(char *filen_ame, 
+                   char *infile, 
+                   char *outfile, 
+                   char *userfile);
 void io_redirect(const char *input_file, 
                  const char *stdout_file, 
                  const char *stderr_file);

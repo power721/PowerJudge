@@ -294,10 +294,12 @@ void run_solution()
     copy_python_runtime(oj_solution.work_dir);
   }
 
-  DIR *dp;
-  dirent *dirp;
-  if ((dp = opendir(oj_solution.data_dir)) == NULL) {
-    FM_LOG_FATAL("open data directory failed");
+  struct dirent **namelist;
+  int num_of_test;
+
+  num_of_test = scandir(oj_solution.data_dir, &namelist, data_filter, alphasort);
+  if (num_of_test < 0) {
+    FM_LOG_FATAL("scan data directory failed");
     exit(EXIT_PRE_JUDGE_DAA);
   }
 
@@ -305,37 +307,33 @@ void run_solution()
 
   bool flag = true;
   int first_failed_test = 0;
-  int num_of_test = 0;
   char input_file[PATH_SIZE];
   char output_file_std[PATH_SIZE];
   char stdout_file_executive[PATH_SIZE];
   char stderr_file_executive[PATH_SIZE];
   sprintf(stderr_file_executive, "%s/stderr_executive.txt", oj_solution.work_dir);
 
-  FM_LOG_DEBUG("start run solution");
-  while (flag && (dirp = readdir(dp)) != NULL) {
-    int namelen = isInFile(dirp->d_name); // check if the file is *.in
-    if (namelen == 0)
-      continue;
+  FM_LOG_DEBUG("start run solution (%d cases)", num_of_test);
+  int i;
+  for (i = 0; flag && i < num_of_test; ++i) {
+    prepare_files(namelist[i]->d_name, input_file, output_file_std, stdout_file_executive);
+    free(namelist[i]);
 
-    // TODO check if the out file is here
-    prepare_files( dirp->d_name, namelen, input_file, output_file_std, stdout_file_executive);
-
-    num_of_test++;
-    FM_LOG_TRACE("run case: %d", num_of_test);
+    FM_LOG_TRACE("run case: %d", i + 1);
 
     flag = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
+
     if (!first_failed_test && oj_solution.result != OJ_AC) {
-      first_failed_test = num_of_test; // this is not usefull, need remove
+      first_failed_test = i + 1; // this is not usefull
     }
   }
 
+  free(namelist);
   if ( oj_solution.lang == LANG_PYTHON) {
     clean_workdir(oj_solution.work_dir);
   }
     
   output_result(oj_solution.result, oj_solution.time_usage, oj_solution.memory_usage, first_failed_test);
-  closedir(dp);
 }
 
 bool judge( const char *input_file, 
@@ -571,16 +569,37 @@ bool judge( const char *input_file,
 void check_spj()
 {
   sprintf(oj_solution.spj_exe_file, "%s/spj", oj_solution.data_dir);
-  if (access( oj_solution.spj_exe_file, F_OK ) != -1) {
+  if (access( oj_solution.spj_exe_file, F_OK) != -1) {
     // spj file exists
     oj_solution.spj = true;
     FM_LOG_MONITOR("Special Judged");
   }
 }
 
-void prepare_files( char *filename, int namelen, 
-                    char *infile, char *outfile, char *userfile)
+int data_filter(const struct dirent *dirp)
 {
+  int namelen = isInFile(dirp->d_name); // check if the file is *.in
+  if (namelen == 0)
+    return 0;
+  
+  char fname[PATH_SIZE];
+  char outfile[PATH_SIZE];
+
+  strncpy(fname, dirp->d_name, namelen);
+  fname[namelen] = 0;
+  sprintf(outfile, "%s/%s.out", oj_solution.data_dir, fname);
+
+  if (access(outfile, F_OK) != -1)
+    return 1;
+  return 0;
+}
+
+void prepare_files( char *filename, 
+                    char *infile, 
+                    char *outfile, 
+                    char *userfile )
+{
+  int namelen = strlen(filename) - 3;
   char fname[PATH_SIZE];
   strncpy(fname, filename, namelen);
   fname[namelen] = 0;
