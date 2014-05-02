@@ -274,6 +274,11 @@ void set_compile_limit()
     exit(EXIT_SET_LIMIT);
   }
 
+  if (EXIT_SUCCESS != malarm(ITIMER_REAL, cpu_time * 1000)) {
+    FM_LOG_FATAL("malarm failed");
+    exit(EXIT_PRE_JUDGE);
+  }
+
   lim.rlim_cur = lim.rlim_max = memory;
   if (setrlimit(RLIMIT_AS, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_AS failed");
@@ -659,8 +664,7 @@ void set_limit(long fsize)
 
   if (oj_solution.lang <= LANG_PASCAL) {
     // Memory control
-    lim.rlim_max = (STD_MB << 10) + oj_solution.memory_limit * STD_KB;
-    lim.rlim_cur = lim.rlim_max;
+    lim.rlim_cur = lim.rlim_max = (STD_MB << 10) + oj_solution.memory_limit * STD_KB;
     if (setrlimit(RLIMIT_AS, &lim) < 0) {
       FM_LOG_FATAL("setrlimit RLIMIT_AS failed");
       exit(EXIT_SET_LIMIT);
@@ -759,6 +763,7 @@ int oj_compare_output_spj( const char *file_in,   // std input
       FM_LOG_TRACE("load spj: %s", spj_exec);
       log_close();
       execlp(spj_exec, spj_exec, file_in, file_out, file_user, NULL);
+      FM_LOG_FATAL("execute spj failed");
       exit(EXIT_COMPARE_SPJ_FORK);
     }
     else {
