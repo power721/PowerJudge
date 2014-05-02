@@ -152,6 +152,7 @@ void print_solution()
 void timeout_hander(int signo)
 {
   if (signo == SIGALRM) {
+    FM_LOG_FATAL("Judge Timeout");
     exit(EXIT_TIMEOUT);
   }
 }

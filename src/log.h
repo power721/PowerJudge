@@ -147,6 +147,10 @@ static void log_write(int level, const char *file,
           LOG_LEVEL_NOTE[level], datetime, getpid(), 
           file, line, log_extra_info, log_buffer);
 
+  if (level == LOG_FATAL) {
+    fprintf(stderr, "%s\n", log_buffer);
+  }
+  
   int log_fd = log_fp->_fileno;
   if (flock(log_fd, LOCK_EX) == 0)
   {
