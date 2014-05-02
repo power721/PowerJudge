@@ -7,23 +7,23 @@ function init()
   passed=0
   failed=0
   mkdir -p temp/10000
-  cp code/1000/1000_AC.cpp temp/10000/Main.cc
+  cp code/1000/1000_AC.cc temp/10000/Main.cc
   mkdir temp/10001
-  cp code/1000/1000_PE.cpp temp/10001/Main.cc
+  cp code/1000/1000_PE.cc temp/10001/Main.cc
   mkdir temp/10002
-  cp code/1000/1000_TLE.cpp temp/10002/Main.cc
+  cp code/1000/1000_TLE.cc temp/10002/Main.cc
   mkdir temp/10003
-  cp code/1000/1000_MLE.cpp temp/10003/Main.cc
+  cp code/1000/1000_MLE.cc temp/10003/Main.cc
   mkdir temp/10004
-  cp code/1000/1000_WA.cpp temp/10004/Main.cc
+  cp code/1000/1000_WA.cc temp/10004/Main.cc
   mkdir temp/10005
-  cp code/1000/1000_RE_SEGV.cpp temp/10005/Main.cc
+  cp code/1000/1000_RE_SEGV.cc temp/10005/Main.cc
   mkdir temp/10006
-  cp code/1000/1000_OLE.cpp temp/10006/Main.cc
+  cp code/1000/1000_OLE.cc temp/10006/Main.cc
   mkdir temp/10007
-  cp code/1000/1000_CE.cpp temp/10007/Main.cc
+  cp code/1000/1000_CE.cc temp/10007/Main.cc
   mkdir temp/10008
-  cp code/1000/1000_RF.cpp temp/10008/Main.cc
+  cp code/1000/1000_RF.cc temp/10008/Main.cc
   
   cp ../java.policy temp/
   mkdir temp/10010
@@ -40,12 +40,20 @@ function init()
   cp code/1000/1000_CE.java temp/10017/Main.java
   mkdir temp/20010
   cp code/1000/1000_thread.java temp/20010/Main.java
+  mkdir temp/20011
+  cp code/1000/NoPublicClass.java temp/20011/Main.java
 
   mkdir temp/10025
   cp code/1000/1000_RE.py temp/10025/Main.py
   mkdir temp/10027
   cp code/1000/1000_CE.py temp/10027/Main.py
 
+  mkdir temp/10010
+  cp code/1000/1000.c temp/10010/Main.c
+  
+  mkdir temp/10017
+  cp code/1000/1000_CE.c temp/10017/Main.c
+  
   mkdir temp/1003
   cp code/1000/1000.pas temp/1003/Main.pas
   
@@ -56,9 +64,9 @@ function init()
   cp code/1000/1000.py temp/1005/Main.py
 
   mkdir temp/640
-  cp code/1000/1000_lld.cpp temp/640/Main.cc
+  cp code/1000/1000_lld.cc temp/640/Main.cc
   mkdir temp/641
-  cp code/1000/1000_I64d.cpp temp/641/Main.cc
+  cp code/1000/1000_I64d.cc temp/641/Main.cc
 
   mkdir temp/14050
   cp code/1405/1405.cc temp/14050/Main.cc
@@ -66,10 +74,10 @@ function init()
   cp code/1405/1405_WA.cc temp/14054/Main.cc
 
   mkdir temp/10009
-  cp code/1000/1000_AC.cpp temp/10009/Main.cc
+  cp code/1000/1000_AC.cc temp/10009/Main.cc
 
   mkdir temp/1002
-  cp code/1000/1000_AC.cpp temp/1002/Main.cc
+  cp code/1000/1000_AC.cc temp/1002/Main.cc
 } 2> error.log
 
 resultStr=(
@@ -119,6 +127,8 @@ runTest 6 "OLE" "../bin/powerjudge -s 10006 -p 1000 -D ./data -d ./temp -t 1000 
 runTest 7 "CE"  "../bin/powerjudge -s 10007 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 runTest 8 "RF"  "../bin/powerjudge -s 10008 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 runTest 9 "SE"  "../bin/powerjudge -s 10009 -p 1001 -D /.data -d ./temp -t 1000 -m 65535 -l 2"
+runTest 0 "GCC AC"    "../bin/powerjudge -s 10010 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 1"
+runTest 7 "GCC CE"    "../bin/powerjudge -s 10017 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 1"
 runTest 0 "Pascal AC" "../bin/powerjudge -s 1003 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 3"
 runTest 0 "Java AC"   "../bin/powerjudge -s 1004 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
 runTest 0 "Python AC" "../bin/powerjudge -s 1005 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
@@ -131,6 +141,7 @@ runTest 3 "Java MLE" "../bin/powerjudge -s 10013 -p 1000 -D ./data -d ./temp -t 
 runTest 5 "Java RE"  "../bin/powerjudge -s 10015 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
 runTest 7 "Java CE"  "../bin/powerjudge -s 10017 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
 runTest 0 "Java Thread"  "../bin/powerjudge -s 20010 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
+runTest 0 "Java No Public Class"  "../bin/powerjudge -s 20011 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
 
 # test Python
 runTest 5 "Python RE" "../bin/powerjudge -s 10025 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"

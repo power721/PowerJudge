@@ -321,11 +321,7 @@ void run_solution()
 
     FM_LOG_TRACE("run case: %d", i + 1);
 
-#ifndef FAST_JUDGE
     flag = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
-#else
-    flag = judge_fast(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
-#endif
 
     if (!first_failed_test && oj_solution.result != OJ_AC) {
       first_failed_test = i + 1;
@@ -379,9 +375,12 @@ bool judge( const char *input_file,
 
     FM_LOG_TRACE("begin execute");
     log_close();
+
+#ifndef FAST_JUDGE
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0) {
       exit(EXIT_PRE_JUDGE_PTRACE);
     }
+#endif
 
     // load program
     if (oj_solution.lang == LANG_JAVA) {
@@ -403,7 +402,9 @@ bool judge( const char *input_file,
     int syscall_id      = 0;
     struct user_regs_struct regs;
 
+#ifndef FAST_JUDGE
     init_syscalls(oj_solution.lang);
+#endif
 
     while (true) {
       if (wait4(executor, &status, 0, &rused) < 0) {
@@ -498,11 +499,12 @@ bool judge( const char *input_file,
               fprintf(stderr, "Other Exception: %s\n", strsignal(signo));
               break;
         } // end of swtich
+#ifndef FAST_JUDGE
         ptrace(PTRACE_KILL, executor, NULL, NULL);
+#endif
         break;
       } // end of  "if (WIFSIGNALED(status) ...)"
 
-      // MLE
       oj_solution.memory_usage = max( oj_solution.memory_usage,
                                       rused.ru_minflt * (page_size / STD_KB) );
       // TODO check why memory exceed too much
@@ -511,21 +513,24 @@ bool judge( const char *input_file,
         oj_solution.result = OJ_MLE;
         FM_LOG_NOTICE("memory limit exceeded: %d (fault: %d * %d)",
                       oj_solution.memory_usage, rused.ru_minflt, page_size);
+#ifndef FAST_JUDGE
         ptrace(PTRACE_KILL, executor, NULL, NULL);
+#endif
         break;
       }
 
+#ifndef FAST_JUDGE
       // check syscall
       if (ptrace(PTRACE_GETREGS, executor, NULL, &regs) < 0) {
         FM_LOG_FATAL("ptrace(PTRACE_GETREGS) failed, %d: %s",
                       errno, strerror(errno));
         exit(EXIT_JUDGE);
       }
-#ifdef __i386__
+  #ifdef __i386__
       syscall_id = regs.orig_eax;
-#else
+  #else
       syscall_id = regs.orig_rax;
-#endif
+  #endif
       if (syscall_id > 0 && !is_valid_syscall(oj_solution.lang, syscall_id)) {
         FM_LOG_NOTICE("restricted function, syscall_id: %d", syscall_id);
         oj_solution.result = OJ_RF;
@@ -537,6 +542,7 @@ bool judge( const char *input_file,
         FM_LOG_FATAL("ptrace(PTRACE_SYSCALL) failed");
         exit(EXIT_JUDGE);
       }
+#endif /* end of FAST_JUDGE */
     } // end of while
   } // end of fork for judge process
 
@@ -545,208 +551,12 @@ bool judge( const char *input_file,
     oj_solution.result = OJ_RE;
   }
 
-  oj_solution.time_usage += ( rused.ru_utime.tv_sec * 1000 +
-                              rused.ru_utime.tv_usec / 1000 );
-
-  if (oj_solution.time_usage > oj_solution.time_limit) {
-    FM_LOG_TRACE("Time Limit Exceeded");
-    oj_solution.result = OJ_TLE;
-  }
-
-  if (oj_solution.result != OJ_AC && oj_solution.result != OJ_PE) {
-    FM_LOG_NOTICE("not AC/PE, no need to continue");
-    if (oj_solution.result == OJ_TLE) {
-      oj_solution.time_usage = oj_solution.time_limit;
-    }
-    if (oj_solution.lang == LANG_JAVA && oj_solution.result == OJ_WA) {
-      fix_java_result(stdout_file_executive, stderr_file_executive);
-    }
-    return false;
-  }
-  return true;
-}
-
-// no ptrace and no RF result
-bool judge_fast( const char *input_file, 
-                 const char *output_file_std, 
-                 const char *stdout_file_executive, 
-                 const char *stderr_file_executive )
-{
-  struct rusage rused;
-  pid_t executor = fork();
-
-  if (executor < 0) {
-    FM_LOG_FATAL("fork executor failed");
-    exit(EXIT_PRE_JUDGE);
-  }
-  else if (executor == 0) { // child process
-    log_add_info("executor");
-
-    long fsize = file_size(output_file_std);
-
-    // io redirect
-    io_redirect(input_file, stdout_file_executive, stderr_file_executive);
-
-    // chroot & setuid
-    set_security_option();
-
-    // set memory, time and file size limit etc.
-    set_limit(fsize); // must after set_security_option()
-
-    FM_LOG_DEBUG("time limit: %d, time usage: %d, time limit addtion: %d",
-                 oj_solution.time_limit, oj_solution.time_usage, time_limit_addtion);
-    int real_time_limit = oj_solution.time_limit
-                        - oj_solution.time_usage
-                        + time_limit_addtion; //time fix
-    // set real time alarm
-    if (EXIT_SUCCESS != malarm(ITIMER_REAL, real_time_limit)) {
-      FM_LOG_FATAL("malarm failed");
-      exit(EXIT_PRE_JUDGE);
-    }
-
-    FM_LOG_TRACE("begin execute");
-    log_close();
-
-    // load program
-    if (oj_solution.lang == LANG_JAVA) {
-      execvp(EXEC_J[0], (char * const *) EXEC_J);
-    }
-    else if (oj_solution.lang == LANG_PYTHON) {
-      execv(EXEC_PY[0], (char * const *) EXEC_PY); // execvp is incorrect
-    }
-    else {
-      execl("./Main", "./Main", NULL);
-    }
-
-    // exec error
-    exit(EXIT_PRE_JUDGE_EXECLP);
-  }
-  else {
-    //Judger
-    int status          = 0;
-    int syscall_id      = 0;
-    struct user_regs_struct regs;
-
-    while (true) {
-      if (wait4(executor, &status, 0, &rused) < 0) {
-        FM_LOG_FATAL("wait4 executor failed, %d:%s", errno, strerror(errno));
-        exit(EXIT_JUDGE);
-      }
-
-      if (WIFEXITED(status)) {
-        if (oj_solution.lang != LANG_JAVA || WEXITSTATUS(status) == EXIT_SUCCESS) {
-          // AC PE WA
-          FM_LOG_TRACE("normal quit");
-          int result;
-          if (oj_solution.spj) {
-            // use SPJ
-            result = oj_compare_output_spj( input_file,
-                                            output_file_std,
-                                            stdout_file_executive,
-                                            oj_solution.spj_exe_file );
-          }
-          else {
-            // compare file
-            result = oj_compare_output( output_file_std,
-                                        stdout_file_executive );
-          }
-          // WA
-          if (result == OJ_WA) {
-            oj_solution.result = OJ_WA;
-          }
-          // AC or PE
-          else if (oj_solution.result != OJ_PE) {
-            oj_solution.result = result;
-          }
-          else /* (oj_solution.result == OJ_PE) */ {
-            oj_solution.result = OJ_PE;
-          }
-          FM_LOG_NOTICE("case result: %d, problem result: %d",
-                        result, oj_solution.result);
-        }
-        else {
-          // not return 0
-          FM_LOG_NOTICE("abnormal quit, exit_code: %d", WEXITSTATUS(status));
-          oj_solution.result = OJ_RE;
-        }
-        break;
-      }
-
-      // RE/TLE/OLE
-      if ( WIFSIGNALED(status) || (WIFSTOPPED(status) && WSTOPSIG(status) != SIGTRAP) ) {
-        int signo = 0;
-        if (WIFSIGNALED(status)) {
-          signo = WTERMSIG(status);
-          FM_LOG_NOTICE("child signaled by %d, %s", signo, strsignal(signo));
-        }
-        else {
-          signo = WSTOPSIG(status);
-          FM_LOG_NOTICE("child stopped by %d, %s", signo, strsignal(signo));
-        }
-        switch (signo) {
-          // TLE
-          case SIGALRM:
-          case SIGXCPU:
-          case SIGVTALRM:
-          case SIGKILL: // During startup program terminated with signal SIGKILL, Killed.
-              FM_LOG_TRACE("time limit exceeded");
-              oj_solution.result = OJ_TLE;
-              break;
-          // OLE
-          case SIGXFSZ:
-              FM_LOG_TRACE("file size limit exceeded");
-              oj_solution.result = OJ_OLE;
-              break;
-          // RE
-          case SIGSEGV:
-              oj_solution.result = OJ_RE;
-              fprintf(stderr, "Segmentation Fault\n");
-              break;
-          case SIGFPE:
-              oj_solution.result = OJ_RE;
-              fprintf(stderr, "Floating Point Exception\n");
-              break;
-          case SIGBUS:
-              oj_solution.result = OJ_RE;
-              fprintf(stderr, "Bus Error\n");
-              break;
-          case SIGABRT:
-              oj_solution.result = OJ_RE;
-              fprintf(stderr, "Abnormal Termination\n");
-              break;
-          default:
-              oj_solution.result = OJ_RE;
-              FM_LOG_TRACE("Runtime Error");
-              fprintf(stderr, "Other Exception: %s\n", strsignal(signo));
-              break;
-        } // end of swtich
-        break;
-      } // end of  "if (WIFSIGNALED(status) ...)"
-
-      // MLE
-      oj_solution.memory_usage = max( oj_solution.memory_usage,
-                                      rused.ru_minflt * (page_size / STD_KB) );
-      if (oj_solution.memory_usage > oj_solution.memory_limit) {
-        oj_solution.result = OJ_MLE;
-        FM_LOG_NOTICE("memory limit exceeded: %d (fault: %d * %d)",
-                      oj_solution.memory_usage, rused.ru_minflt, page_size);
-        break;
-      }
-    } // end of while
-  } // end of fork for judge process
-
-  // MLE
   oj_solution.memory_usage = max( oj_solution.memory_usage,
                                   rused.ru_minflt * (page_size / STD_KB) );
   if (oj_solution.memory_usage > oj_solution.memory_limit) {
     oj_solution.result = OJ_MLE;
     FM_LOG_NOTICE("memory limit exceeded: %d (fault: %d * %d)",
                   oj_solution.memory_usage, rused.ru_minflt, page_size);
-  }
-
-  if ( oj_solution.lang == LANG_PYTHON && file_size(stderr_file_executive)) {
-    FM_LOG_TRACE("Runtime Error");
-    oj_solution.result = OJ_RE;
   }
 
   oj_solution.time_usage += ( rused.ru_utime.tv_sec * 1000 +

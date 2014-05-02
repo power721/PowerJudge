@@ -1,14 +1,13 @@
 import java.io.*;
 import java.util.*;
 
-public class main
+class Main
 {
   public static void main(String[] args)
   {
     Scanner cin = new Scanner(new BufferedInputStream(System.in));
-    int a, b;
-    
-    while (cin.hasNext())
+    int a,b;
+    while(cin.hasNext())
     {
       a = cin.nextInt();
       b = cin.nextInt();

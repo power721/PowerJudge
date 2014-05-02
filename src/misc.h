@@ -3,6 +3,7 @@
 
 #include <ctype.h>
 #include "judge_core.h"
+#include "syscalls.h"
 
 #define is_space_char(a) ((a == ' ') || (a == '\t') || (a == '\n'))
 
@@ -46,8 +47,8 @@ int isInFile(const char *filename)
   }
 }
 
-//a simpler interface for setitimer
-//which can be ITIMER_REAL, ITIMER_VIRTUAL, ITIMER_PROF
+// a simpler interface for setitimer
+// which can be ITIMER_REAL, ITIMER_VIRTUAL, ITIMER_PROF
 int malarm(int which, int milliseconds)
 {
   struct itimerval t;
@@ -142,8 +143,6 @@ void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, con
   fclose(out);
 }
 
-#include "syscalls.h"
-// deal with sys call
 static bool in_syscall = true;
 bool is_valid_syscall(int lang, int syscall_id)
 {
