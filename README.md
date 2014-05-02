@@ -4,7 +4,7 @@ Judge Core for PowerOJ on Linux platform.
 Based on UESTC and HUST judge core.
 
 ##Features##
-auto get data files from data directory.
+auto get data files from data directory and sort by lexicographical.
 
 judge_fast doesn't use ptrace and no RF result, use chroot and setuid for permission control. 
 

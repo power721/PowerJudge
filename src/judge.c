@@ -241,7 +241,7 @@ void compile()
     }
     else {
       if (WIFSIGNALED(status)) { // killed by signal
-        FM_LOG_WARNING("compiler limit exceeded");
+        FM_LOG_WARNING("Compiler Limit Exceeded");
         output_result(OJ_CE, 0, 0, 0);
         stderr = freopen(stderr_compiler, "a", stderr);
         fprintf(stderr, "Compiler Limit Exceeded\n");
