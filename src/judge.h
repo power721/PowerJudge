@@ -45,7 +45,7 @@ int compile_time_limit          = 5; // HUST is 60s
 int compile_memory_limit        = 256; // HUST is 2048 MB
 
 // 编译输出限制(MB)
-int compile_fsize_limit         = 256;
+int compile_fsize_limit         = 64;
 
 // SPJ时间限制(ms)
 int spj_time_limit              = 5347;

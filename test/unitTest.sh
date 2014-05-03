@@ -41,7 +41,7 @@ function init()
   mkdir temp/20010
   cp code/1000/1000_thread.java temp/20010/Main.java
   mkdir temp/20011
-  cp code/1000/NoPublicClass.java temp/20011/Main.java
+  cp code/1000/NotPublicClass.java temp/20011/Main.java
 
   mkdir temp/10025
   cp code/1000/1000_RE.py temp/10025/Main.py
