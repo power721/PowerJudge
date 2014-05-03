@@ -2,7 +2,9 @@
 
 int main(int argc, char *argv[], char *envp[])
 {
+#ifndef FAST_JUDGE
   nice(10); // 降低优先级
+#endif
 
   init();
 
@@ -552,11 +554,6 @@ bool judge( const char *input_file,
     } // end of while
   } // end of fork for judge process
 
-  if ( oj_solution.lang == LANG_PYTHON && file_size(stderr_file_executive)) {
-    FM_LOG_TRACE("Runtime Error");
-    oj_solution.result = OJ_RE;
-  }
-
   oj_solution.memory_usage = max( oj_solution.memory_usage,
                                   rused.ru_minflt * (page_size / STD_KB) );
   if (oj_solution.memory_usage > oj_solution.memory_limit) {
@@ -580,6 +577,10 @@ bool judge( const char *input_file,
     }
     if (oj_solution.lang == LANG_JAVA && oj_solution.result == OJ_WA) {
       fix_java_result(stdout_file_executive, stderr_file_executive);
+    }
+    else if ( oj_solution.lang == LANG_PYTHON && file_size(stderr_file_executive)) {
+      FM_LOG_TRACE("Runtime Error");
+      oj_solution.result = OJ_RE;
     }
     return false;
   }
@@ -642,7 +643,7 @@ void io_redirect( const char *input_file,
   //io_redirect
   stdin  = freopen(input_file, "r", stdin);
   stdout = freopen(stdout_file, "w", stdout);
-  stderr = freopen(stderr_file, "w", stderr);
+  stderr = freopen(stderr_file, "a+", stderr);
   if (stdin == NULL || stdout == NULL || stderr == NULL) {
     FM_LOG_FATAL("error freopen: stdin(%p) stdout(%p), stderr(%p)", stdin, stdout, stderr);
     exit(EXIT_PRE_JUDGE);

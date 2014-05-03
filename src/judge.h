@@ -2,12 +2,12 @@
 #define __JUDGE_H__
 
 #include <sys/wait.h>
-#include <sys/reg.h>
 #include <sys/user.h>
-#include <sys/syscall.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/syscall.h>
 #include <sys/ptrace.h>
+#include <sys/reg.h>
 #include <dirent.h>
 #include "log.h"
 #include "misc.h"
