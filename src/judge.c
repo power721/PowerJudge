@@ -632,7 +632,9 @@ void prepare_files( const char *filename,
   sprintf(userfile, "%s/%s.out", oj_solution.work_dir, fname);
 
 #ifndef FAST_JUDGE
-  execute_cmd("/bin/ln -s %s %s", infile, oj_solution.work_dir);
+  char buff[PATH_SIZE];
+  sprintf(buff, "%s/%s.in", oj_solution.work_dir, fname);
+  symlink(infile, buff);
 #endif /* fast judge can read this input file */
 
   FM_LOG_DEBUG("std  input  file: %s", infile);
