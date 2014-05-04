@@ -631,6 +631,10 @@ void prepare_files( const char *filename,
   sprintf(outfile, "%s/%s.out", oj_solution.data_dir, fname);
   sprintf(userfile, "%s/%s.out", oj_solution.work_dir, fname);
 
+#ifndef FAST_JUDGE
+  execute_cmd("/bin/ln -s %s %s", infile, oj_solution.work_dir);
+#endif /* fast judge can read this input file */
+
   FM_LOG_DEBUG("std  input  file: %s", infile);
   FM_LOG_DEBUG("std  output file: %s", outfile);
   FM_LOG_DEBUG("user output file: %s", userfile);
