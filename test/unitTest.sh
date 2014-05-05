@@ -1,7 +1,5 @@
 #!/bin/bash
 
-start=`date +%s`
-
 function init()
 {
   passed=0
@@ -119,6 +117,8 @@ function runTest()
 } 2>> error.log
 
 init
+
+start=`date +%s`
 
 # normal test
 runTest 0 "AC"  "../bin/powerjudge -s 100020 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"

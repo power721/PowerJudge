@@ -401,10 +401,11 @@ bool judge(const char *input_file,
   } else {
     // Judger
     int status          = 0;
+
+#ifndef FAST_JUDGE
     int syscall_id      = 0;
     struct user_regs_struct regs;
 
-#ifndef FAST_JUDGE
     init_syscalls(oj_solution.lang);
 #endif
 

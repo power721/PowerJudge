@@ -15,12 +15,12 @@ endif
 
 all: $(TARGET)
 $(TARGET): $(OBJECTS)
-	$(LD) $(OBJECTS) -o $@ $(LDFLAGS)
+	$(LD) -o $@ $(LDFLAGS) $(OBJECTS)
 	sudo chown root:root $(TARGET)
 	sudo chmod 4755 $(TARGET)
 
 bin/%.o: src/%.c src/*.h
-	$(CXX) $< -c -o $@ $(CXXFLAGS)
+	$(CXX) -o $@ $(CXXFLAGS) -c $<
 
 .PHONY: test check install clean
 test:
