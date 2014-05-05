@@ -606,11 +606,13 @@ void prepare_files(const char *filename,
   snprintf(outfile,  PATH_SIZE, "%s/%s.out", oj_solution.data_dir, fname);
   snprintf(userfile, PATH_SIZE, "%s/%s.out", oj_solution.work_dir, fname);
 
+#ifndef FAST_JUDGE
   char buff[PATH_SIZE];
   snprintf(buff, PATH_SIZE, "%s/%s.in", oj_solution.work_dir, fname);
   if (symlink(infile, buff) == -1) {
     FM_LOG_WARNING("make symlink for %s failed: %s", infile, strerror(errno));
   }
+#endif /* fast judge can read this input file, it's dangerous */
 
   FM_LOG_DEBUG("std  input  file: %s", infile);
   FM_LOG_DEBUG("std  output file: %s", outfile);
@@ -653,7 +655,6 @@ void set_limit(off_t fsize)
       exit(EXIT_SET_LIMIT);
     }
 
-    // useful for fast judge
     // process control, fork() failed and return EAGAIN
     lim.rlim_cur = lim.rlim_max = 0;
     if (setrlimit(RLIMIT_NPROC, &lim) < 0) {
@@ -661,6 +662,7 @@ void set_limit(off_t fsize)
       exit(EXIT_SET_LIMIT);
     }
 
+    // useful for fast judge
     // number of open file, return EMFILE
     lim.rlim_cur = lim.rlim_max = 0;
     if (setrlimit(RLIMIT_NOFILE, &lim) < 0) {
