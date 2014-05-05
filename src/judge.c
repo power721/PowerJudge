@@ -464,7 +464,6 @@ bool judge(const char *input_file,
           case SIGALRM:    // alarm() and setitimer(ITIMER_REAL)
           case SIGVTALRM:  // setitimer(ITIMER_VIRTUAL)
           case SIGXCPU:    // exceeds soft processor limit
-          case SIGKILL:    // exceeds hard processor limit, not only TLE
               oj_solution.result = OJ_TLE;
               FM_LOG_TRACE("Time Limit Exceeded: %s", strsignal(signo));
               break;
@@ -474,6 +473,11 @@ bool judge(const char *input_file,
               FM_LOG_TRACE("Output Limit Exceeded");
               break;
           // RE
+          case SIGKILL:  // exceeds hard processor limit
+              oj_solution.result = OJ_RE;
+              fprintf(stderr, "%s\n", strsignal(signo));
+              FM_LOG_TRACE("Exceeds Limit, maybe stack overflow");
+              break;
           case SIGSEGV:  // segmentation violation
           case SIGFPE:   // any arithmetic exception
           case SIGBUS:   // the process incurs a hardware fault
@@ -746,7 +750,6 @@ int oj_compare_output_spj(const char *file_in,    // std input file
     // Set spj timeout
     if (EXIT_SUCCESS == malarm(ITIMER_REAL, spj_time_limit)) {
       FM_LOG_TRACE("load spj: %s", spj_exec);
-      //log_close();
       execlp(spj_exec, spj_exec, file_in, file_out, file_user, NULL);
       FM_LOG_FATAL("execute spj failed");
       exit(EXIT_COMPARE_SPJ_FORK);
@@ -824,9 +827,9 @@ int oj_compare_output(const char *file_out, const char *file_user)
       break;
     } else if (feof(fp_std) || feof(fp_exe)) {
       // deal with tailing white spaces
-      FM_LOG_TRACE("one file ended");
       FILE *fp_tmp;
       if (feof(fp_std)) {
+        FM_LOG_TRACE("std out file ended");
         if (!is_space_char(b)) {
           FM_LOG_TRACE("WA exe['%c':0x%x @%d]", b, b, Nb);
           status = WA;
@@ -834,6 +837,7 @@ int oj_compare_output(const char *file_out, const char *file_user)
         }
         fp_tmp = fp_exe;
       } else { /* feof(fp_exe) */
+        FM_LOG_TRACE("user out file ended");
         if (!is_space_char(a)) {
           FM_LOG_TRACE("WA std['%c':0x%x @%d]", a, a, Na);
           status = WA;
