@@ -43,10 +43,10 @@ char data_dir_root[PATH_SIZE];
 int judge_time_limit            = 15347;
 
 // 编译限制(s)
-int compile_time_limit          = 5;  // HUST is 60s
+int compile_time_limit          = 5;
 
 // 编译限制(MB)
-int compile_memory_limit        = 256;  // HUST is 2048 MB
+int compile_memory_limit        = 256;
 
 // 编译输出限制(MB)
 int compile_fsize_limit         = 64;
@@ -55,7 +55,7 @@ int compile_fsize_limit         = 64;
 int spj_time_limit              = 10347;
 
 // 程序运行的栈空间大小(KB)
-int stack_size_limit            = 8192;  // HUST is 64 MB
+int stack_size_limit            = 8192;
 
 // ms
 int time_limit_addtion          = 347;

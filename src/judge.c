@@ -473,15 +473,11 @@ bool judge(const char *input_file,
               FM_LOG_TRACE("Output Limit Exceeded");
               break;
           // RE
-          case SIGKILL:  // exceeds hard processor limit
-              oj_solution.result = OJ_RE;
-              fprintf(stderr, "%s\n", strsignal(signo));
-              FM_LOG_TRACE("Exceeds Limit, maybe stack overflow");
-              break;
           case SIGSEGV:  // segmentation violation
           case SIGFPE:   // any arithmetic exception
           case SIGBUS:   // the process incurs a hardware fault
           case SIGABRT:  // abort() function
+          case SIGKILL:  // exceeds hard processor limit
           default:
               oj_solution.result = OJ_RE;
               fprintf(stderr, "%s\n", strsignal(signo));
@@ -610,13 +606,11 @@ void prepare_files(const char *filename,
   snprintf(outfile,  PATH_SIZE, "%s/%s.out", oj_solution.data_dir, fname);
   snprintf(userfile, PATH_SIZE, "%s/%s.out", oj_solution.work_dir, fname);
 
-#ifndef FAST_JUDGE
   char buff[PATH_SIZE];
   snprintf(buff, PATH_SIZE, "%s/%s.in", oj_solution.work_dir, fname);
   if (symlink(infile, buff) == -1) {
     FM_LOG_WARNING("make symlink for %s failed: %s", infile, strerror(errno));
   }
-#endif /* fast judge can read this input file, it's dangerous */
 
   FM_LOG_DEBUG("std  input  file: %s", infile);
   FM_LOG_DEBUG("std  output file: %s", outfile);
@@ -643,7 +637,7 @@ void set_limit(off_t fsize)
 {
   rlimit lim;
 
-  // Set CPU time limit round up
+  // Set CPU time limit round up, raise SIGXCPU
   lim.rlim_max = (oj_solution.time_limit - oj_solution.time_usage + 999) / 1000 + 1;
   lim.rlim_cur = lim.rlim_max;
   if (setrlimit(RLIMIT_CPU, &lim) < 0) {
@@ -652,29 +646,37 @@ void set_limit(off_t fsize)
   }
 
   if (oj_solution.lang <= LANG_PASCAL) {
-    // Memory control
+    // Memory control, raise SIGSEGV
     lim.rlim_cur = lim.rlim_max = (STD_MB << 10) + oj_solution.memory_limit * STD_KB;
     if (setrlimit(RLIMIT_AS, &lim) < 0) {
       FM_LOG_FATAL("setrlimit RLIMIT_AS failed: %s", strerror(errno));
       exit(EXIT_SET_LIMIT);
     }
 
-    // process control
-    lim.rlim_cur = lim.rlim_max = 1;
+    // useful for fast judge
+    // process control, fork() failed and return EAGAIN
+    lim.rlim_cur = lim.rlim_max = 0;
     if (setrlimit(RLIMIT_NPROC, &lim) < 0) {
       FM_LOG_FATAL("setrlimit RLIMIT_NPROC failed: %s", strerror(errno));
       exit(EXIT_SET_LIMIT);
     }
+
+    // number of open file, return EMFILE
+    lim.rlim_cur = lim.rlim_max = 0;
+    if (setrlimit(RLIMIT_NOFILE, &lim) < 0) {
+      FM_LOG_FATAL("setrlimit RLIMIT_NOFILE failed: %s", strerror(errno));
+      exit(EXIT_SET_LIMIT);
+    }
   }
 
-  // Stack space
+  // Stack space, raise SIGSEGV
   lim.rlim_cur = lim.rlim_max = stack_size_limit * STD_KB;
   if (setrlimit(RLIMIT_STACK, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_STACK failed: %s", strerror(errno));
     exit(EXIT_SET_LIMIT);
   }
 
-  // Output file size limit
+  // Output file size limit, raise SIGXFSZ
   lim.rlim_cur = lim.rlim_max = fsize + (fsize >> 3) + (STD_MB << 3);
   if (setrlimit(RLIMIT_FSIZE, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed: %s", strerror(errno));
