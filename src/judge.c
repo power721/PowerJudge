@@ -21,8 +21,8 @@ int main(int argc, char *argv[], char *envp[])
 
   if (EXIT_SUCCESS != chdir(oj_solution.work_dir)) {  // change directory
     FM_LOG_FATAL("chdir(%s) failed, %d: %s",
-                   oj_solution.work_dir, errno, strerror(errno));
-    exit(EXIT_SET_SECURITY);
+                  oj_solution.work_dir, errno, strerror(errno));
+    exit(EXIT_VERY_FIRST);
   }
   FM_LOG_DEBUG("\n\x1b[31m----- Power Judge 1.0 -----\x1b[0m");
 
@@ -31,7 +31,11 @@ int main(int argc, char *argv[], char *envp[])
     FM_LOG_FATAL("set alarm for judge failed, %d: %s", errno, strerror(errno));
     exit(EXIT_VERY_FIRST);
   }
-  signal(SIGALRM, timeout_hander);
+
+  if (signal(SIGALRM, timeout_hander) == SIG_ERR) {
+    FM_LOG_FATAL("cannot handle SIGALRM");
+    exit(EXIT_VERY_FIRST);
+  }
 
   compile();
 
@@ -461,32 +465,32 @@ bool judge(const char *input_file,
         }
         switch (signo) {
           // TLE
-          case SIGALRM:
-          case SIGXCPU:
-          case SIGVTALRM:
-          case SIGKILL:  // During startup program terminated with signal SIGKILL, Killed.
+          case SIGALRM:    // alarm() and setitimer(ITIMER_REAL)
+          case SIGVTALRM:  // setitimer(ITIMER_VIRTUAL)
+          case SIGXCPU:    // exceeds its soft processor limit
+          case SIGKILL:    // hard limit is exceeded
               FM_LOG_TRACE("time limit exceeded");
               oj_solution.result = OJ_TLE;
               break;
           // OLE
-          case SIGXFSZ:
+          case SIGXFSZ:  // exceeds its file size limit
               FM_LOG_TRACE("file size limit exceeded");
               oj_solution.result = OJ_OLE;
               break;
           // RE
-          case SIGSEGV:
+          case SIGSEGV:  // segmentation violation
               oj_solution.result = OJ_RE;
               fprintf(stderr, "Segmentation Fault\n");
               break;
-          case SIGFPE:
+          case SIGFPE:  // any arithmetic exception
               oj_solution.result = OJ_RE;
-              fprintf(stderr, "Floating Point Exception\n");
+              fprintf(stderr, "Arithmetic Exception\n");
               break;
-          case SIGBUS:
+          case SIGBUS:  // the process incurs a hardware fault
               oj_solution.result = OJ_RE;
-              fprintf(stderr, "Bus Error\n");
+              fprintf(stderr, "Hardware Error\n");
               break;
-          case SIGABRT:
+          case SIGABRT:  // abort() function
               oj_solution.result = OJ_RE;
               fprintf(stderr, "Abnormal Termination\n");
               break;
