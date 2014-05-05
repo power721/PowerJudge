@@ -1,7 +1,11 @@
 /*
+ * Copyright 2014 power <power0721#gmail.com>
+ * PowerOJ GPLv2
+ */
+ /*
  *
  * LOGGER v0.0.4
- * modified by power(power0721@gmail.com)
+ * modified by power(power0721#gmail.com)
  * A simple logger for c/c++ under linux, multiprocess-safe
  *
  * ---- CopyLeft by Felix021 @ http://www.felix021.com ----
@@ -28,8 +32,8 @@
  *   log_close();
  *
  */
-#ifndef __LOG_H__
-#define __LOG_H__
+#ifndef SRC_LOG_H_
+#define SRC_LOG_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,7 +86,7 @@ int log_open(const char* filename)
   }
   int len = strlen(filename);
   log_filename = (char *)malloc(sizeof(char) * len + 1);
-  strcpy(log_filename, filename);
+  snprintf(log_filename, len + 1, "%s", filename);
   log_fp = fopen(log_filename, "a");
   if (log_fp == NULL)
   {
@@ -105,7 +109,8 @@ void log_close()
   {
     char buf[256] = "log_close\n";
     if (!log_extra_info[0]) {
-      strcat(buf, "--------------------------------------------------------------------------------\n");
+      strcat(buf,
+        "--------------------------------------------------------------------------------\n");
     }
     FM_LOG_TRACE(buf);
     fclose(log_fp);
@@ -131,10 +136,10 @@ static void log_write(int level, const char *file,
   struct timeval tv;
   now = time(NULL);
 
-  strftime(buffer, 99, "%Y-%m-%d %H:%M:%S", localtime(&now));
+  strftime(buffer, 90, "%Y-%m-%d %H:%M:%S", localtime(&now));
   if (gettimeofday(&tv, NULL) == 0)
   {
-    sprintf(datetime, "%s.%06ld", buffer, tv.tv_usec);
+    snprintf(datetime, sizeof(datetime), "%s.%06ld", buffer, tv.tv_usec);
   }
 
   va_list ap;
@@ -144,13 +149,13 @@ static void log_write(int level, const char *file,
 
   size_t count = snprintf(buffer, LOG_BUFFER_SIZE,
           "%s [%s] [#%d] [%s:%d]%s %s\n",
-          LOG_LEVEL_NOTE[level], datetime, getpid(), 
+          LOG_LEVEL_NOTE[level], datetime, getpid(),
           file, line, log_extra_info, log_buffer);
 
   if (level == LOG_FATAL) {
     fprintf(stderr, "%s\n", log_buffer);
   }
-  
+
   int log_fd = log_fp->_fileno;
   if (flock(log_fd, LOCK_EX) == 0)
   {
@@ -160,9 +165,7 @@ static void log_write(int level, const char *file,
       exit(1);
     }
     flock(log_fd, LOCK_UN);
-  }
-  else
-  {
+  } else {
     perror("flock log file error");
     exit(1);
   }
@@ -174,4 +177,4 @@ void log_add_info(const char *info)
   snprintf(log_extra_info + len, LOG_BUFFER_SIZE - len, " [%s]", info);
 }
 
-#endif /* __LOG_H__ */
+#endif  // SRC_LOG_H_

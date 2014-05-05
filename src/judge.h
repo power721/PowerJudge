@@ -1,5 +1,9 @@
-#ifndef __JUDGE_H__
-#define __JUDGE_H__
+/*
+ * Copyright 2014 power <power0721#gmail.com>
+ * PowerOJ GPLv2
+ */
+#ifndef SRC_JUDGE_H_
+#define SRC_JUDGE_H_
 
 #include <sys/wait.h>
 #include <sys/user.h>
@@ -23,7 +27,7 @@ const char* CP_J[] = { "javac", "Main.java", "-g:none", "-Xlint", "-encoding", "
 const char* CP_PY[] = { "python", "-c", "import py_compile;py_compile.compile(r'Main.py')", NULL };
 
 // "-Xms512m", "-Xmx512m", "-Xss256k"
-const char* EXEC_J[] = { "java", "-Djava.security.manager", 
+const char* EXEC_J[] = { "java", "-Djava.security.manager",
                          "-Djava.security.policy=../java.policy", "Main", NULL };
 const char* EXEC_PY[] = { "python", "Main.py", NULL };
 
@@ -39,19 +43,19 @@ char data_dir_root[PATH_SIZE];
 int judge_time_limit            = 15347;
 
 // 编译限制(s)
-int compile_time_limit          = 5; // HUST is 60s
+int compile_time_limit          = 5;  // HUST is 60s
 
 // 编译限制(MB)
-int compile_memory_limit        = 256; // HUST is 2048 MB
+int compile_memory_limit        = 256;  // HUST is 2048 MB
 
 // 编译输出限制(MB)
 int compile_fsize_limit         = 64;
 
 // SPJ时间限制(ms)
-int spj_time_limit              = 5347;
+int spj_time_limit              = 10347;
 
 // 程序运行的栈空间大小(KB)
-int stack_size_limit            = 8192; // HUST is 64 MB
+int stack_size_limit            = 8192;  // HUST is 64 MB
 
 // ms
 int time_limit_addtion          = 347;
@@ -65,15 +69,14 @@ int python_time_factor          = 2;
 int python_memory_factor        = 2;
 /* -- end of configruation -- */
 
-long page_size;
+off_t page_size;
 
-struct oj_solution_t
-{
-  int sid;          // solution id
-  int pid;          // problem id
-  int lang;         // language id
-  int time_limit;   // ms
-  int memory_limit; // KB
+struct oj_solution_t {
+  int sid;           // solution id
+  int pid;           // problem id
+  int lang;          // language id
+  int time_limit;    // ms
+  int memory_limit;  // KB
 
   int result;
 
@@ -96,35 +99,35 @@ void timeout_hander(int signo);
 void print_solution();
 void check_spj();
 int data_filter(const struct dirent *dirp);
-void prepare_files(const char *filen_ame, 
-                   char *infile, 
-                   char *outfile, 
+void prepare_files(const char *filen_ame,
+                   char *infile,
+                   char *outfile,
                    char *userfile);
-void io_redirect(const char *input_file, 
-                 const char *stdout_file, 
+void io_redirect(const char *input_file,
+                 const char *stdout_file,
                  const char *stderr_file);
-void set_limit(long fsize);
+void set_limit(off_t fsize);
 void set_compile_limit();
 void set_security_option();
 
-int oj_compare_output_spj(const char *file_in,  //std input
-                          const char *file_out, //std output
-                          const char *file_user, //user output
-                          const char *spj_exec);  //path of spj
+int oj_compare_output_spj(const char *file_in,    // std input
+                          const char *file_out,   // std output
+                          const char *file_user,  // user output
+                          const char *spj_exec);  // path of spj
 int oj_compare_output(const char *file_out, const char *file_user);
 void fix_java_result(const char *stdout_file, const char *stderr_file);
 void output_result(int result, int time_usage, int memory_usage, int test);
 
 void compile();
 void run_solution();
-bool judge(const char *input_file, 
-           const char *output_file_std, 
-           const char *stdout_file_executive, 
+bool judge(const char *input_file,
+           const char *output_file_std,
+           const char *stdout_file_executive,
            const char *stderr_file_executive);
 
-bool judge_fast( const char *input_file, 
-                 const char *output_file_std, 
-                 const char *stdout_file_executive, 
-                 const char *stderr_file_executive );
+bool judge_fast(const char *input_file,
+                const char *output_file_std,
+                const char *stdout_file_executive,
+                const char *stderr_file_executive);
 
-#endif /* __JUDGE_H__ */
+#endif  // SRC_JUDGE_H_

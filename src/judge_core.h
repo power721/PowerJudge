@@ -1,7 +1,12 @@
-#ifndef __JUDGE_CORE_H__
-#define __JUDGE_CORE_H__
+/*
+ * Copyright 2014 power <power0721#gmail.com>
+ * PowerOJ GPLv2
+ */
+#ifndef SRC_JUDGE_CORE_H_
+#define SRC_JUDGE_CORE_H_
 
 
+#include <stdint.h>
 #include <unistd.h>
 #include <errno.h>
 #include <pwd.h>
@@ -94,4 +99,4 @@ char result_str[][10] = {
 const char languages[][10]  = { "unknown", "c", "c++", "pascal", "java", "python" };
 const char lang_ext[][10]   = { "", "c", "cc", "pas", "java", "py" };
 
-#endif /* __JUDGE_CORE_H__ */
+#endif  // SRC_JUDGE_CORE_H_

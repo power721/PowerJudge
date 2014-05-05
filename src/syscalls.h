@@ -1,5 +1,9 @@
-#ifndef __SYS_CALLS__
-#define __SYS_CALLS__
+/*
+ * Copyright 2014 power <power0721#gmail.com>
+ * PowerOJ GPLv2
+ */
+#ifndef SRC_SYSCALLS_H_
+#define SRC_SYSCALLS_H_
 
 #include "log.h"
 #include "judge_core.h"
@@ -13,7 +17,7 @@
  *
  * syscalls的初始化由init_syscalls函数完成
  */
-short syscalls[1024] = {0};
+uint16_t syscalls[1024] = {0};
 
 /*
  * SC_* 数组对是用于初始化syscalls的数据来源,
@@ -27,7 +31,7 @@ short syscalls[1024] = {0};
 #define SYSCALLS_INFINITE -1
 #define SYSCALLS_END      -2
 #ifdef __i386
-//http://docs.cs.up.ac.za/programming/asm/derick_tut/syscalls.html
+// http://docs.cs.up.ac.za/programming/asm/derick_tut/syscalls.html
 
 // C or C++
 int SC_C[512] =
@@ -157,7 +161,7 @@ int SC_PYTHON[512] = {
   SYSCALLS_END
 };
 #else
-//http://blog.rchapman.org/post/36801038863/linux-system-call-table-for-x86-64
+// http://blog.rchapman.org/post/36801038863/linux-system-call-table-for-x86-64
 
 // C or C++
 int SC_C[512] =
@@ -166,7 +170,7 @@ int SC_C[512] =
   SYS_read,            SYSCALLS_INFINITE,
   SYS_readlink,        SYSCALLS_INFINITE,
   SYS_uname,           SYSCALLS_INFINITE,
-  SYS_write,           SYSCALLS_INFINITE, 
+  SYS_write,           SYSCALLS_INFINITE,
   SYS_close,           SYSCALLS_INFINITE,
   SYS_exit_group,      SYSCALLS_INFINITE,
   SYS_execve,          SYSCALLS_INFINITE,
@@ -306,7 +310,7 @@ int SC_PYTHON[512] = {
 };
 #endif
 
-//根据 SC_* 数组来初始化syscalls
+// 根据 SC_* 数组来初始化syscalls
 int init_syscalls(int lang)
 {
   int i;
@@ -336,4 +340,4 @@ int init_syscalls(int lang)
   return 0;
 }
 
-#endif
+#endif  // SRC_SYSCALLS_H_

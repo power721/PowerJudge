@@ -22,11 +22,17 @@ $(TARGET): $(OBJECTS)
 bin/%.o: src/%.c src/*.h
 	$(CXX) $< -c -o $@ $(CXXFLAGS)
 
-.PHONY: test install clean
+.PHONY: test check install clean
 test:
 	g++ -o test/data/1405/spj test/data/1405/spj.cc
 	chmod a+x test/unitTest.sh
 	cd test && ./unitTest.sh
+
+check:
+	-cd src && ./cpplint.py --linelength=100 --extensions=c,h \
+	--filter=-whitespace/braces,-build/include \
+	judge.c judge.h judge_core.h log.h misc.h syscalls.h
+	-cppcheck src/judge.c
 
 install:
 	sudo cp $(TARGET) /usr/local/bin/

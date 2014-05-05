@@ -1,5 +1,9 @@
-#ifndef __MISC_H__
-#define __MISC_H__
+/*
+ * Copyright 2014 power <power0721#gmail.com>
+ * PowerOJ GPLv2
+ */
+#ifndef SRC_MISC_H_
+#define SRC_MISC_H_
 
 #include <ctype.h>
 #include "judge_core.h"
@@ -8,7 +12,7 @@
 #define is_space_char(a) ((a == ' ') || (a == '\t') || (a == '\n'))
 
 int max(int a, int b);
-long file_size(const char *filename);
+off_t file_size(const char *filename);
 int isInFile(const char *filename);
 int malarm(int which, int milliseconds);
 void print_compiler(const char * options[]);
@@ -25,15 +29,15 @@ int max(int a, int b)
   return a > b ? a : b;
 }
 
-long file_size(const char *filename)
+off_t file_size(const char *filename)
 {
-  struct stat st; 
+  struct stat st;
 
   if (!stat(filename, &st)) {
     return st.st_size;
   }
-  
-  return 0; 
+
+  return 0;
 }
 
 int isInFile(const char *filename)
@@ -41,8 +45,7 @@ int isInFile(const char *filename)
   int len = strlen(filename);
   if (len <= 3 || strcmp(filename + len - 3, ".in") != 0) {
     return 0;
-  }
-  else {
+  } else {
     return len - 3;
   }
 }
@@ -127,7 +130,7 @@ void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, con
   FM_LOG_DEBUG("make_diff_out");
   FILE *out;
   char buf[BUFF_SIZE];
-  sprintf(buf, "%s/diff.out", work_dir);
+  snprintf(buf, BUFF_SIZE, "%s/diff.out", work_dir);
   out = fopen(buf, "a+");
   fprintf(out, "=================%s\n", basename(path));
   fprintf(out, "Right:\n%c", c1);
@@ -149,16 +152,13 @@ bool is_valid_syscall(int lang, int syscall_id)
   in_syscall = !in_syscall;
   if (syscalls[syscall_id] == 0) {
     return false;
-  }
-  else if (syscalls[syscall_id] > 0) {
+  } else if (syscalls[syscall_id] > 0) {
     if (in_syscall == false) {
       syscalls[syscall_id]--;
     }
-  }
-  else {
-    ;
+  } else {
   }
   return true;
 }
 
-#endif /* __MISC_H__ */
+#endif  // SRC_MISC_H_
