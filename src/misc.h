@@ -5,7 +5,6 @@
 #ifndef SRC_MISC_H_
 #define SRC_MISC_H_
 
-#include <ctype.h>
 #include "judge_core.h"
 #include "syscalls.h"
 
