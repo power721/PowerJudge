@@ -169,7 +169,7 @@ runTest 4 "SPJ WA" "../bin/powerjudge -s 140524 -p 1405 -D ./data -d ./temp -t 1
 runTest 0 "empty data dir"  "../bin/powerjudge -s 100220 -p 1002 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
 
 # gcc not include header for scanf/printf
-runTest 7 "gcc no IO header" "../bin/powerjudge -s 10 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 1"
+runTest 0 "gcc no IO header" "../bin/powerjudge -s 10 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 1"
 
 # g++ not include header for scanf/printf
 runTest 7 "g++ no IO header" "../bin/powerjudge -s 127 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
