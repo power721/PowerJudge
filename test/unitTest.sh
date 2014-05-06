@@ -52,8 +52,12 @@ function init()
   mkdir temp/20041
   cp code/1000/NotPublicClass.java temp/20041/Main.java
 
+  mkdir temp/100053
+  cp code/1000/1000_MLE.py temp/100053/Main.py
   mkdir temp/100055
   cp code/1000/1000_RE.py temp/100055/Main.py
+  mkdir temp/100056
+  cp code/1000/1000_OLE.py temp/100056/Main.py
   mkdir temp/100057
   cp code/1000/1000_CE.py temp/100057/Main.py
 
@@ -148,8 +152,10 @@ runTest 0 "Java Thread"  "../bin/powerjudge -s 20040 -p 1000 -D ./data -d ./temp
 runTest 0 "Java No Public Class"  "../bin/powerjudge -s 20041 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 4"
 
 # test Python
-runTest 5 "Python RE" "../bin/powerjudge -s 100055 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
-runTest 7 "Python CE" "../bin/powerjudge -s 100057 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
+runTest 3 "Python MLE" "../bin/powerjudge -s 100053 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
+runTest 5 "Python RE"  "../bin/powerjudge -s 100055 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
+runTest 6 "Python OLE" "../bin/powerjudge -s 100056 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
+runTest 7 "Python CE"  "../bin/powerjudge -s 100057 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
 
 # test int64
 runTest 0 "long long" "../bin/powerjudge -s 6420 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"

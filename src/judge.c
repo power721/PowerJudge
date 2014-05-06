@@ -277,7 +277,7 @@ void set_compile_limit()
 
   if (EXIT_SUCCESS != malarm(ITIMER_REAL, compile_time_limit)) {
     FM_LOG_FATAL("malarm  for compiler failed: %s", strerror(errno));
-    exit(EXIT_PRE_JUDGE);
+    exit(EXIT_SET_LIMIT);
   }
 
   lim.rlim_cur = lim.rlim_max = compile_memory_limit * STD_MB;
@@ -499,8 +499,6 @@ bool judge(const char *input_file,
       //                            rused.ru_minflt, page_size / STD_KB);
       if (oj_solution.memory_usage > oj_solution.memory_limit) {
         oj_solution.result = OJ_MLE;
-        FM_LOG_NOTICE("memory limit exceeded: %d (fault: %d * %d)",
-                      oj_solution.memory_usage, rused.ru_minflt, page_size);
 #ifndef FAST_JUDGE
         ptrace(PTRACE_KILL, executor, NULL, NULL);
 #endif
@@ -542,7 +540,6 @@ bool judge(const char *input_file,
   }
 
   oj_solution.time_usage += (rused.ru_utime.tv_sec * 1000 + rused.ru_utime.tv_usec / 1000);
-
   if (oj_solution.time_usage > oj_solution.time_limit) {
     oj_solution.result = OJ_TLE;
     FM_LOG_TRACE("Time Limit Exceeded");
@@ -552,12 +549,13 @@ bool judge(const char *input_file,
     FM_LOG_NOTICE("not AC/PE, no need to continue");
     if (oj_solution.result == OJ_TLE) {
       oj_solution.time_usage = oj_solution.time_limit;
-    }
-    if (oj_solution.lang == LANG_JAVA && oj_solution.result == OJ_WA) {
-      fix_java_result(stdout_file_executive, stderr_file_executive);
-    } else if (oj_solution.lang == LANG_PYTHON && file_size(stderr_file_executive)) {
-      oj_solution.result = OJ_RE;
-      FM_LOG_TRACE("Runtime Error");
+    } else if (oj_solution.result == OJ_WA) {
+      if (oj_solution.lang == LANG_JAVA) {
+        fix_java_result(stdout_file_executive, stderr_file_executive);
+      } else if (oj_solution.lang == LANG_PYTHON && file_size(stderr_file_executive)) {
+        oj_solution.result = OJ_RE;
+        FM_LOG_TRACE("Runtime Error");
+      }
     }
     return false;
   }
