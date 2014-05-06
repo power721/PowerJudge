@@ -20,7 +20,6 @@ void copy_shell_runtime(const char * work_dir);
 void copy_python_runtime(const char * work_dir);
 void clean_workdir(const char * work_dir);
 void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path);
-bool is_valid_syscall(int lang, int syscall_id);
 
 
 int max(int a, int b)
@@ -87,12 +86,12 @@ int execute_cmd(const char *fmt, ...)
 
 void copy_shell_runtime(const char *work_dir)
 {
-  execute_cmd("/bin/mkdir %s/lib", work_dir);
-  execute_cmd("/bin/mkdir %s/bin", work_dir);
+  execute_cmd("/bin/mkdir %s/lib 2>/dev/null", work_dir);
+  execute_cmd("/bin/mkdir %s/bin 2>/dev/null", work_dir);
   execute_cmd("/bin/cp /lib/* %s/lib/ 2>/dev/null", work_dir);
   execute_cmd("/bin/cp -a /lib/i386-linux-gnu %s/lib/ 2>/dev/null", work_dir);
 #ifndef __i386
-  execute_cmd("/bin/mkdir %s/lib64", work_dir);
+  execute_cmd("/bin/mkdir %s/lib64 2>/dev/null", work_dir);
   execute_cmd("/bin/cp -a /lib/x86_64-linux-gnu %s/lib/ 2>/dev/null", work_dir);
   execute_cmd("/bin/cp /lib64/* %s/lib64/ 2>/dev/null", work_dir);
   execute_cmd("/bin/cp -a /lib32 %s/ 2>/dev/null", work_dir);
@@ -105,8 +104,8 @@ void copy_shell_runtime(const char *work_dir)
 void copy_python_runtime(const char *work_dir)
 {
   copy_shell_runtime(work_dir);
-  execute_cmd("/bin/mkdir -p %s/usr/include", work_dir);
-  execute_cmd("/bin/mkdir -p %s/usr/lib", work_dir);
+  execute_cmd("/bin/mkdir -p %s/usr/include 2>/dev/null", work_dir);
+  execute_cmd("/bin/mkdir -p %s/usr/lib 2>/dev/null", work_dir);
   execute_cmd("/bin/cp /usr/bin/python* %s/ 2>/dev/null", work_dir);
   execute_cmd("/bin/cp -a /usr/lib/python* %s/usr/lib/ 2>/dev/null", work_dir);
   execute_cmd("/bin/cp -a /usr/include/python* %s/usr/include/ 2>/dev/null", work_dir);

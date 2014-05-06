@@ -39,4 +39,4 @@ or
   4. Java
   5. Python
 * **-D**    root data directory, e.g. ~/oj/data/
-* **-d**    root work directory, e.g. ~/oj/temp/ (optional, default './')
+* **-d**    root work directory, e.g. ~/oj/temp/

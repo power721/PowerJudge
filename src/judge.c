@@ -526,7 +526,7 @@ bool judge(const char *input_file,
   #else
       syscall_id = regs.orig_rax;
   #endif
-      if (syscall_id > 0 && !is_valid_syscall(oj_solution.lang, syscall_id)) {
+      if (syscall_id > 0 && !is_valid_syscall(syscall_id)) {
         oj_solution.result = OJ_RF;
         FM_LOG_NOTICE("restricted function, syscall_id: %d", syscall_id);
         ptrace(PTRACE_KILL, executor, NULL, NULL);
@@ -672,7 +672,6 @@ void set_limit(off_t fsize)
       exit(EXIT_SET_LIMIT);
     }
 
-    // useful for fast judge
     // number of open file, return EMFILE
     lim.rlim_cur = lim.rlim_max = 0;
     if (setrlimit(RLIMIT_NOFILE, &lim) < 0) {
