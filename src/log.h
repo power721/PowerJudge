@@ -35,6 +35,7 @@
 #ifndef SRC_LOG_H_
 #define SRC_LOG_H_
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -44,14 +45,16 @@
 #include <error.h>
 #include <sys/file.h>
 
-#ifndef LOG_LEVEL
-#define LOG_LEVEL LOG_DEBUG
-#endif
 
 int log_open(const char *filename);
 void log_close();
 static void log_write(int, const char *, const int, const char *, ...);
 void log_add_info(const char *info);
+
+
+#ifndef LOG_LEVEL
+#define LOG_LEVEL LOG_DEBUG
+#endif
 
 #define LOG_FATAL        0
 #define LOG_WARNING      1
@@ -62,12 +65,12 @@ void log_add_info(const char *info);
 static char LOG_LEVEL_NOTE[][10] =
 { "FATAL", "WARNING", "MONITOR", "NOTICE", "TRACE", "DEBUG" };
 
-#define FM_LOG_DEBUG(x...)   log_write(LOG_DEBUG, __FILE__, __LINE__, ##x)
-#define FM_LOG_TRACE(x...)   log_write(LOG_TRACE, __FILE__, __LINE__, ##x)
-#define FM_LOG_NOTICE(x...)  log_write(LOG_NOTICE, __FILE__, __LINE__, ##x)
+#define FM_LOG_DEBUG(x...)   log_write(LOG_DEBUG,   __FILE__, __LINE__, ##x)
+#define FM_LOG_TRACE(x...)   log_write(LOG_TRACE,   __FILE__, __LINE__, ##x)
+#define FM_LOG_NOTICE(x...)  log_write(LOG_NOTICE,  __FILE__, __LINE__, ##x)
 #define FM_LOG_MONITOR(x...) log_write(LOG_MONITOR, __FILE__, __LINE__, ##x)
 #define FM_LOG_WARNING(x...) log_write(LOG_WARNING, __FILE__, __LINE__, ##x)
-#define FM_LOG_FATAL(x...)   log_write(LOG_FATAL, __FILE__, __LINE__, ##x)
+#define FM_LOG_FATAL(x...)   log_write(LOG_FATAL,   __FILE__, __LINE__, ##x)
 
 static FILE *log_fp                 = NULL;
 static char *log_filename           = NULL;
@@ -77,10 +80,10 @@ static int  log_opened              = 0;
 static char log_buffer[LOG_BUFFER_SIZE];
 static char log_extra_info[LOG_BUFFER_SIZE];
 
+
 int log_open(const char* filename)
 {
-  if (log_opened == 1)
-  {
+  if (log_opened == 1) {
     fprintf(stderr, "logger: log already opened\n");
     return 0;
   }
@@ -88,8 +91,7 @@ int log_open(const char* filename)
   log_filename = (char *)malloc(sizeof(char) * len + 1);
   snprintf(log_filename, len + 1, "%s", filename);
   log_fp = fopen(log_filename, "a");
-  if (log_fp == NULL)
-  {
+  if (log_fp == NULL) {
     fprintf(stderr, "log_file: %s", log_filename);
     perror("cannot open log file");
     exit(1);
@@ -105,8 +107,7 @@ int log_open(const char* filename)
 
 void log_close()
 {
-  if (log_opened)
-  {
+  if (log_opened) {
     char buf[256] = "log_close\n";
     if (!log_extra_info[0]) {
       strcat(buf,
@@ -125,8 +126,7 @@ static void log_write(int level, const char *file,
                       const int line, const char *fmt, ...)
 {
   if (LOG_LEVEL < level) return;
-  if (log_opened == 0)
-  {
+  if (log_opened == 0) {
     fprintf(stderr, "log_open not called yet!\n");
     exit(1);
   }
@@ -137,8 +137,7 @@ static void log_write(int level, const char *file,
   now = time(NULL);
 
   strftime(buffer, 90, "%Y-%m-%d %H:%M:%S", localtime(&now));
-  if (gettimeofday(&tv, NULL) == 0)
-  {
+  if (gettimeofday(&tv, NULL) == 0) {
     snprintf(datetime, sizeof(datetime), "%s.%06ld", buffer, tv.tv_usec);
   }
 
@@ -157,10 +156,8 @@ static void log_write(int level, const char *file,
   }
 
   int log_fd = log_fp->_fileno;
-  if (flock(log_fd, LOCK_EX) == 0)
-  {
-    if (write(log_fd, buffer, count) < 0)
-    {
+  if (flock(log_fd, LOCK_EX) == 0) {
+    if (write(log_fd, buffer, count) < 0) {
       perror("write log error");
       exit(1);
     }

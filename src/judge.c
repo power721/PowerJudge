@@ -116,6 +116,11 @@ void parse_arguments(int argc, char *argv[])
     oj_solution.time_limit      *= python_time_factor;
   }
 
+  char buff[PATH_SIZE];
+  snprintf(buff, PATH_SIZE, "%s/last", work_dir_root);
+  unlink(buff);
+  symlink(oj_solution.work_dir, buff);
+
   print_solution();
 }
 
@@ -583,7 +588,7 @@ void check_spj()
 
 int data_filter(const struct dirent *dirp)
 {
-  int namelen = isInFile(dirp->d_name);  // check if the file is *.in
+  int namelen = checkInFile(dirp->d_name);  // check if the file is *.in
   if (namelen == 0)
     return 0;
 

@@ -12,7 +12,7 @@
 
 int max(int a, int b);
 off_t file_size(const char *filename);
-int isInFile(const char *filename);
+int checkInFile(const char *filename);
 int malarm(int which, int milliseconds);
 void print_compiler(const char * options[]);
 int execute_cmd(const char *format, ...);
@@ -38,7 +38,7 @@ off_t file_size(const char *filename)
   return 0;
 }
 
-int isInFile(const char *filename)
+int checkInFile(const char *filename)
 {
   int len = strlen(filename);
   if (len <= 3 || strcmp(filename + len - 3, ".in") != 0) {
@@ -53,11 +53,11 @@ int isInFile(const char *filename)
 int malarm(int which, int milliseconds)
 {
   struct itimerval t;
-  FM_LOG_TRACE("malarm: %d", milliseconds);
   t.it_value.tv_sec       = milliseconds / 1000;
   t.it_value.tv_usec      = milliseconds % 1000 * 1000;
   t.it_interval.tv_sec    = 0;
   t.it_interval.tv_usec   = 0;
+  FM_LOG_TRACE("malarm: %d", milliseconds);
   return setitimer(which, &t, NULL);
 }
 
