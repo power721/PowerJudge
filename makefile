@@ -9,10 +9,6 @@ ifdef LOG_LEVEL
 	CXXFLAGS+= -DLOG_LEVEL=${LOG_LEVEL}
 endif
 
-ifdef FAST_JUDGE
-	CXXFLAGS+= -DFAST_JUDGE
-endif
-
 all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(LD) -o $@ $(LDFLAGS) $(OBJECTS)

@@ -6,11 +6,9 @@
 
 int main(int argc, char *argv[], char *envp[])
 {
-#ifndef FAST_JUDGE
   if (nice(10) == -1) {  // increase nice value(decrease pripority)
     FM_LOG_WARNING("increase nice value failed: %s", strerror(errno));
   }
-#endif
 
   init();
 
@@ -119,7 +117,9 @@ void parse_arguments(int argc, char *argv[])
   char buff[PATH_SIZE];
   snprintf(buff, PATH_SIZE, "%s/last", work_dir_root);
   unlink(buff);
-  symlink(oj_solution.work_dir, buff);
+  if (symlink(oj_solution.work_dir, buff) == -1) {
+    FM_LOG_NOTICE("make symlink for %s failed: %s", buff, strerror(errno));
+  }
 
   print_solution();
 }
@@ -398,12 +398,10 @@ bool judge(const char *input_file,
     FM_LOG_TRACE("begin execute");
     log_close();
 
-#ifndef FAST_JUDGE
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0) {
       FM_LOG_FATAL("Trace executor failed: %s", strerror(errno));
       exit(EXIT_PRE_JUDGE_PTRACE);
     }
-#endif
 
     // load program
     if (oj_solution.lang == LANG_JAVA) {
@@ -420,13 +418,10 @@ bool judge(const char *input_file,
   } else {
     // Judger
     int status          = 0;
-
-#ifndef FAST_JUDGE
     int syscall_id      = 0;
     struct user_regs_struct regs;
 
     init_syscalls(oj_solution.lang);
-#endif
 
     while (true) {
       if (wait4(executor, &status, 0, &rused) < 0) {
@@ -501,9 +496,7 @@ bool judge(const char *input_file,
               FM_LOG_TRACE("Runtime Error");
               break;
         }  // end of swtich
-#ifndef FAST_JUDGE
         ptrace(PTRACE_KILL, executor, NULL, NULL);
-#endif
         break;
       }  // end of  "if (WIFSIGNALED(status) ...)"
 
@@ -514,13 +507,10 @@ bool judge(const char *input_file,
       //                            rused.ru_minflt, page_size / STD_KB);
       if (oj_solution.memory_usage > oj_solution.memory_limit) {
         oj_solution.result = OJ_MLE;
-#ifndef FAST_JUDGE
         ptrace(PTRACE_KILL, executor, NULL, NULL);
-#endif
         break;
       }
 
-#ifndef FAST_JUDGE
       // check syscall
       if (ptrace(PTRACE_GETREGS, executor, NULL, &regs) < 0) {
         FM_LOG_FATAL("ptrace(PTRACE_GETREGS) failed: %s", strerror(errno));
@@ -542,7 +532,6 @@ bool judge(const char *input_file,
         FM_LOG_FATAL("ptrace(PTRACE_SYSCALL) failed");
         exit(EXIT_JUDGE);
       }
-#endif /* end of FAST_JUDGE */
     }  // end of while
   }  // end of fork for judge process
 
@@ -621,13 +610,11 @@ void prepare_files(const char *filename,
   snprintf(outfile,  PATH_SIZE, "%s/%s.out", oj_solution.data_dir, fname);
   snprintf(userfile, PATH_SIZE, "%s/%s.out", oj_solution.work_dir, fname);
 
-#ifndef FAST_JUDGE
   char buff[PATH_SIZE];
   snprintf(buff, PATH_SIZE, "%s/%s.in", oj_solution.work_dir, fname);
   if (symlink(infile, buff) == -1) {
-    FM_LOG_WARNING("make symlink for %s failed: %s", infile, strerror(errno));
+    FM_LOG_NOTICE("make symlink for %s failed: %s", buff, strerror(errno));
   }
-#endif /* fast judge can read this input file, it's dangerous */
 
   FM_LOG_DEBUG("std  input  file: %s", infile);
   FM_LOG_DEBUG("std  output file: %s", outfile);

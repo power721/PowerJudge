@@ -14,7 +14,7 @@ judge_fast doesn't use ptrace and no RF result, use chroot and setuid for permis
 
 or
 
-    make -e FAST_JUDGE=1 -e LOG_LEVEL=LOG_NOTICE
+    make -e LOG_LEVEL=LOG_NOTICE
 
 
 ##Test##
