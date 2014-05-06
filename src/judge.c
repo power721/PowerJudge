@@ -249,8 +249,8 @@ void compile()
         int signo = WTERMSIG(status);
         FM_LOG_WARNING("Compiler Limit Exceeded: %s", strsignal(signo));
         output_result(OJ_CE, 0, 0, 0);
-        stderr = freopen(stderr_compiler, "a", stderr);
-        fprintf(stderr, "Compiler Limit Exceeded\n");
+        stderr = freopen(stderr_compiler, "w", stderr);
+        fprintf(stderr, "Compiler Limit Exceeded: %s\n", strsignal(signo));
         exit(EXIT_OK);
       } else if (WIFSTOPPED(status)) {  // stopped by signal
         int signo = WSTOPSIG(status);
@@ -269,13 +269,13 @@ void set_compile_limit()
 
   rlimit lim;
 
-  lim.rlim_cur = lim.rlim_max = compile_time_limit;
+  lim.rlim_cur = lim.rlim_max = compile_time_limit / 1000;
   if (setrlimit(RLIMIT_CPU, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_CPU failed: %s", strerror(errno));
     exit(EXIT_SET_LIMIT);
   }
 
-  if (EXIT_SUCCESS != malarm(ITIMER_REAL, compile_time_limit * 1000 /* ms */ )) {
+  if (EXIT_SUCCESS != malarm(ITIMER_REAL, compile_time_limit)) {
     FM_LOG_FATAL("malarm  for compiler failed: %s", strerror(errno));
     exit(EXIT_PRE_JUDGE);
   }

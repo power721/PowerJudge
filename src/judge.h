@@ -43,8 +43,8 @@ char data_dir_root[PATH_SIZE];
 // judge本身的时限(ms)
 int judge_time_limit            = 15347;
 
-// 编译限制(s)
-int compile_time_limit          = 5;
+// 编译限制(ms)
+int compile_time_limit          = 5347;
 
 // 编译限制(MB)
 int compile_memory_limit        = 256;
