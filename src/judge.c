@@ -246,13 +246,15 @@ void compile()
       }
     } else {
       if (WIFSIGNALED(status)) {  // killed by signal
-        FM_LOG_WARNING("Compiler Limit Exceeded");
+        int signo = WTERMSIG(status);
+        FM_LOG_WARNING("Compiler Limit Exceeded: %s", strsignal(signo));
         output_result(OJ_CE, 0, 0, 0);
         stderr = freopen(stderr_compiler, "a", stderr);
         fprintf(stderr, "Compiler Limit Exceeded\n");
         exit(EXIT_OK);
       } else if (WIFSTOPPED(status)) {  // stopped by signal
-        FM_LOG_FATAL("stopped by signal %d\n", WSTOPSIG(status));
+        int signo = WSTOPSIG(status);
+        FM_LOG_FATAL("stopped by signal: %s\n", strsignal(signo));
       } else {
         FM_LOG_FATAL("unknown stop reason, status(%d)", status);
       }

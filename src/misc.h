@@ -7,6 +7,7 @@
 
 #include "judge_core.h"
 
+
 #define is_space_char(a) ((a == ' ') || (a == '\t') || (a == '\n'))
 
 int max(int a, int b);
