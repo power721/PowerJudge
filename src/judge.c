@@ -47,7 +47,7 @@ int main(int argc, char *argv[], char *envp[])
 
 void init()
 {
-  oj_solution.result = OJ_AC;
+  oj_solution.result = OJ_AC;  // this is the result of empty data directory
   oj_solution.time_limit = 1000;
   oj_solution.memory_limit = 65536;
   snprintf(work_dir_root, PATH_SIZE, ".");

@@ -92,42 +92,38 @@ struct oj_solution_t {
 }oj_solution;
 
 
-void init();
-void check_arguments();
-void parse_arguments(int argc, char *argv[]);
-void timeout_hander(int signo);
-void print_solution();
-void check_spj();
-int data_filter(const struct dirent *dirp);
-void prepare_files(const char *filen_ame,
-                   char *infile,
-                   char *outfile,
-                   char *userfile);
-void io_redirect(const char *input_file,
-                 const char *stdout_file,
-                 const char *stderr_file);
-void set_limit(off_t fsize);
-void set_compile_limit();
-void set_security_option();
+static void init();
+static void check_arguments();
+static void parse_arguments(int argc, char *argv[]);
+static void timeout_hander(int signo);
+static void print_solution();
 
-int oj_compare_output_spj(const char *file_in,    // std input
-                          const char *file_out,   // std output
-                          const char *file_user,  // user output
-                          const char *spj_exec);  // path of spj
-int oj_compare_output(const char *file_out, const char *file_user);
-void fix_java_result(const char *stdout_file, const char *stderr_file);
-void output_result(int result, int time_usage, int memory_usage, int test);
+static void check_spj();
+static int data_filter(const struct dirent *dirp);
+static void prepare_files(const char *filen_ame,
+                          char *infile,
+                          char *outfile,
+                          char *userfile);
+static void io_redirect(const char *input_file,
+                        const char *stdout_file,
+                        const char *stderr_file);
+static void set_limit(off_t fsize);
+static void set_compile_limit();
+static void set_security_option();
 
-void compile();
-void run_solution();
-bool judge(const char *input_file,
-           const char *output_file_std,
-           const char *stdout_file_executive,
-           const char *stderr_file_executive);
+static int oj_compare_output_spj(const char *file_in,    // std input
+                                 const char *file_out,   // std output
+                                 const char *file_user,  // user output
+                                 const char *spj_exec);  // path of spj
+static int oj_compare_output(const char *file_out, const char *file_user);
+static void fix_java_result(const char *stdout_file, const char *stderr_file);
+static void output_result(int result, int time_usage, int memory_usage, int test);
 
-bool judge_fast(const char *input_file,
-                const char *output_file_std,
-                const char *stdout_file_executive,
-                const char *stderr_file_executive);
+static void compile();
+static void run_solution();
+static bool judge(const char *input_file,
+                  const char *output_file_std,
+                  const char *stdout_file_executive,
+                  const char *stderr_file_executive);
 
 #endif  // SRC_JUDGE_H_
