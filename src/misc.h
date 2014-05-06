@@ -6,7 +6,6 @@
 #define SRC_MISC_H_
 
 #include "judge_core.h"
-#include "syscalls.h"
 
 #define is_space_char(a) ((a == ' ') || (a == '\t') || (a == '\n'))
 
@@ -143,21 +142,6 @@ void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, con
   }
   fprintf(out, "\n=================\n");
   fclose(out);
-}
-
-static bool in_syscall = true;
-bool is_valid_syscall(int lang, int syscall_id)
-{
-  in_syscall = !in_syscall;
-  if (syscalls[syscall_id] == 0) {
-    return false;
-  } else if (syscalls[syscall_id] > 0) {
-    if (in_syscall == false) {
-      syscalls[syscall_id]--;
-    }
-  } else {
-  }
-  return true;
 }
 
 #endif  // SRC_MISC_H_

@@ -340,4 +340,19 @@ int init_syscalls(int lang)
   return 0;
 }
 
+static bool in_syscall = true;
+bool is_valid_syscall(int lang, int syscall_id)
+{
+  in_syscall = !in_syscall;
+  if (syscalls[syscall_id] == 0) {
+    return false;
+  } else if (syscalls[syscall_id] > 0) {
+    if (in_syscall == false) {
+      syscalls[syscall_id]--;
+    }
+  } else {
+  }
+  return true;
+}
+
 #endif  // SRC_SYSCALLS_H_

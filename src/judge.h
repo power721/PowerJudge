@@ -15,6 +15,7 @@
 #include <dirent.h>
 #include "log.h"
 #include "misc.h"
+#include "syscalls.h"
 
 
 // 编译选项
