@@ -167,6 +167,16 @@ void timeout_hander(int signo)
   }
 }
 
+  /*
+   * #error "This make CE"
+   * #warning "Just warning message"
+   * #include </dev/core>
+   * #include </dev/zero>
+   * #include </dev/random>
+   * #include </etc/passwd>
+   * #include <../../../etc/passwd>
+   * egrep '^\s*#include\s*[<"][./].*[>"]' Main.cc
+   */
 void compile()
 {
   char stdout_compiler[PATH_SIZE];
