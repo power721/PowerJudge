@@ -9,6 +9,14 @@ auto get data files from data directory and sort by lexicographical.
 judge_fast doesn't use ptrace and no RF result, use chroot and setuid for permission control. 
 
 
+##Download##
+    git clone http://git.oschina.net/power/PowerJudge.git
+
+
+##Compilers##
+    sudo apt-get install fpc openjdk-7-jdk python2.7 gcc g++
+
+
 ##Build##
     make
 
