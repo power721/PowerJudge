@@ -398,7 +398,6 @@ bool judge(const char *input_file,
     }
 
     FM_LOG_TRACE("begin execute");
-    log_close();
 
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0) {
       FM_LOG_FATAL("Trace executor failed: %s", strerror(errno));
