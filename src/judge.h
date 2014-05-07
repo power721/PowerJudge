@@ -93,13 +93,13 @@ struct oj_solution_t {
 }oj_solution;
 
 
-static void init();
-static void check_arguments();
+static void init(void);
+static void check_arguments(void);
 static void parse_arguments(int argc, char *argv[]);
 static void timeout_hander(int signo);
 static void print_solution();
 
-static void check_spj();
+static void check_spj(void);
 static int data_filter(const struct dirent *dirp);
 static void prepare_files(const char *filen_ame,
                           char *infile,
@@ -109,8 +109,8 @@ static void io_redirect(const char *input_file,
                         const char *stdout_file,
                         const char *stderr_file);
 static void set_limit(off_t fsize);
-static void set_compile_limit();
-static void set_security_option();
+static void set_compile_limit(void);
+static void set_security_option(void);
 
 static int oj_compare_output_spj(const char *file_in,    // std input
                                  const char *file_out,   // std output
@@ -120,8 +120,8 @@ static int oj_compare_output(const char *file_out, const char *file_user);
 static void fix_java_result(const char *stdout_file, const char *stderr_file);
 static void output_result(int result, int time_usage, int memory_usage, int test);
 
-static void compile();
-static void run_solution();
+static void compile(void);
+static void run_solution(void);
 static bool judge(const char *input_file,
                   const char *output_file_std,
                   const char *stdout_file_executive,

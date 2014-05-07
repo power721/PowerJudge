@@ -105,7 +105,7 @@ int log_open(const char* filename)
 }
 
 
-void log_close()
+void log_close(void)
 {
   if (log_opened) {
     char buf[256] = "log_close\n";

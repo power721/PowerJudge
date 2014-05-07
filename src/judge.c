@@ -43,7 +43,7 @@ int main(int argc, char *argv[], char *envp[])
   return 0;
 }
 
-void init()
+void init(void)
 {
   oj_solution.result = OJ_AC;  // this is the result of empty data directory
   oj_solution.time_limit = 1000;
@@ -89,7 +89,7 @@ void parse_arguments(int argc, char *argv[])
       default:
         fprintf(stderr, "unknown option provided: -%c %s\n", opt, optarg);
         exit(EXIT_BAD_PARAM);
-      }
+    }
   }
   snprintf(log_file, PATH_SIZE, "%s/oj-judge.log", work_dir_root);
   log_open(log_file);
@@ -124,7 +124,7 @@ void parse_arguments(int argc, char *argv[])
   print_solution();
 }
 
-void check_arguments()
+void check_arguments(void)
 {
   if (oj_solution.sid == 0) {
     FM_LOG_FATAL("Miss parameter: solution id");
@@ -152,7 +152,7 @@ void check_arguments()
   }
 }
 
-void print_solution()
+void print_solution(void)
 {
   FM_LOG_DEBUG("-- Solution Information --");
   FM_LOG_MONITOR("solution id %d", oj_solution.sid);
@@ -182,7 +182,7 @@ void timeout_hander(int signo)
    * #include <../../../etc/passwd>
    * egrep '^\s*#include\s*[<"][./].*[>"]' Main.cc
    */
-void compile()
+void compile(void)
 {
   char stdout_compiler[PATH_SIZE];
   char stderr_compiler[PATH_SIZE];
@@ -278,7 +278,7 @@ void compile()
   }
 }
 
-void set_compile_limit()
+void set_compile_limit(void)
 {
   if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON) return;
 
@@ -310,7 +310,7 @@ void set_compile_limit()
   FM_LOG_DEBUG("set compile limit ok");
 }
 
-void run_solution()
+void run_solution(void)
 {
   FM_LOG_DEBUG("run_solution");
   if (oj_solution.lang == LANG_PYTHON) {
@@ -567,7 +567,7 @@ bool judge(const char *input_file,
   return true;
 }
 
-void check_spj()
+void check_spj(void)
 {
   snprintf(oj_solution.spj_exe_file, PATH_SIZE, "%s/spj", oj_solution.data_dir);
   if (access(oj_solution.spj_exe_file, F_OK) != -1) {  // spj file exists
@@ -691,7 +691,7 @@ void set_limit(off_t fsize)
   FM_LOG_TRACE("set execute limit ok");
 }
 
-void set_security_option()
+void set_security_option(void)
 {
   struct passwd *nobody = getpwnam("nobody");  // get password file entry for user nobody
   if (nobody == NULL) {
