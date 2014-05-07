@@ -713,25 +713,16 @@ void set_security_option()
     }
   }
 
-  /*if (oj_solution.lang != LANG_JAVA)*/ {
-    // setgid, must before setuid()
-    if (EXIT_SUCCESS != setgid(nobody->pw_gid)) {
-      FM_LOG_FATAL("setgid(%d) failed: %s", nobody->pw_gid, strerror(errno));
-      exit(EXIT_SET_SECURITY);
-    }
+  // setgid, must before setuid()
+  if (EXIT_SUCCESS != setgid(nobody->pw_gid)) {
+    FM_LOG_FATAL("setgid(%d) failed: %s", nobody->pw_gid, strerror(errno));
+    exit(EXIT_SET_SECURITY);
+  }
 
-    // setuid
-    if (EXIT_SUCCESS != setuid(nobody->pw_uid)) {
-      FM_LOG_FATAL("setuid(%d) failed: %s", nobody->pw_uid, strerror(errno));
-      exit(EXIT_SET_SECURITY);
-    }
-
-    // If the effective UID of the caller is root, the real UID and saved set-user-ID are also set
-    // set real, effective and saved user ID
-    /*if (EXIT_SUCCESS != setresuid(nobody->pw_uid, nobody->pw_uid, nobody->pw_uid)) {
-      FM_LOG_FATAL("setresuid(%d) failed: %s", nobody->pw_uid, strerror(errno));
-      exit(EXIT_SET_SECURITY);
-    }*/
+  // setuid
+  if (EXIT_SUCCESS != setuid(nobody->pw_uid)) {
+    FM_LOG_FATAL("setuid(%d) failed: %s", nobody->pw_uid, strerror(errno));
+    exit(EXIT_SET_SECURITY);
   }
 
   FM_LOG_TRACE("set_security_option ok");

@@ -46,6 +46,7 @@ int SC_C[512] =
   SYS_mprotect,         SYSCALLS_INFINITE,
   SYS_munmap,           SYSCALLS_INFINITE,
   SYS_read,             SYSCALLS_INFINITE,
+  SYS_readlink,         SYSCALLS_INFINITE,
   SYS_set_thread_area,  SYSCALLS_INFINITE,
   SYS_time,             SYSCALLS_INFINITE,
   SYS_uname,            SYSCALLS_INFINITE,
