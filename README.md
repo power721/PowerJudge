@@ -5,7 +5,9 @@ Based on UESTC and HUST judge core.
 
 ##Features##
 auto get data files from data directory and sort by lexicographical.
+
 set process limit for compiler, executor and spj.
+
 chroot and setgid/setuid with nobody account for secuirty.
 
 support Linux 32 bit and 64 bit.
@@ -14,9 +16,9 @@ support Linux 32 bit and 64 bit.
   * Linux Mint 14 64bit
   * Debian 7.5 32bit
   * Debian 7.1 64bit
-  
-  * Redhat 5.5  NOT support
-  * CentOS 4.8  NOT support
+
+  * Redhat 5.5  **NOT** support
+  * CentOS 4.8  **NOT** support
 
 ##Download##
     git clone http://git.oschina.net/power/PowerJudge.git
