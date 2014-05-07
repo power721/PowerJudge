@@ -312,8 +312,10 @@ void set_compile_limit()
 
 void run_solution()
 {
+  FM_LOG_DEBUG("run_solution");
   if (oj_solution.lang == LANG_PYTHON) {
     copy_python_runtime(oj_solution.work_dir);
+    FM_LOG_DEBUG("copy_python_runtime");
   }
 
   check_spj();

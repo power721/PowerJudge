@@ -5,9 +5,18 @@ Based on UESTC and HUST judge core.
 
 ##Features##
 auto get data files from data directory and sort by lexicographical.
+set process limit for compiler, executor and spj.
+chroot and setgid/setuid with nobody account for secuirty.
 
-judge_fast doesn't use ptrace and no RF result, use chroot and setuid for permission control. 
-
+support Linux 32 bit and 64 bit.
+  * Ubuntu 12.04 Desktop 64bit
+  * Ubuntu 14.04 Server 32bit
+  * Linux Mint 14 64bit
+  * Debian 7.5 32bit
+  * Debian 7.1 64bit
+  
+  * Redhat 5.5  NOT support
+  * CentOS 4.8  NOT support
 
 ##Download##
     git clone http://git.oschina.net/power/PowerJudge.git
@@ -15,6 +24,8 @@ judge_fast doesn't use ptrace and no RF result, use chroot and setuid for permis
 
 ##Compilers##
     sudo apt-get install fpc openjdk-7-jdk python2.7 gcc g++
+
+not support Eclipse Java Compiler or gcj-jdk.
 
 
 ##Build##

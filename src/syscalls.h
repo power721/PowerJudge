@@ -32,6 +32,7 @@ static int syscalls[1024] = {0};
 #define SYSCALLS_END      -2
 #ifdef __i386
 // http://docs.cs.up.ac.za/programming/asm/derick_tut/syscalls.html
+// http://syscalls.kernelgrok.com/
 
 // C or C++
 int SC_C[512] =
