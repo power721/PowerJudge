@@ -48,6 +48,7 @@ int SC_C[512] =
   SYS_munmap,           SYSCALLS_INFINITE,
   SYS_read,             SYSCALLS_INFINITE,
   SYS_readlink,         SYSCALLS_INFINITE,
+  SYS_rt_sigaction,     SYSCALLS_INFINITE,  // Ubuntu 32bit
   SYS_set_thread_area,  SYSCALLS_INFINITE,
   SYS_time,             SYSCALLS_INFINITE,
   SYS_uname,            SYSCALLS_INFINITE,
