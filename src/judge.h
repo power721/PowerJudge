@@ -33,44 +33,42 @@ const char* EXEC_J[] = { "java", "-cp", ".", "-Djava.security.manager",
 const char* EXEC_PY[] = { "python", "Main.py", NULL };
 
 
-// 配置
-char log_file[PATH_SIZE];
-
-char work_dir_root[PATH_SIZE];
-
-char data_dir_root[PATH_SIZE];
-
+// configruation
 // judge本身的时限(ms)
-int judge_time_limit            = 15347;
+static int judge_time_limit            = 15347;
 
 // 编译限制(ms)
-int compile_time_limit          = 5347;
+static int compile_time_limit          = 5347;
 
 // 编译限制(MB)
-int compile_memory_limit        = 256;
+static int compile_memory_limit        = 256;
 
 // 编译输出限制(MB)
-int compile_fsize_limit         = 64;
+static int compile_fsize_limit         = 64;
 
 // SPJ时间限制(ms)
-int spj_time_limit              = 10347;
+static int spj_time_limit              = 10347;
 
 // 程序运行的栈空间大小(KB)
-int stack_size_limit            = 8192;
+static int stack_size_limit            = 8192;
 
 // ms
-int time_limit_addtion          = 347;
+static int time_limit_addtion          = 347;
 
-int java_time_factor            = 3;
+static int java_time_factor            = 3;
 
-int java_memory_factor          = 3;
+static int java_memory_factor          = 3;
 
-int python_time_factor          = 2;
+static int python_time_factor          = 2;
 
-int python_memory_factor        = 2;
+static int python_memory_factor        = 2;
 /* -- end of configruation -- */
 
-off_t page_size;
+static off_t page_size;
+
+static char work_dir_root[PATH_SIZE] = ".";
+
+static char data_dir_root[PATH_SIZE];
 
 struct oj_solution_t {
   int sid;           // solution id
@@ -88,7 +86,6 @@ struct oj_solution_t {
 
   char work_dir[PATH_SIZE];
   char data_dir[PATH_SIZE];
-
   char spj_exe_file[PATH_SIZE];
 }oj_solution;
 

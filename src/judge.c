@@ -48,7 +48,6 @@ void init(void)
   oj_solution.result = OJ_AC;  // this is the result of empty data directory
   oj_solution.time_limit = 1000;
   oj_solution.memory_limit = 65536;
-  snprintf(work_dir_root, PATH_SIZE, ".");
   page_size = sysconf(_SC_PAGESIZE);  // get configuration information for page size
 }
 
@@ -91,8 +90,9 @@ void parse_arguments(int argc, char *argv[])
         exit(EXIT_BAD_PARAM);
     }
   }
-  snprintf(log_file, PATH_SIZE, "%s/oj-judge.log", work_dir_root);
-  log_open(log_file);
+  char buff[PATH_SIZE];
+  snprintf(buff, PATH_SIZE, "%s/oj-judge.log", work_dir_root);
+  log_open(buff);
 
   check_arguments();
 
@@ -114,7 +114,6 @@ void parse_arguments(int argc, char *argv[])
     oj_solution.time_limit      *= python_time_factor;
   }
 
-  char buff[PATH_SIZE];
   snprintf(buff, PATH_SIZE, "%s/last", work_dir_root);
   unlink(buff);
   if (symlink(oj_solution.work_dir, buff) == -1) {

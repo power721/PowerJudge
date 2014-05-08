@@ -35,7 +35,7 @@ static int syscalls[1024] = {0};
 // http://syscalls.kernelgrok.com/
 
 // C or C++
-int SC_C[512] =
+static int SC_C[512] =
 {
   252,                  2,
   SYS_access,           SYSCALLS_INFINITE,
@@ -58,7 +58,7 @@ int SC_C[512] =
 };
 
 // Pascal
-int SC_PASCAL[512] =
+static int SC_PASCAL[512] =
 {
   13,                   SYSCALLS_INFINITE,
   175,                  SYSCALLS_INFINITE,
@@ -82,7 +82,7 @@ int SC_PASCAL[512] =
 };
 
 // Java
-int SC_JAVA[512] =
+static int SC_JAVA[512] =
 {
   295,                  SYSCALLS_INFINITE,
   SYS_access,           SYSCALLS_INFINITE,
@@ -121,7 +121,7 @@ int SC_JAVA[512] =
 };
 
 // Python
-int SC_PYTHON[512] = {
+static int SC_PYTHON[512] = {
   102,                  SYSCALLS_INFINITE,
   117,                  SYSCALLS_INFINITE,
   146,                  SYSCALLS_INFINITE,
@@ -171,7 +171,7 @@ int SC_PYTHON[512] = {
 // http://blog.rchapman.org/post/36801038863/linux-system-call-table-for-x86-64
 
 // C or C++
-int SC_C[512] =
+static int SC_C[512] =
 {
   252,                 2,
   SYS_access,          SYSCALLS_INFINITE,
@@ -194,7 +194,7 @@ int SC_C[512] =
 };
 
 // Pascal
-int SC_PASCAL[512] =
+static int SC_PASCAL[512] =
 {
   158,                 SYSCALLS_INFINITE,
   191,                 SYSCALLS_INFINITE,
@@ -221,7 +221,7 @@ int SC_PASCAL[512] =
 };
 
 // Java
-int SC_JAVA[512] =
+static int SC_JAVA[512] =
 {
   110,                 SYSCALLS_INFINITE,
   111,                 SYSCALLS_INFINITE,
@@ -271,7 +271,7 @@ int SC_JAVA[512] =
 };
 
 // Python
-int SC_PYTHON[512] = {
+static int SC_PYTHON[512] = {
   102,                 SYSCALLS_INFINITE,
   117,                 SYSCALLS_INFINITE,
   146,                 SYSCALLS_INFINITE,
