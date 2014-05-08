@@ -48,7 +48,8 @@ int SC_C[512] =
   SYS_munmap,           SYSCALLS_INFINITE,
   SYS_read,             SYSCALLS_INFINITE,
   SYS_readlink,         SYSCALLS_INFINITE,
-  SYS_rt_sigaction,     SYSCALLS_INFINITE,  // Ubuntu 32bit
+  SYS_rt_sigaction,     SYSCALLS_INFINITE,  // Ubuntu
+  SYS_rt_sigprocmask,   SYSCALLS_INFINITE,  // Ubuntu
   SYS_set_thread_area,  SYSCALLS_INFINITE,
   SYS_time,             SYSCALLS_INFINITE,
   SYS_uname,            SYSCALLS_INFINITE,
@@ -151,6 +152,7 @@ int SC_PYTHON[512] = {
   SYS_mremap,           SYSCALLS_INFINITE,
   SYS_munmap,           SYSCALLS_INFINITE,
   SYS_open,             SYSCALLS_INFINITE,
+  SYS_openat,           SYSCALLS_INFINITE,  // Ubuntu
   SYS_read,             SYSCALLS_INFINITE,
   SYS_readlink,         SYSCALLS_INFINITE,
   SYS_rt_sigaction,     SYSCALLS_INFINITE,
