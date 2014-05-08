@@ -144,6 +144,7 @@ int SC_PYTHON[512] = {
   SYS_geteuid32,        SYSCALLS_INFINITE,
   SYS_getgid32,         SYSCALLS_INFINITE,
   SYS_getrlimit,        SYSCALLS_INFINITE,
+  SYS_gettimeofday,     SYSCALLS_INFINITE,
   SYS_getuid32,         SYSCALLS_INFINITE,
   SYS_ioctl,            SYSCALLS_INFINITE,
   SYS_lstat64,          SYSCALLS_INFINITE,
@@ -161,6 +162,7 @@ int SC_PYTHON[512] = {
   SYS_set_thread_area,  SYSCALLS_INFINITE,
   SYS_set_tid_address,  SYSCALLS_INFINITE,
   SYS_stat64,           SYSCALLS_INFINITE,
+  SYS_time,             SYSCALLS_INFINITE,
   SYS_uname,            SYSCALLS_INFINITE,
   SYS_write,            SYSCALLS_INFINITE,
   SYSCALLS_END
