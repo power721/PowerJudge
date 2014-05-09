@@ -97,7 +97,6 @@ void copy_shell_runtime(const char *work_dir)
   execute_cmd("/bin/cp -a /lib32 %s/ 2>>error.log", work_dir);
 #endif
   execute_cmd("/bin/cp /bin/busybox %s/bin/ 2>>error.log", work_dir);
-  execute_cmd("/bin/ln -s /bin/busybox %s/bin/sh 2>>error.log", work_dir);
   execute_cmd("/bin/cp /bin/bash %s/bin/bash 2>>error.log", work_dir);
 }
 
