@@ -340,18 +340,21 @@ void run_solution(void)
   int i;
   for (i = 0; flag && i < num_of_test; ++i) {
     prepare_files(namelist[i]->d_name, input_file, output_file_std, stdout_file_executive);
-    free(namelist[i]);
 
     FM_LOG_TRACE("run case: %d", i + 1);
 
     flag = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
 
-    if (!first_failed_test && oj_solution.result != OJ_AC) {
+    if (oj_solution.result != OJ_AC && !first_failed_test) {
       first_failed_test = i + 1;
     }
   }
 
+  for (i = 0; i < num_of_test; ++i) {
+    free(namelist[i]);
+  }
   free(namelist);
+
   if (oj_solution.lang == LANG_PYTHON) {
     clean_workdir(oj_solution.work_dir);
   }
@@ -654,20 +657,6 @@ void set_limit(off_t fsize)
     lim.rlim_cur = lim.rlim_max = (STD_MB << 10) + oj_solution.memory_limit * STD_KB;
     if (setrlimit(RLIMIT_AS, &lim) < 0) {
       FM_LOG_FATAL("setrlimit RLIMIT_AS failed: %s", strerror(errno));
-      exit(EXIT_SET_LIMIT);
-    }
-
-    // process control, fork() failed and return EAGAIN
-    lim.rlim_cur = lim.rlim_max = 0;
-    if (setrlimit(RLIMIT_NPROC, &lim) < 0) {
-      FM_LOG_FATAL("setrlimit RLIMIT_NPROC failed: %s", strerror(errno));
-      exit(EXIT_SET_LIMIT);
-    }
-
-    // number of open file, return EMFILE
-    lim.rlim_cur = lim.rlim_max = 0;
-    if (setrlimit(RLIMIT_NOFILE, &lim) < 0) {
-      FM_LOG_FATAL("setrlimit RLIMIT_NOFILE failed: %s", strerror(errno));
       exit(EXIT_SET_LIMIT);
     }
   }

@@ -11,8 +11,10 @@ set process limit for compiler, executor and spj.
 chroot and setgid/setuid with nobody account for secuirty.
 
 support Linux 32 bit and 64 bit.
+  * Ubuntu 12.10 Desktop 32bit
   * Ubuntu 12.04 Desktop 64bit
   * Ubuntu 14.04 Server 32bit
+  * Linux Mint 14 32bit
   * Linux Mint 14 64bit
   * Debian 7.5 32bit
   * Debian 7.1 64bit
