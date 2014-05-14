@@ -312,10 +312,12 @@ void set_compile_limit(void)
 void run_solution(void)
 {
   FM_LOG_DEBUG("run_solution");
+#ifndef FAST_JUDGE
   if (oj_solution.lang == LANG_PYTHON) {
     copy_python_runtime(oj_solution.work_dir);
     FM_LOG_DEBUG("copy_python_runtime");
   }
+#endif
 
   check_spj();
 
@@ -355,9 +357,11 @@ void run_solution(void)
   }
   free(namelist);
 
+#ifndef FAST_JUDGE
   if (oj_solution.lang == LANG_PYTHON) {
     clean_workdir(oj_solution.work_dir);
   }
+#endif
 
   output_result(oj_solution.result, oj_solution.time_usage,
                 oj_solution.memory_usage, first_failed_test);
@@ -410,7 +414,11 @@ bool judge(const char *input_file,
     if (oj_solution.lang == LANG_JAVA) {
       execvp(EXEC_J[0], (char * const *) EXEC_J);
     } else if (oj_solution.lang == LANG_PYTHON) {
-      execv(EXEC_PY[0], (char * const *) EXEC_PY);  // execvp is incorrect
+#ifdef FAST_JUDGE
+      execvp(EXEC_PY[0], (char * const *) EXEC_PY);
+#else
+      execv(EXEC_PY[0], (char * const *) EXEC_PY);
+#endif
     } else {
       execl("./Main", "./Main", NULL);
     }
@@ -687,7 +695,11 @@ void set_security_option(void)
     exit(EXIT_SET_SECURITY);
   }
 
-  if (oj_solution.lang != LANG_JAVA) {
+  if (oj_solution.lang != LANG_JAVA
+#ifdef FAST_JUDGE
+    && oj_solution.lang != LANG_PYTHON
+#endif
+    ) {
     char cwd[PATH_SIZE];
     char *tmp = getcwd(cwd, PATH_SIZE-1);
     if (tmp == NULL) {
