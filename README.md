@@ -10,6 +10,8 @@ set process limit for compiler, executor and spj.
 
 chroot and setgid/setuid with nobody account for secuirty.
 
+fast judge for Python which doesn't use chroot or copy rutime env.
+
 support Linux 32 bit and 64 bit.
   * Ubuntu 12.10 Desktop 32bit
   * Ubuntu 12.04 Desktop 64bit
@@ -39,7 +41,7 @@ not support Eclipse Java Compiler or gcj-jdk.
     make
 
 or
-
+    make -e FAST_JUDGE=true
     make -e LOG_LEVEL=LOG_NOTICE
 
 

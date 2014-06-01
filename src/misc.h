@@ -16,10 +16,12 @@ int checkInFile(const char *filename);
 int malarm(int which, int milliseconds);
 void print_compiler(const char * options[]);
 int execute_cmd(const char *format, ...);
+void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path);
+#ifndef FAST_JUDGE
 void copy_shell_runtime(const char * work_dir);
 void copy_python_runtime(const char * work_dir);
 void clean_workdir(const char * work_dir);
-void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path);
+#endif
 
 
 int max(int a, int b)
@@ -84,6 +86,7 @@ int execute_cmd(const char *fmt, ...)
   return ret;
 }
 
+#ifndef FAST_JUDGE
 void copy_shell_runtime(const char *work_dir)
 {
   execute_cmd("/bin/mkdir %s/lib 2>>error.log", work_dir);
@@ -120,6 +123,7 @@ void clean_workdir(const char *work_dir)
   execute_cmd("rm -Rf %s/usr", work_dir);
   execute_cmd("rm -f %s/python*", work_dir);
 }
+#endif
 
 // not very helpful, should diff line by line and give line number
 void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path)
