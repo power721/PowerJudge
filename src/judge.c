@@ -290,7 +290,7 @@ void set_compile_limit(void)
   }
 
   if (EXIT_SUCCESS != malarm(ITIMER_REAL, compile_time_limit)) {
-    FM_LOG_FATAL("malarm  for compiler failed: %s", strerror(errno));
+    FM_LOG_FATAL("malarm for compiler failed: %s", strerror(errno));
     exit(EXIT_SET_LIMIT);
   }
 
@@ -555,6 +555,7 @@ bool judge(const char *input_file,
   }
 
   oj_solution.time_usage += (rused.ru_utime.tv_sec * 1000 + rused.ru_utime.tv_usec / 1000);
+  oj_solution.time_usage += (rused.ru_stime.tv_sec * 1000 + rused.ru_stime.tv_usec / 1000);
   if (oj_solution.time_usage > oj_solution.time_limit) {
     oj_solution.result = OJ_TLE;
     FM_LOG_TRACE("Time Limit Exceeded");
