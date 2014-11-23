@@ -57,6 +57,8 @@ char result_str[][10] = {
 #define bool char
 #define false 0
 #define true  1
+#define MAX_LOG_FILE_SIZE (STD_MB << 4)
+
 
 
 // 退出原因

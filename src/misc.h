@@ -17,6 +17,7 @@ int malarm(int which, int milliseconds);
 void print_compiler(const char * options[]);
 int execute_cmd(const char *format, ...);
 void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path);
+void check_and_rename_log(const char* filename);
 #ifndef FAST_JUDGE
 void copy_shell_runtime(const char * work_dir);
 void copy_python_runtime(const char * work_dir);
@@ -145,6 +146,20 @@ void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, con
   }
   fprintf(out, "\n=================\n");
   fclose(out);
+}
+
+void check_and_rename_log(const char* filename)
+{
+  off_t fsize = file_size(filename);
+  if (fsize < MAX_LOG_FILE_SIZE)
+  {
+    return;
+  }
+
+  char backup_filename[PATH_SIZE];
+  snprintf(backup_filename, PATH_SIZE, "%s.1", filename);
+
+  rename(filename, backup_filename);
 }
 
 #endif  // SRC_MISC_H_

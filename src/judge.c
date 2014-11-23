@@ -92,6 +92,7 @@ void parse_arguments(int argc, char *argv[])
   }
   char buff[PATH_SIZE];
   snprintf(buff, PATH_SIZE, "%s/oj-judge.log", work_dir_root);
+  check_and_rename_log(buff);
   log_open(buff);
 
   check_arguments();
@@ -194,7 +195,7 @@ void compile(void)
     FM_LOG_FATAL("fork compiler failed: %s", strerror(errno));
     exit(EXIT_COMPILE_ERROR);
   } else if (compiler == 0) {
-    // run compiler
+    // child process: run compiler
     log_add_info("compiler");
 
     set_compile_limit();
@@ -233,7 +234,7 @@ void compile(void)
     FM_LOG_FATAL("execvp compiler error");
     exit(EXIT_COMPILE_ERROR);
   } else {
-    // Judger
+    // parent process: Judger
     int status = 0;
     if (waitpid(compiler, &status, WUNTRACED) == -1) {
       FM_LOG_FATAL("waitpid for compiler failed: %s", strerror(errno));
@@ -429,7 +430,6 @@ bool judge(const char *input_file,
   } else {
     // Judger
     int status          = 0;
-    int syscall_id      = 0;
     struct user_regs_struct regs;
 
     init_syscalls(oj_solution.lang);
@@ -527,6 +527,7 @@ bool judge(const char *input_file,
         FM_LOG_FATAL("ptrace(PTRACE_GETREGS) failed: %s", strerror(errno));
         exit(EXIT_JUDGE);
       }
+      int syscall_id      = 0;
   #ifdef __i386__
       syscall_id = regs.orig_eax;
   #else
@@ -678,7 +679,7 @@ void set_limit(off_t fsize)
   }
 
   // Output file size limit, raise SIGXFSZ
-  lim.rlim_cur = lim.rlim_max = fsize + (fsize >> 3) + (STD_MB << 3);
+  lim.rlim_cur = lim.rlim_max = fsize + (fsize >> 3) + MAX_LOG_FILE_SIZE;
   if (setrlimit(RLIMIT_FSIZE, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed: %s", strerror(errno));
     exit(EXIT_SET_LIMIT);
