@@ -29,7 +29,7 @@ test:
 	cd test && ./unitTest.sh
 
 check:
-	-cd src && ./cpplint.py --linelength=100 --extensions=c,h \
+	-cd src && ../bin/cpplint.py --linelength=100 --extensions=c,h \
 	--filter=-whitespace/braces,-build/include \
 	judge.c judge.h judge_core.h log.h misc.h syscalls.h
 	-cppcheck src/judge.c
