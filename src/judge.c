@@ -256,8 +256,14 @@ void compile(void)
         output_result(OJ_CE, 0, 0, 0);
         exit(EXIT_OK);
       } else {
-        FM_LOG_FATAL("compiler unknown exit status %d", WEXITSTATUS(status));
-        exit(EXIT_COMPILE_ERROR);  // SE
+        if (fix_gcc_result(stderr_compiler)) {
+          FM_LOG_WARNING("Compiler Limit Exceeded!");
+          output_result(OJ_CE, 0, 0, 0);
+          exit(EXIT_OK);
+        } else {
+          FM_LOG_FATAL("compiler unknown exit status %d", WEXITSTATUS(status));
+          exit(EXIT_COMPILE_ERROR);  // SE
+        }
       }
     } else {
       if (WIFSIGNALED(status)) {  // killed by signal
@@ -887,31 +893,46 @@ int oj_compare_output(const char *file_out, const char *file_user)
 
 void fix_java_result(const char *stdout_file, const char *stderr_file)
 {
-  int comp_res = execute_cmd("/bin/grep 'java.lang.OutOfMemoryError' %s", stderr_file);
+  int comp_res = execute_cmd("/bin/grep -q 'java.lang.OutOfMemoryError' %s", stderr_file);
   if (!comp_res) {
     oj_solution.result = OJ_MLE;
     oj_solution.memory_usage = oj_solution.memory_limit * STD_KB;
     return;
   }
 
-  comp_res = execute_cmd("/bin/grep 'java.lang.OutOfMemoryError' %s", stdout_file);
+  comp_res = execute_cmd("/bin/grep -q 'java.lang.OutOfMemoryError' %s", stdout_file);
   if (!comp_res) {
     oj_solution.result = OJ_MLE;
     oj_solution.memory_usage = oj_solution.memory_limit * STD_KB;
     return;
   }
 
-  comp_res = execute_cmd("/bin/grep 'Exception' %s", stderr_file);
+  comp_res = execute_cmd("/bin/grep -q 'Exception' %s", stderr_file);
   if (!comp_res) {
     oj_solution.result = OJ_RE;
     return;
   }
 
-  comp_res = execute_cmd("/bin/grep 'Could not create' %s", stderr_file);
+  comp_res = execute_cmd("/bin/grep -q 'Could not create' %s", stderr_file);
   if (!comp_res) {
     oj_solution.result = OJ_RE;
     return;
   }
+}
+
+int fix_gcc_result(const char *stderr_compiler)
+{
+  if (oj_solution.lang != LANG_C && oj_solution.lang != LANG_CPP) {
+    return 0;
+  }
+
+  int comp_res = execute_cmd("/bin/grep -q 'compiler error' %s", stderr_compiler);
+  if (!comp_res) {
+    execute_cmd("/bin/sed -n -i '1p' stderr_compiler.txt");
+    return 1;
+  }
+
+  return 0;
 }
 
 // Output result

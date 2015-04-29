@@ -42,6 +42,7 @@ not support Eclipse Java Compiler or gcj-jdk.
 
 or
     make -e FAST_JUDGE=true
+    
     make -e LOG_LEVEL=LOG_NOTICE
 
 
