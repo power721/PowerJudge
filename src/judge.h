@@ -19,7 +19,7 @@
 
 
 // 编译选项
-const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-Wall",
+const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-std=c99", "-Wall",
                        "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.c", NULL };
 const char* CP_CC[] = { "g++", "-fno-asm", "-lm", "-static", "-Wall",
                         "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", NULL };

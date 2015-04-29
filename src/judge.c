@@ -483,10 +483,10 @@ bool judge(const char *input_file,
         int signo = 0;
         if (WIFSIGNALED(status)) {
           signo = WTERMSIG(status);
-          FM_LOG_NOTICE("child signaled by %d, %s", signo, strsignal(signo));
+          FM_LOG_NOTICE("child terminated by signal %d, %s", signo, strsignal(signo));
         } else {
           signo = WSTOPSIG(status);
-          FM_LOG_NOTICE("child stopped by %d, %s", signo, strsignal(signo));
+          FM_LOG_NOTICE("child stopped by signal %d, %s", signo, strsignal(signo));
         }
         switch (signo) {
           // TLE
