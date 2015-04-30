@@ -62,11 +62,11 @@ or
 * **-t**    time limit   (optional, default 1000 ms)
 * **-m**    memory limit (optional, default 65536 KB)
 * **-l**    language id
-  1. C
-  2. CPP
-  3. Pascal
-  4. Java
-  5. Python
+  1. 1 -- C
+  2. 2 -- CPP
+  3. 3 -- Pascal
+  4. 4 -- Java
+  5. 5 -- Python
 * **-D**    root data directory, e.g. ~/oj/data/
 * **-d**    root work directory, e.g. ~/oj/temp/
 

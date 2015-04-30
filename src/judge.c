@@ -443,6 +443,7 @@ bool judge(const char *input_file,
     while (true) {
       if (wait4(executor, &status, 0, &rused) < 0) {
         FM_LOG_FATAL("wait4 executor failed: %s", strerror(errno));
+        kill(executor, SIGKILL);
         exit(EXIT_JUDGE);
       }
 
@@ -483,10 +484,10 @@ bool judge(const char *input_file,
         int signo = 0;
         if (WIFSIGNALED(status)) {
           signo = WTERMSIG(status);
-          FM_LOG_NOTICE("child terminated by signal %d, %s", signo, strsignal(signo));
+          FM_LOG_NOTICE("child process killed by signal %d, %s", signo, strsignal(signo));
         } else {
           signo = WSTOPSIG(status);
-          FM_LOG_NOTICE("child stopped by signal %d, %s", signo, strsignal(signo));
+          FM_LOG_NOTICE("child process stopped by signal %d, %s", signo, strsignal(signo));
         }
         switch (signo) {
           // TLE
@@ -513,7 +514,7 @@ bool judge(const char *input_file,
               FM_LOG_TRACE("Runtime Error");
               break;
         }  // end of swtich
-        ptrace(PTRACE_KILL, executor, NULL, NULL);
+        kill(executor, SIGKILL);
         break;
       }  // end of  "if (WIFSIGNALED(status) ...)"
 
@@ -524,13 +525,14 @@ bool judge(const char *input_file,
       //                            rused.ru_minflt, page_size / STD_KB);
       if (oj_solution.memory_usage > oj_solution.memory_limit) {
         oj_solution.result = OJ_MLE;
-        ptrace(PTRACE_KILL, executor, NULL, NULL);
+        kill(executor, SIGKILL);
         break;
       }
 
       // check syscall
       if (ptrace(PTRACE_GETREGS, executor, NULL, &regs) < 0) {
         FM_LOG_FATAL("ptrace(PTRACE_GETREGS) failed: %s", strerror(errno));
+        kill(executor, SIGKILL);
         exit(EXIT_JUDGE);
       }
       int syscall_id      = 0;
@@ -542,12 +544,13 @@ bool judge(const char *input_file,
       if (syscall_id > 0 && !is_valid_syscall(syscall_id)) {
         oj_solution.result = OJ_RF;
         FM_LOG_NOTICE("restricted function, syscall_id: %d", syscall_id);
-        ptrace(PTRACE_KILL, executor, NULL, NULL);
+        kill(executor, SIGKILL);
         break;
       }
 
       if (ptrace(PTRACE_SYSCALL, executor, NULL, NULL) < 0) {
-        FM_LOG_FATAL("ptrace(PTRACE_SYSCALL) failed");
+        FM_LOG_FATAL("ptrace(PTRACE_SYSCALL) failed: %s", strerror(errno));
+        kill(executor, SIGKILL);
         exit(EXIT_JUDGE);
       }
     }  // end of while

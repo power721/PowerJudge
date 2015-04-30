@@ -415,6 +415,12 @@ int init_syscalls(int lang)
 static bool in_syscall = true;
 bool is_valid_syscall(int syscall_id)
 {
+  /* PTRACE_SYSCALL
+   * Syscall-enter-stop and syscall-exit-stop are indistinguishable from each other by the tracer.
+   * The tracer needs to keep track of the sequence of ptrace-stops
+     in order to not misinterpret syscall-enter-stop as syscall-exit-stop or vice versa.
+   * The rule is that syscall-enter-stop is always followed by syscall-exit-stop
+   */
   in_syscall = !in_syscall;
   if (syscalls[syscall_id] == 0) {
     return false;

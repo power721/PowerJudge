@@ -115,7 +115,7 @@ static int oj_compare_output_spj(const char *file_in,    // std input
                                  const char *spj_exec);  // path of spj
 static int oj_compare_output(const char *file_out, const char *file_user);
 static void fix_java_result(const char *stdout_file, const char *stderr_file);
-int fix_gcc_result(const char *stderr_file);
+static int fix_gcc_result(const char *stderr_file);
 static void output_result(int result, int time_usage, int memory_usage, int test);
 
 static void compile(void);
