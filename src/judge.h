@@ -41,7 +41,7 @@ static int judge_time_limit            = 15347;
 static int compile_time_limit          = 5347;
 
 // 编译限制(MB)
-static int compile_memory_limit        = 256;
+static int compile_memory_limit        = 1024;
 
 // 编译输出限制(MB)
 static int compile_fsize_limit         = 64;
@@ -50,7 +50,7 @@ static int compile_fsize_limit         = 64;
 static int spj_time_limit              = 10347;
 
 // 程序运行的栈空间大小(KB)
-static int stack_size_limit            = 8192;
+static int stack_size_limit            = 65536;
 
 // ms
 static int time_limit_addtion          = 347;
