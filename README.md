@@ -25,7 +25,7 @@ support Linux 32 bit and 64 bit.
   * CentOS 4.8  **NOT** support
 
 ##Download##
-    git clone http://git.oschina.net/power/PowerJudge.git
+    git clone https://github.com/power721/PowerJudge.git
 
 
 ##Compilers##
@@ -42,7 +42,6 @@ not support Eclipse Java Compiler or gcj-jdk.
 
 or
     make -e FAST_JUDGE=true
-    
     make -e LOG_LEVEL=LOG_NOTICE
 
 

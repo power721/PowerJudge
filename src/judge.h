@@ -19,10 +19,10 @@
 
 
 // 编译选项
-const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-std=c99", "-Wall",
-                       "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.c", NULL };
+const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-Wall",
+                       "-std=c11","-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.c", NULL };
 const char* CP_CC[] = { "g++", "-fno-asm", "-lm", "-static", "-Wall",
-                        "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", NULL };
+                        "-std=c++11","-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", NULL };
 const char* CP_PAS[] = { "fpc", "Main.pas", "-O2", "-Co", "-Cr", "-Ct", "-Ci", NULL };
 const char* CP_J[] = { "javac", "Main.java", "-g:none", "-Xlint", "-encoding", "UTF-8", NULL };
 const char* CP_PY[] = { "python", "-c", "import py_compile;py_compile.compile(r'Main.py')", NULL };
@@ -41,7 +41,7 @@ static int judge_time_limit            = 15347;
 static int compile_time_limit          = 5347;
 
 // 编译限制(MB)
-static int compile_memory_limit        = 256;
+static int compile_memory_limit        = 1024;
 
 // 编译输出限制(MB)
 static int compile_fsize_limit         = 64;
@@ -50,7 +50,7 @@ static int compile_fsize_limit         = 64;
 static int spj_time_limit              = 10347;
 
 // 程序运行的栈空间大小(KB)
-static int stack_size_limit            = 8192;
+static int stack_size_limit            = 65536;
 
 // ms
 static int time_limit_addtion          = 347;
