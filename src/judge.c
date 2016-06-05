@@ -157,7 +157,7 @@ void print_solution(void)
   FM_LOG_DEBUG("-- Solution Information --");
   FM_LOG_MONITOR("solution id %d", oj_solution.sid);
   FM_LOG_TRACE("problem id    %d", oj_solution.pid);
-  FM_LOG_TRACE("language      %s", languages[oj_solution.lang]);
+  FM_LOG_TRACE("language(%d)  %s", oj_solution.lang, languages[oj_solution.lang]);
   FM_LOG_TRACE("time limit    %d ms", oj_solution.time_limit);
   FM_LOG_TRACE("memory limit  %d KB", oj_solution.memory_limit);
   FM_LOG_DEBUG("work dir      %s", oj_solution.work_dir);

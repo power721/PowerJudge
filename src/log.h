@@ -44,6 +44,7 @@
 #include <unistd.h>
 #include <error.h>
 #include <sys/file.h>
+#include <sys/time.h>
 
 
 int log_open(const char *filename);

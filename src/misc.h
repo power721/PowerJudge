@@ -5,12 +5,15 @@
 #ifndef SRC_MISC_H_
 #define SRC_MISC_H_
 
+#include <ctype.h>
 #include "judge_core.h"
 
 
 #define is_space_char(a) ((a == ' ') || (a == '\t') || (a == '\n'))
 
 int max(int a, int b);
+void error(const char *msg);
+char *trim(char *str);
 off_t file_size(const char *filename);
 int checkInFile(const char *filename);
 int malarm(int which, int milliseconds);
@@ -28,6 +31,32 @@ void clean_workdir(const char * work_dir);
 int max(int a, int b)
 {
   return a > b ? a : b;
+}
+
+void error(const char *msg)
+{
+    perror(msg);
+    exit(1);
+}
+
+char *trim(char *str)
+{
+  char *end;
+
+  // Trim leading space
+  while (isspace(*str)) str++;
+
+  if (*str == 0)  // All spaces?
+    return str;
+
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+  while (end > str && isspace(*end)) end--;
+
+  // Write new null terminator
+  *(end+1) = 0;
+
+  return str;
 }
 
 off_t file_size(const char *filename)
