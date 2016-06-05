@@ -29,9 +29,9 @@ support Linux 32 bit and 64 bit.
 
 
 ##Compilers##
-    sudo apt-get install fpc openjdk-7-jdk python2.7 gcc g++
+    sudo apt-get install fpc openjdk-7-jdk python2.7 gcc g++ libbsd-dev
 
-    sudo yum install glibc-devel glibc-static gcc gcc-c++ java-1.7.0-openjdk java-1.7.0-openjdk-devel gpm
+    sudo yum install glibc-devel glibc-static gcc gcc-c++ java-1.7.0-openjdk java-1.7.0-openjdk-devel gpm libbsd-dev
     sudo rpm -ivh fpc-2.6.0-5.1.i686.rpm
 
 not support Eclipse Java Compiler or gcj-jdk.
