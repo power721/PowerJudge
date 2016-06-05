@@ -58,7 +58,7 @@ static int SC_C[512] =
 };
 
 // C++
-static int SC_C[512] =
+static int SC_CPP[512] =
 {
   252,                  2,
   SYS_access,           SYSCALLS_INFINITE,
