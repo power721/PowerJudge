@@ -73,6 +73,7 @@ void parse_arguments(int argc, char *argv[])
       case 'm':  // Memory limit
         oj_solution.memory_limit      = atoi(optarg);
         break;
+      case 'w':
       case 'd':  // Work directory
         if (realpath(optarg, work_dir_root) == NULL) {
           fprintf(stderr, "resolve work dir failed:%s\n", strerror(errno));
