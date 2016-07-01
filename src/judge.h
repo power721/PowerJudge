@@ -29,7 +29,7 @@ const char* CP_PY[] = { "python", "-c", "import py_compile;py_compile.compile(r'
 
 // "-Xms512m", "-Xmx512m", "-Xss256k"
 const char* EXEC_J[] = { "java", "-cp", ".", "-Djava.security.manager",
-                         "-Djava.security.policy=../java.policy", "Main", NULL };
+                         "-Djava.security.policy=../java.policy", "-DONLINE_JUDGE=true", "Main", NULL };
 const char* EXEC_PY[] = { "python", "Main.py", NULL };
 
 

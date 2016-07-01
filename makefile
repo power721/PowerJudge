@@ -36,6 +36,7 @@ check:
 
 install:
 	sudo cp $(TARGET) /usr/local/bin/
+	sudo cp java.policy /home/judge/temp/
 	sudo chmod 4755 /usr/local/bin/powerjudge
 
 clean:
