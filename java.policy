@@ -1,5 +1,6 @@
 grant {
     permission java.io.FilePermission "./*", "read";
     permission java.lang.RuntimePermission "getenv.ONLINE_JUDGE";
+    permission java.util.PropertyPermission "ONLINE_JUDGE", "read";
 };
 
