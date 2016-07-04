@@ -56,7 +56,7 @@ void parse_arguments(int argc, char *argv[])
   int opt;
   extern char *optarg;
 
-  while ((opt = getopt(argc, argv, "s:p:t:m:l:d:D:")) != -1) {
+  while ((opt = getopt(argc, argv, "s:p:t:m:l:w:d:D:")) != -1) {
     switch (opt) {
       case 's':  // Solution ID
         oj_solution.sid               = atoi(optarg);
