@@ -9,9 +9,9 @@
 #include "judge_core.h"
 
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
 #define is_space_char(a) ((a == ' ') || (a == '\t') || (a == '\n'))
 
-int max(int a, int b);
 void error(const char *msg);
 char *trim(char *str);
 off_t file_size(const char *filename);
@@ -27,11 +27,6 @@ void copy_python_runtime(const char * work_dir);
 void clean_workdir(const char * work_dir);
 #endif
 
-
-int max(int a, int b)
-{
-  return a > b ? a : b;
-}
 
 void error(const char *msg)
 {

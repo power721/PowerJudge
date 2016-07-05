@@ -97,12 +97,12 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
 
         bzero(buffer, BUFF_SIZE);
         int n = read(newsockfd, buffer, BUFF_SIZE);
-        if (n < 0) {
+        if (n <= 0) {
             FM_LOG_WARNING("ERROR reading from socket");
             close(newsockfd);
             return;
         }
-        FM_LOG_NOTICE("Here is the message: %s", buffer);
+        FM_LOG_NOTICE("Here is the message: %s(%d)", buffer, n);
 
         if (parse_arguments(buffer) < 0) {
             n = write(newsockfd, "Missing some parameters", 23);
@@ -113,7 +113,10 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
             n = write(newsockfd, "I got your message", 18);
             if (n < 0) FM_LOG_WARNING("ERROR writing to socket");
 
+            close(newsockfd);
             run();
+            // mysql_close(con);
+            return;
         }
     }
 
@@ -121,6 +124,12 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
 }
 
 void run() {
+    if (oj_solution.cid > 0) {
+        sprintf(oj_solution.work_dir, "%s/c%d", oj_config.temp_dir, oj_solution.cid);
+    } else {
+        strncpy(oj_solution.work_dir, oj_config.temp_dir, strlen(oj_config.temp_dir));
+    }
+    FM_LOG_NOTICE("/usr/local/bin/powerjudge -s %s -p %s -l %s -t %s -m %s -w %s -D %s", oj_solution.sid, oj_solution.pid, oj_solution.language, oj_solution.time_limit, oj_solution.memory_limit, oj_solution.work_dir, oj_config.data_dir);
     pid_t pid = fork();
     if (pid < 0) {
         FM_LOG_FATAL("fork judger failed: %s", strerror(errno));
@@ -132,14 +141,14 @@ void run() {
             "-l", oj_solution.language, 
             "-t", oj_solution.time_limit, 
             "-m", oj_solution.memory_limit, 
-            "-d", oj_config.temp_dir, 
+            "-w", oj_solution.work_dir, 
             "-D", oj_config.data_dir, 
             NULL);
         FM_LOG_FATAL("exec error");
     } else {
         // TODO: wait judger and update result to DataBase
         int status = 0;
-        FM_LOG_TRACE("pid=%d", pid);
+        FM_LOG_TRACE("process ID=%d", pid);
         if (waitpid(pid, &status, WUNTRACED) == -1) {
           FM_LOG_FATAL("waitpid for judger failed: %s", strerror(errno));
         }
@@ -147,7 +156,7 @@ void run() {
         if (WIFEXITED(status)) {  // normal termination
           if (EXIT_SUCCESS == WEXITSTATUS(status)) {
             FM_LOG_DEBUG("judge succeeded");
-            // TODO: check result
+            update_result();
           } else if (EXIT_JUDGE == WEXITSTATUS(status)) {
             FM_LOG_TRACE("judge error");
             // SE
@@ -220,6 +229,16 @@ void read_config(const char *cfg_file) {
                 strncpy(oj_config.data_dir, value, val_len);
             } else if (strcmp("temp.dir", key) == 0) {
                 strncpy(oj_config.temp_dir, value, val_len);
+            } else if (strcmp("db.host", key) == 0) {
+                strncpy(oj_config.db_host, value, val_len);
+            } else if (strcmp("db.port", key) == 0) {
+                oj_config.db_port = atoi(value);
+            } else if (strcmp("db.user", key) == 0) {
+                strncpy(oj_config.db_user, value, val_len);
+            } else if (strcmp("db.password", key) == 0) {
+                strncpy(oj_config.db_password, value, val_len);
+            } else if (strcmp("db.database", key) == 0) {
+                strncpy(oj_config.db_database, value, val_len);
             }
         }
     }
@@ -258,11 +277,140 @@ int check_password(char *password, char *message) {
 }
 
 int parse_arguments(char *str) {
-    int number = sscanf(str, "%s %s %s %s %s", oj_solution.sid, oj_solution.pid, oj_solution.language, oj_solution.time_limit, oj_solution.memory_limit);
-    FM_LOG_TRACE("sid=%s  pid=%s  language=%s  timeLimit=%s ms  memoryLimit=%s KB", 
-        oj_solution.sid, oj_solution.pid, oj_solution.language, oj_solution.time_limit, oj_solution.memory_limit);
+    int number = sscanf(str, "%s %d %s %s %s %s", oj_solution.sid, &oj_solution.cid, oj_solution.pid, oj_solution.language, oj_solution.time_limit, oj_solution.memory_limit);
+    FM_LOG_TRACE("sid=%s cid=%d  pid=%s  language=%s  timeLimit=%s ms  memoryLimit=%s KB", 
+        oj_solution.sid, oj_solution.cid, oj_solution.pid, oj_solution.language, oj_solution.time_limit, oj_solution.memory_limit);
     if (number < 5) {
         return -1;
     }
     return 0;
+}
+
+void update_result() {
+    CURL *curl;
+    CURLcode res;
+    curl_global_init(CURL_GLOBAL_ALL);
+    curl = curl_easy_init();
+    if (curl) {
+        char data[BUFF_SIZE] = {0};
+        read_result(data);
+        FM_LOG_NOTICE("POST result %s", data);
+        curl_easy_setopt(curl, CURLOPT_URL, "http://power.oj/api/judge/updateResult");
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "power-agent/1.0");
+        curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+        curl_easy_setopt(curl, CURLOPT_POST, 1L);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(data));
+
+        res = curl_easy_perform(curl);
+        if(res != CURLE_OK) {
+            FM_LOG_FATAL("POST result failed: " + res);
+        } else {
+            FM_LOG_NOTICE("POST result successfully." + res);
+        }
+ 
+        curl_easy_cleanup(curl);
+        curl_global_cleanup();
+    } else {
+        FM_LOG_FATAL("cannot init curl library!");
+    }
+}
+
+void read_result(char * data) {
+    char buffer[BUFF_SIZE];
+    sprintf(buffer, "%s/%s/result.txt", oj_solution.work_dir, oj_solution.sid);
+    FILE* fp = fopen(buffer, "r");
+    if (fp == NULL) {
+        update_system_error();
+        return;
+    }
+    int result;
+    int time_usage;
+    int memory_usage;
+    int test;
+    int number = fscanf(fp, "%d %d %d %d", &result, &time_usage, &memory_usage, &test);
+    FM_LOG_TRACE("result=%d  time_usage=%d ms  memory_usage=%d KB test=%d", result, time_usage, memory_usage, test);
+    if (number < 4) {
+        fclose(fp);
+        update_system_error();
+        return;
+    }
+    sprintf(data, "sid=%s&cid=%d&pid=%s&language=%s&result=%d&time=%d&memory=%d&test=%d", oj_solution.sid, oj_solution.cid, oj_solution.pid, oj_solution.language, result, time_usage, memory_usage, test);
+    fclose(fp);
+}
+
+// void update_result() {
+//     if (init_database_connection() == -1) {
+//         return;
+//     }
+//     char buffer[BUFF_SIZE];
+//     sprintf(buffer, "%s/%s/result.txt", oj_config.temp_dir, oj_solution.sid);
+//     FILE* fp = fopen(buffer, "r");
+//     if (fp == NULL) {
+//         update_system_error();
+//         return;
+//     }
+//     int result;
+//     int time_usage;
+//     int memory_usage;
+//     int test;
+//     int number = fscanf(fp, "%d %d %d %d", &result, &time_usage, &memory_usage, &test);
+//     FM_LOG_TRACE("result=%d  time_usage=%d ms  memory_usage=%d KB test=%d", result, time_usage, memory_usage, test);
+//     if (number < 4) {
+//         update_system_error();
+//         return;
+//     }
+//     FM_LOG_TRACE("MySQL client version: %s\n", mysql_get_client_info());
+//     sprintf(buffer, "SELECT * FROM solution WHERE sid=%s", oj_solution.sid);
+//     if(mysql_query(con, buffer) != 0) {
+//         FM_LOG_FATAL("cannot query database: %s", mysql_error(con));
+//         return;
+//     }
+
+//     MYSQL_RES *m_result = mysql_store_result(con);
+//     if (m_result == NULL) {
+//         FM_LOG_FATAL("cannot get result: %s", mysql_error(con));
+//         return;
+//     }
+
+//     int num_fields = mysql_num_fields(m_result);
+//     FM_LOG_TRACE("num_fields: %d", num_fields);
+
+//     MYSQL_ROW row;
+//     while ((row = mysql_fetch_row(m_result))) 
+//     { 
+//         for(int i = 0; i < num_fields; i++) 
+//         { 
+//             FM_LOG_TRACE("%s ", row[i] ? row[i] : "NULL"); 
+//         } 
+//     }
+//     mysql_free_result(m_result);
+// }
+
+// int init_database_connection() {
+//     if (con == NULL) {
+//         con = mysql_init(NULL);
+//         if (con == NULL) {
+//             FM_LOG_FATAL("cannot init database connection: %s", mysql_error(con));
+//             return -1;
+//         }
+//         if (mysql_real_connect(con, oj_config.db_host, oj_config.db_user, oj_config.db_password, oj_config.db_database, oj_config.db_port, NULL ,0) == NULL) {
+//              FM_LOG_FATAL("cannot connect to database: %s", mysql_error(con));
+//             return -1;
+//         }
+//     }
+//     return 0;
+// }
+
+void update_system_error() {
+    
+}
+
+void update_compile_error() {
+
+}
+
+void update_runtime_error() {
+
 }

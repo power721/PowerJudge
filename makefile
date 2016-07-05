@@ -1,8 +1,8 @@
 LD=g++
 CXX=g++
-CXXFLAGS=-g -Wall -O2
+CXXFLAGS=-g -Wall -O2 -DBIG_JOINS=1 -fno-strict-aliasing -DNDEBUG
 LDFLAGS=
-LIBS=-lbsd
+LIBS=-lbsd -L/usr/lib/x86_64-linux-gnu -lcurl -lpthread -lz -lm -ldl
 TARGET=bin/powerjudge
 OBJECTS=bin/judge.o
 TARGETD=bin/powerjudged
@@ -16,7 +16,8 @@ ifdef FAST_JUDGE
 	CXXFLAGS+= -DFAST_JUDGE
 endif
 
-all: $(TARGET) $(TARGETD)
+.PHONY: test check install clean
+all: clean $(TARGET) $(TARGETD)
 $(TARGET): $(OBJECTS)
 	$(LD) -o $@ $(LDFLAGS) $(OBJECTS)
 	sudo chown root:root $(TARGET)
@@ -30,19 +31,18 @@ $(TARGETD): $(OBJECTSD)
 bin/%.o: src/%.c src/*.h
 	$(CXX) -o $@ $(CXXFLAGS) -c $<
 
-.PHONY: test check install clean
-test:
+test: all
 	g++ -o test/data/1405/spj test/data/1405/spj.cc
 	chmod a+x test/unitTest.sh
 	cd test && ./unitTest.sh
 
-check:
+check: all
 	-cd src && ../bin/cpplint.py --linelength=100 --extensions=c,h \
 	--filter=-whitespace/braces,-build/include \
 	judge.c judge.h judged.c judged.h judge_core.h log.h misc.h syscalls.h
 	-cppcheck src/judge.c  src/judged.c
 
-install:
+install: all
 	sudo cp $(TARGET) /usr/local/bin/
 	sudo chmod 4755 /usr/local/bin/powerjudge
 	sudo pkill -f /usr/local/bin/powerjudged

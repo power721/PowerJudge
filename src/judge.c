@@ -56,7 +56,7 @@ void parse_arguments(int argc, char *argv[])
   int opt;
   extern char *optarg;
 
-  while ((opt = getopt(argc, argv, "s:p:t:m:l:d:D:")) != -1) {
+  while ((opt = getopt(argc, argv, "s:p:t:m:l:w:d:D:")) != -1) {
     switch (opt) {
       case 's':  // Solution ID
         oj_solution.sid               = atoi(optarg);
@@ -73,6 +73,7 @@ void parse_arguments(int argc, char *argv[])
       case 'm':  // Memory limit
         oj_solution.memory_limit      = atoi(optarg);
         break;
+      case 'w':
       case 'd':  // Work directory
         if (realpath(optarg, work_dir_root) == NULL) {
           fprintf(stderr, "resolve work dir failed:%s\n", strerror(errno));
@@ -945,4 +946,6 @@ void output_result(int result, int time_usage, int memory_usage, int test)
                   result, result_str[result], time_usage, memory_usage);
   // this is judge result for Web app
   printf("%d %d %d %d\n", result, time_usage, memory_usage, test);
+  FILE* fp = fopen("result.txt", "w");
+  fprintf(fp, "%d %d %d %d", result, time_usage, memory_usage, test);
 }

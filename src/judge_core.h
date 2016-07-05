@@ -99,6 +99,6 @@ char result_str[][10] = {
 #define LANG_PYTHON            5
 
 const char languages[][10]  = { "unknown", "c", "c++", "pascal", "java", "python" };
-const char lang_ext[][10]   = { "", "c", "cc", "pas", "java", "py" };
+const char lang_ext[][10]   = { "unknown", "c", "cc",  "pas",    "java", "py" };
 
 #endif  // SRC_JUDGE_CORE_H_
