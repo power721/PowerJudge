@@ -20,6 +20,9 @@
 #include "log.h"
 #include "misc.h"
 
+#define ERROR_READ_FILE 40
+#define ERROR_READ_RESULT 41
+
 struct oj_config_t {
     char ip[20];
     int port;
@@ -34,6 +37,8 @@ struct oj_config_t {
     char db_user[256];
     char db_password[256];
     char db_database[256];
+    char api_url[256];
+    char user_agent[256];
 }oj_config;
 
 struct oj_solution_t {
@@ -44,6 +49,10 @@ struct oj_solution_t {
   char time_limit[15];    // ms
   char memory_limit[15];  // KB
   char work_dir[PATH_SIZE];
+  int result;
+  int time_usage;
+  int memory_usage;
+  int test;
 }oj_solution;
 
 int DEFAULT_BACKLOG = 100;
@@ -62,10 +71,12 @@ int check_password(char *password, char *message);
 int parse_arguments(char *str);
 void run();
 int init_database_connection();
-void update_result();
-void read_result(char * data);
-void update_system_error();
+void update_multi_result(char* file_path);
+void update_normal_result();
+void update_system_error(int result);
 void update_compile_error();
-void update_runtime_error();
+void update_runtime_error(int result);
+
+size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp);
 
 #endif  // SRC_JUDGED_H_

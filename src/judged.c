@@ -156,7 +156,7 @@ void run() {
         if (WIFEXITED(status)) {  // normal termination
           if (EXIT_SUCCESS == WEXITSTATUS(status)) {
             FM_LOG_DEBUG("judge succeeded");
-            update_result();
+            update_normal_result();
           } else if (EXIT_JUDGE == WEXITSTATUS(status)) {
             FM_LOG_TRACE("judge error");
             // SE
@@ -239,6 +239,10 @@ void read_config(const char *cfg_file) {
                 strncpy(oj_config.db_password, value, val_len);
             } else if (strcmp("db.database", key) == 0) {
                 strncpy(oj_config.db_database, value, val_len);
+            } else if (strcmp("api.url", key) == 0) {
+                strncpy(oj_config.api_url, value, val_len);
+            } else if (strcmp("user.agent", key) == 0) {
+                strncpy(oj_config.user_agent, value, val_len);
             }
         }
     }
@@ -286,131 +290,212 @@ int parse_arguments(char *str) {
     return 0;
 }
 
-void update_result() {
-    CURL *curl;
-    CURLcode res;
-    curl_global_init(CURL_GLOBAL_ALL);
-    curl = curl_easy_init();
-    if (curl) {
-        char data[BUFF_SIZE] = {0};
-        read_result(data);
-        FM_LOG_NOTICE("POST result %s", data);
-        curl_easy_setopt(curl, CURLOPT_URL, "http://power.oj/api/judge/updateResult");
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "power-agent/1.0");
-        curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
-        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-        curl_easy_setopt(curl, CURLOPT_POST, 1L);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(data));
-
-        res = curl_easy_perform(curl);
-        if(res != CURLE_OK) {
-            FM_LOG_FATAL("POST result failed: " + res);
-        } else {
-            FM_LOG_NOTICE("POST result successfully." + res);
-        }
- 
-        curl_easy_cleanup(curl);
-        curl_global_cleanup();
-    } else {
-        FM_LOG_FATAL("cannot init curl library!");
+size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
+{
+    if (userp == NULL) {
+        return 0;
     }
+
+    FILE *fp = (FILE *)userp;
+
+    int c = fgetc(fp);
+    if (c != EOF) {
+        *(char *)ptr = (char)c;
+        return 1;
+    }
+
+    return 0;                          /* no more data left to deliver */ 
 }
 
-void read_result(char * data) {
+void update_multi_result(char* file_path) {
+    CURL *curl;
+ 
+  CURLM *multi_handle;
+  int still_running;
+ 
+  struct curl_httppost *formpost=NULL;
+  struct curl_httppost *lastptr=NULL;
+  struct curl_slist *headerlist=NULL;
+  static const char buf[] = "Expect:";
+  char data[25] = {0};
+  curl_formadd(&formpost,
+               &lastptr,
+               CURLFORM_COPYNAME, "sid",
+               CURLFORM_COPYCONTENTS, oj_solution.sid,
+               CURLFORM_END);
+
+  sprintf(data, "%d", oj_solution.cid);
+ curl_formadd(&formpost,
+               &lastptr,
+               CURLFORM_COPYNAME, "cid",
+               CURLFORM_COPYCONTENTS, data,
+               CURLFORM_END);
+ 
+ sprintf(data, "%d", oj_solution.result);
+  curl_formadd(&formpost,
+               &lastptr,
+               CURLFORM_COPYNAME, "result",
+               CURLFORM_COPYCONTENTS, data,
+               CURLFORM_END);
+
+  curl_formadd(&formpost,
+               &lastptr,
+               CURLFORM_COPYNAME, "time",
+               CURLFORM_COPYCONTENTS, oj_solution.time_usage,
+               CURLFORM_END);
+
+  curl_formadd(&formpost,
+               &lastptr,
+               CURLFORM_COPYNAME, "memory",
+               CURLFORM_COPYCONTENTS, oj_solution.memory_usage,
+               CURLFORM_END);
+
+  curl_formadd(&formpost,
+               &lastptr,
+               CURLFORM_COPYNAME, "test",
+               CURLFORM_COPYCONTENTS, oj_solution.test,
+               CURLFORM_END);
+
+  if (file_path != NULL) {
+      curl_formadd(&formpost,
+               &lastptr,
+               CURLFORM_COPYNAME, "error",
+               CURLFORM_FILE, file_path,
+               CURLFORM_END);
+  }
+ 
+  curl = curl_easy_init();
+  multi_handle = curl_multi_init();
+
+  headerlist = curl_slist_append(headerlist, buf);
+  if(curl && multi_handle) {
+ 
+    curl_easy_setopt(curl, CURLOPT_URL, oj_config.api_url);
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+ 
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
+    curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
+ 
+    curl_multi_add_handle(multi_handle, curl);
+ 
+    curl_multi_perform(multi_handle, &still_running);
+ 
+    do {
+      struct timeval timeout;
+      int rc; /* select() return code */ 
+      CURLMcode mc; /* curl_multi_fdset() return code */ 
+ 
+      fd_set fdread;
+      fd_set fdwrite;
+      fd_set fdexcep;
+      int maxfd = -1;
+ 
+      long curl_timeo = -1;
+ 
+      FD_ZERO(&fdread);
+      FD_ZERO(&fdwrite);
+      FD_ZERO(&fdexcep);
+ 
+      /* set a suitable timeout to play around with */ 
+      timeout.tv_sec = 1;
+      timeout.tv_usec = 0;
+ 
+      curl_multi_timeout(multi_handle, &curl_timeo);
+      if(curl_timeo >= 0) {
+        timeout.tv_sec = curl_timeo / 1000;
+        if(timeout.tv_sec > 1)
+          timeout.tv_sec = 1;
+        else
+          timeout.tv_usec = (curl_timeo % 1000) * 1000;
+      }
+ 
+      /* get file descriptors from the transfers */ 
+      mc = curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
+ 
+      if(mc != CURLM_OK) {
+        fprintf(stderr, "curl_multi_fdset() failed, code %d.\n", mc);
+        break;
+      }
+ 
+      if(maxfd == -1) {
+#ifdef _WIN32
+        Sleep(100);
+        rc = 0;
+#else
+        /* Portable sleep for platforms other than Windows. */ 
+        struct timeval wait = { 0, 100 * 1000 }; /* 100ms */ 
+        rc = select(0, NULL, NULL, NULL, &wait);
+#endif
+      }
+      else {
+        /* Note that on some platforms 'timeout' may be modified by select().
+           If you need access to the original value save a copy beforehand. */ 
+        rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
+      }
+ 
+      switch(rc) {
+      case -1:
+        /* select error */ 
+        break;
+      case 0:
+      default:
+        /* timeout or readable/writable sockets */ 
+        curl_multi_perform(multi_handle, &still_running);
+        break;
+      }
+    } while(still_running);
+ 
+    curl_multi_cleanup(multi_handle);
+ 
+    curl_easy_cleanup(curl);
+ 
+    curl_formfree(formpost);
+ 
+    curl_slist_free_all (headerlist);
+  }
+}
+
+void update_normal_result() {
     char buffer[BUFF_SIZE];
     sprintf(buffer, "%s/%s/result.txt", oj_solution.work_dir, oj_solution.sid);
     FILE* fp = fopen(buffer, "r");
     if (fp == NULL) {
-        update_system_error();
+        update_system_error(ERROR_READ_FILE);
         return;
     }
-    int result;
-    int time_usage;
-    int memory_usage;
-    int test;
-    int number = fscanf(fp, "%d %d %d %d", &result, &time_usage, &memory_usage, &test);
-    FM_LOG_TRACE("result=%d  time_usage=%d ms  memory_usage=%d KB test=%d", result, time_usage, memory_usage, test);
-    if (number < 4) {
-        fclose(fp);
-        update_system_error();
-        return;
-    }
-    sprintf(data, "sid=%s&cid=%d&pid=%s&language=%s&result=%d&time=%d&memory=%d&test=%d", oj_solution.sid, oj_solution.cid, oj_solution.pid, oj_solution.language, result, time_usage, memory_usage, test);
+
+    int number = fscanf(fp, "%d %d %d %d", &oj_solution.result, &oj_solution.time_usage, &oj_solution.memory_usage, &oj_solution.test);
     fclose(fp);
+    if (number < 4) {
+        update_system_error(ERROR_READ_RESULT);
+        return;
+    }
+
+    if (oj_solution.result == OJ_CE) {
+        update_compile_error();
+        return;
+    }
+
+    update_multi_result(NULL);
 }
 
-// void update_result() {
-//     if (init_database_connection() == -1) {
-//         return;
-//     }
-//     char buffer[BUFF_SIZE];
-//     sprintf(buffer, "%s/%s/result.txt", oj_config.temp_dir, oj_solution.sid);
-//     FILE* fp = fopen(buffer, "r");
-//     if (fp == NULL) {
-//         update_system_error();
-//         return;
-//     }
-//     int result;
-//     int time_usage;
-//     int memory_usage;
-//     int test;
-//     int number = fscanf(fp, "%d %d %d %d", &result, &time_usage, &memory_usage, &test);
-//     FM_LOG_TRACE("result=%d  time_usage=%d ms  memory_usage=%d KB test=%d", result, time_usage, memory_usage, test);
-//     if (number < 4) {
-//         update_system_error();
-//         return;
-//     }
-//     FM_LOG_TRACE("MySQL client version: %s\n", mysql_get_client_info());
-//     sprintf(buffer, "SELECT * FROM solution WHERE sid=%s", oj_solution.sid);
-//     if(mysql_query(con, buffer) != 0) {
-//         FM_LOG_FATAL("cannot query database: %s", mysql_error(con));
-//         return;
-//     }
-
-//     MYSQL_RES *m_result = mysql_store_result(con);
-//     if (m_result == NULL) {
-//         FM_LOG_FATAL("cannot get result: %s", mysql_error(con));
-//         return;
-//     }
-
-//     int num_fields = mysql_num_fields(m_result);
-//     FM_LOG_TRACE("num_fields: %d", num_fields);
-
-//     MYSQL_ROW row;
-//     while ((row = mysql_fetch_row(m_result))) 
-//     { 
-//         for(int i = 0; i < num_fields; i++) 
-//         { 
-//             FM_LOG_TRACE("%s ", row[i] ? row[i] : "NULL"); 
-//         } 
-//     }
-//     mysql_free_result(m_result);
-// }
-
-// int init_database_connection() {
-//     if (con == NULL) {
-//         con = mysql_init(NULL);
-//         if (con == NULL) {
-//             FM_LOG_FATAL("cannot init database connection: %s", mysql_error(con));
-//             return -1;
-//         }
-//         if (mysql_real_connect(con, oj_config.db_host, oj_config.db_user, oj_config.db_password, oj_config.db_database, oj_config.db_port, NULL ,0) == NULL) {
-//              FM_LOG_FATAL("cannot connect to database: %s", mysql_error(con));
-//             return -1;
-//         }
-//     }
-//     return 0;
-// }
-
-void update_system_error() {
+void update_system_error(int result) {
     
 }
 
 void update_compile_error() {
+    char buffer[BUFF_SIZE];
+    sprintf(buffer, "%s/%s/stderr_compiler.txt", oj_solution.work_dir, oj_solution.sid);
+    FILE* fp = fopen(buffer, "rb");
+    if (fp == NULL) {
+        update_system_error(ERROR_READ_FILE);
+        return;
+    }
+    fclose(fp);
 
+    update_multi_result(buffer);
 }
 
-void update_runtime_error() {
+void update_runtime_error(int result) {
 
 }
