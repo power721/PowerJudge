@@ -554,7 +554,7 @@ bool judge(const char *input_file,
   #endif
       if (syscall_id > 0 && !is_valid_syscall(syscall_id)) {
         oj_solution.result = OJ_RF;
-        FM_LOG_NOTICE("restricted function, syscall_id: %d", syscall_id);
+        FM_LOG_FATAL("restricted function, syscall_id: %d", syscall_id);
         kill(executor, SIGKILL);
         break;
       }

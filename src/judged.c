@@ -323,10 +323,9 @@ void update_result() {
     } else if (oj_solution.result == OJ_RE) {
         sprintf(buffer, "%s/%s/stderr_executive.txt", oj_solution.work_dir, oj_solution.sid);
         p = buffer;
-    } else if (oj_solution.result == OJ_SE) {
+    } else if (oj_solution.result == OJ_SE || oj_solution.result == OJ_RF) {
         sprintf(buffer, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
         p = buffer;
-        return;
     }
 
     send_multi_result(p);
