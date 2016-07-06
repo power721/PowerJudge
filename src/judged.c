@@ -129,11 +129,14 @@ void run() {
     } else {
         strncpy(oj_solution.work_dir, oj_config.temp_dir, strlen(oj_config.temp_dir));
     }
+    char stderr_file[PATH_SIZE];
+    sprintf(stderr_file, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
     FM_LOG_NOTICE("/usr/local/bin/powerjudge -s %s -p %s -l %s -t %s -m %s -w %s -D %s", oj_solution.sid, oj_solution.pid, oj_solution.language, oj_solution.time_limit, oj_solution.memory_limit, oj_solution.work_dir, oj_config.data_dir);
     pid_t pid = fork();
     if (pid < 0) {
         FM_LOG_FATAL("fork judger failed: %s", strerror(errno));
     } else if (pid == 0) {
+        stderr = freopen(stderr_file, "a+", stderr);
         execl("/usr/local/bin/powerjudge", 
             "/usr/local/bin/powerjudge", 
             "-s", oj_solution.sid, 
@@ -156,25 +159,30 @@ void run() {
         if (WIFEXITED(status)) {  // normal termination
           if (EXIT_SUCCESS == WEXITSTATUS(status)) {
             FM_LOG_DEBUG("judge succeeded");
-            update_normal_result();
+            update_result();
           } else if (EXIT_JUDGE == WEXITSTATUS(status)) {
             FM_LOG_TRACE("judge error");
+            update_system_error(OJ_SE);
             // SE
           } else {
             FM_LOG_TRACE("judge error");
+            update_system_error(WEXITSTATUS(status));
             // SE
           }
         } else {
           if (WIFSIGNALED(status)) {  // killed by signal
             int signo = WTERMSIG(status);
             FM_LOG_WARNING("judger killed by signal: %s", strsignal(signo));
+            update_system_error(OJ_SE);
             // SE
           } else if (WIFSTOPPED(status)) {  // stopped by signal
             int signo = WSTOPSIG(status);
             FM_LOG_FATAL("judger stopped by signal: %s\n", strsignal(signo));
+            update_system_error(OJ_SE);
             // SE
           } else {
             FM_LOG_FATAL("judger stopped with unknown reason, status(%d)", status);
+            update_system_error(OJ_SE);
             // SE
           }
         }
@@ -290,24 +298,50 @@ int parse_arguments(char *str) {
     return 0;
 }
 
-size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
-{
-    if (userp == NULL) {
-        return 0;
+void update_result() {
+    char buffer[BUFF_SIZE];
+    sprintf(buffer, "%s/%s/result.txt", oj_solution.work_dir, oj_solution.sid);
+    FILE* fp = fopen(buffer, "r");
+    if (fp == NULL) {
+        FM_LOG_WARNING("cannot open file %s", buffer);
+        update_system_error(ERROR_READ_FILE);
+        return;
     }
 
-    FILE *fp = (FILE *)userp;
-
-    int c = fgetc(fp);
-    if (c != EOF) {
-        *(char *)ptr = (char)c;
-        return 1;
+    int number = fscanf(fp, "%d %d %d %d", &oj_solution.result, &oj_solution.time_usage, &oj_solution.memory_usage, &oj_solution.test);
+    fclose(fp);
+    if (number < 4) {
+        FM_LOG_WARNING("read result failed!");
+        update_system_error(ERROR_READ_RESULT);
+        return;
     }
 
-    return 0;                          /* no more data left to deliver */ 
+    char *p = NULL;
+    if (oj_solution.result == OJ_CE) {
+        sprintf(buffer, "%s/%s/stderr_compiler.txt", oj_solution.work_dir, oj_solution.sid);
+        p = buffer;
+    } else if (oj_solution.result == OJ_RE) {
+        sprintf(buffer, "%s/%s/stderr_executive.txt", oj_solution.work_dir, oj_solution.sid);
+        p = buffer;
+    } else if (oj_solution.result == OJ_SE) {
+        sprintf(buffer, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
+        p = buffer;
+        return;
+    }
+
+    send_multi_result(p);
 }
 
-void update_multi_result(char* file_path) {
+void update_system_error(int result) {
+    FM_LOG_WARNING("system error %d", result);
+    oj_solution.result = OJ_SE;
+    char buffer[BUFF_SIZE];
+    sprintf(buffer, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
+    send_multi_result(buffer);
+}
+
+void send_multi_result(char* file_path) {
+    FM_LOG_TRACE("send_multi_result");
     CURL *curl;
  
   CURLM *multi_handle;
@@ -338,25 +372,29 @@ void update_multi_result(char* file_path) {
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
+sprintf(data, "%d", oj_solution.time_usage);
   curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "time",
-               CURLFORM_COPYCONTENTS, oj_solution.time_usage,
+               CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
+sprintf(data, "%d", oj_solution.memory_usage);
   curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "memory",
-               CURLFORM_COPYCONTENTS, oj_solution.memory_usage,
+               CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
+sprintf(data, "%d", oj_solution.test);
   curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "test",
-               CURLFORM_COPYCONTENTS, oj_solution.test,
+               CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
   if (file_path != NULL) {
+    FM_LOG_NOTICE("upload error file %s", file_path);
       curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "error",
@@ -364,12 +402,13 @@ void update_multi_result(char* file_path) {
                CURLFORM_END);
   }
  
+ FM_LOG_TRACE("try curl_easy_init");
   curl = curl_easy_init();
   multi_handle = curl_multi_init();
 
   headerlist = curl_slist_append(headerlist, buf);
   if(curl && multi_handle) {
- 
+    FM_LOG_TRACE("curl_multi_init OK");
     curl_easy_setopt(curl, CURLOPT_URL, oj_config.api_url);
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
  
@@ -452,50 +491,7 @@ void update_multi_result(char* file_path) {
     curl_formfree(formpost);
  
     curl_slist_free_all (headerlist);
+  } else {
+    FM_LOG_FATAL("cannot init curl");
   }
-}
-
-void update_normal_result() {
-    char buffer[BUFF_SIZE];
-    sprintf(buffer, "%s/%s/result.txt", oj_solution.work_dir, oj_solution.sid);
-    FILE* fp = fopen(buffer, "r");
-    if (fp == NULL) {
-        update_system_error(ERROR_READ_FILE);
-        return;
-    }
-
-    int number = fscanf(fp, "%d %d %d %d", &oj_solution.result, &oj_solution.time_usage, &oj_solution.memory_usage, &oj_solution.test);
-    fclose(fp);
-    if (number < 4) {
-        update_system_error(ERROR_READ_RESULT);
-        return;
-    }
-
-    if (oj_solution.result == OJ_CE) {
-        update_compile_error();
-        return;
-    }
-
-    update_multi_result(NULL);
-}
-
-void update_system_error(int result) {
-    
-}
-
-void update_compile_error() {
-    char buffer[BUFF_SIZE];
-    sprintf(buffer, "%s/%s/stderr_compiler.txt", oj_solution.work_dir, oj_solution.sid);
-    FILE* fp = fopen(buffer, "rb");
-    if (fp == NULL) {
-        update_system_error(ERROR_READ_FILE);
-        return;
-    }
-    fclose(fp);
-
-    update_multi_result(buffer);
-}
-
-void update_runtime_error(int result) {
-
 }

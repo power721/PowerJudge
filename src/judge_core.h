@@ -70,6 +70,7 @@ char result_str[][10] = {
 #define EXIT_VERY_FIRST        5
 #define EXIT_COMPILE_ERROR     6
 #define EXIT_NO_SOURCE_CODE    7
+#define EXIT_PRIVILEGED        8
 #define EXIT_PRE_JUDGE         9
 #define EXIT_PRE_JUDGE_PTRACE  10
 #define EXIT_PRE_JUDGE_EXECLP  11

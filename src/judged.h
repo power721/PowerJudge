@@ -60,7 +60,6 @@ int DEFAULT_PORT = 55555;
 const char *DEFAULT_CFG_FILE = "/home/judge/judge.properties";
 const char *PID_FILE = "/var/run/judged.pid";
 const char *LOG_FILE = "/var/log/judged.log";
-// MYSQL *con = NULL;
 
 
 void work(int newsockfd, struct sockaddr_in cli_addr);
@@ -70,13 +69,8 @@ int split(char *line, char **key, char **value);
 int check_password(char *password, char *message);
 int parse_arguments(char *str);
 void run();
-int init_database_connection();
-void update_multi_result(char* file_path);
-void update_normal_result();
+void update_result();
 void update_system_error(int result);
-void update_compile_error();
-void update_runtime_error(int result);
-
-size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp);
+void send_multi_result(char* file_path);
 
 #endif  // SRC_JUDGED_H_

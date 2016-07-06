@@ -44,12 +44,15 @@ check: all
 
 install: all
 	sudo cp $(TARGET) /usr/local/bin/
+	sudo chown judge:tomcat /usr/local/bin/powerjudge
 	sudo chmod 4755 /usr/local/bin/powerjudge
+	sudo setcap cap_sys_chroot+ep /usr/local/bin/powerjudge
 	sudo pkill -f /usr/local/bin/powerjudged
 	sudo cp $(TARGETD) /usr/local/bin/
+	sudo chown root:root /usr/local/bin/powerjudged
 	sudo chmod 4755 /usr/local/bin/powerjudged
 	sudo cp -p judge.properties /home/judge/
-	/usr/local/bin/powerjudged
+	sudo su judge -c /usr/local/bin/powerjudged
 
 clean:
 	sudo rm -f bin/judge.o bin/powerjudge bin/judged.o bin/powerjudged

@@ -14,9 +14,14 @@ int main(int argc, char *argv[], char *envp[])
 
   parse_arguments(argc, argv);
 
-  if (geteuid() != 0) {  // effective user is not root
-    FM_LOG_FATAL("please run as root, or set suid bit(chmod +4755)");
-    exit(EXIT_UNPRIVILEGED);
+  // if (geteuid() != 0) {  // effective user is not root
+  //   FM_LOG_FATAL("please run as root, or set suid bit(chmod +4755)");
+  //   exit(EXIT_UNPRIVILEGED);
+  // }
+
+  if (geteuid() == 0) {  // effective user is not root
+    FM_LOG_FATAL("please do not run as root, run as judge");
+    exit(EXIT_PRIVILEGED);
   }
 
   if (EXIT_SUCCESS != chdir(oj_solution.work_dir)) {  // change current directory
@@ -511,8 +516,13 @@ bool judge(const char *input_file,
           case SIGKILL:  // exceeds hard processor limit
           default:
               oj_solution.result = OJ_RE;
-              fprintf(stderr, "%s\n", strsignal(signo));
-              FM_LOG_TRACE("Runtime Error");
+              FILE * fp = fopen(stderr_file_executive, "a+");
+              if (fp == NULL) {
+                fprintf(stderr, "%s\n", strsignal(signo));
+                FM_LOG_WARNING("Runtime Error: %s", strsignal(signo));
+              } else {
+                fprintf(fp, "%s\n", strsignal(signo));
+              }
               break;
         }  // end of swtich
         kill(executor, SIGKILL);
@@ -701,9 +711,9 @@ void set_limit(off_t fsize)
 
 void set_security_option(void)
 {
-  struct passwd *nobody = getpwnam("nobody");  // get password file entry for user nobody
-  if (nobody == NULL) {
-    FM_LOG_FATAL("no user named 'nobody': %s", strerror(errno));
+  struct passwd *judge = getpwnam("judge");  // get password file entry for user judge
+  if (judge == NULL) {
+    FM_LOG_FATAL("no user named 'judge': %s", strerror(errno));
     exit(EXIT_SET_SECURITY);
   }
 
@@ -727,14 +737,14 @@ void set_security_option(void)
   }
 
   // setgid, must before setuid()
-  if (EXIT_SUCCESS != setgid(nobody->pw_gid)) {
-    FM_LOG_FATAL("setgid(%d) failed: %s", nobody->pw_gid, strerror(errno));
+  if (EXIT_SUCCESS != setgid(judge->pw_gid)) {
+    FM_LOG_FATAL("setgid(%d) failed: %s", judge->pw_gid, strerror(errno));
     exit(EXIT_SET_SECURITY);
   }
 
   // setuid
-  if (EXIT_SUCCESS != setuid(nobody->pw_uid)) {
-    FM_LOG_FATAL("setuid(%d) failed: %s", nobody->pw_uid, strerror(errno));
+  if (EXIT_SUCCESS != setuid(judge->pw_uid)) {
+    FM_LOG_FATAL("setuid(%d) failed: %s", judge->pw_uid, strerror(errno));
     exit(EXIT_SET_SECURITY);
   }
 
