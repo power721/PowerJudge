@@ -141,6 +141,7 @@ void run() {
     pid_t pid = fork();
     if (pid < 0) {
         FM_LOG_FATAL("fork judger failed: %s", strerror(errno));
+        update_system_error(EXIT_FORK_ERROR);
     } else if (pid == 0) {
         stderr = freopen(stderr_file, "a+", stderr);
         execl("/usr/local/bin/powerjudge", 
@@ -153,7 +154,8 @@ void run() {
             "-w", oj_solution.work_dir, 
             "-D", oj_config.data_dir, 
             NULL);
-        FM_LOG_FATAL("exec error");
+        FM_LOG_FATAL("exec error: %s", strerror(errno));
+        update_system_error(EXIT_EXEC_ERROR);
     } else {
         // TODO: wait judger and update result to DataBase
         int status = 0;
@@ -169,27 +171,22 @@ void run() {
           } else if (EXIT_JUDGE == WEXITSTATUS(status)) {
             FM_LOG_TRACE("judge error");
             update_system_error(OJ_SE);
-            // SE
           } else {
             FM_LOG_TRACE("judge error");
             update_system_error(WEXITSTATUS(status));
-            // SE
           }
         } else {
           if (WIFSIGNALED(status)) {  // killed by signal
             int signo = WTERMSIG(status);
             FM_LOG_WARNING("judger killed by signal: %s", strsignal(signo));
-            update_system_error(OJ_SE);
-            // SE
+            update_system_error(signo);
           } else if (WIFSTOPPED(status)) {  // stopped by signal
             int signo = WSTOPSIG(status);
             FM_LOG_FATAL("judger stopped by signal: %s\n", strsignal(signo));
-            update_system_error(OJ_SE);
-            // SE
+            update_system_error(signo);
           } else {
             FM_LOG_FATAL("judger stopped with unknown reason, status(%d)", status);
-            update_system_error(OJ_SE);
-            // SE
+            update_system_error(EXIT_UNKNOWN);
           }
         }
     }
@@ -500,6 +497,7 @@ sprintf(data, "%d", oj_solution.test);
  
     curl_slist_free_all (headerlist);
   } else {
-    FM_LOG_FATAL("cannot init curl");
+    FM_LOG_FATAL("cannot init curl: %s", strerror(errno));
+    update_system_error(EXIT_CURL_ERROR);
   }
 }
