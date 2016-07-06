@@ -92,7 +92,8 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
 
     FM_LOG_NOTICE("Here is the password: %s", buffer);
     if (check_password(oj_config.password, buffer)) {
-        n = write(newsockfd, "Authentication Ok", 17);
+        FM_LOG_DEBUG("Authentication Ok.");
+        n = write(newsockfd, "Authentication Ok.", 18);
         if (n < 0) FM_LOG_WARNING("ERROR writing to socket");
 
         bzero(buffer, BUFF_SIZE);
@@ -105,12 +106,13 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
         FM_LOG_NOTICE("Here is the message: %s(%d)", buffer, n);
 
         if (parse_arguments(buffer) < 0) {
-            n = write(newsockfd, "Missing some parameters", 23);
+            FM_LOG_WARNING("Missing some parameters.");
+            n = write(newsockfd, "Missing some parameters.", 24);
             if (n < 0) FM_LOG_WARNING("ERROR writing to socket");
             close(newsockfd);
             return;
         } else {
-            n = write(newsockfd, "I got your message", 18);
+            n = write(newsockfd, "I got your request.", 19);
             if (n < 0) FM_LOG_WARNING("ERROR writing to socket");
 
             close(newsockfd);
@@ -118,6 +120,10 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
             // mysql_close(con);
             return;
         }
+    } else {
+        FM_LOG_WARNING("Authentication Failed.");
+        n = write(newsockfd, "Authentication Failed.", 22);
+        if (n < 0) FM_LOG_WARNING("ERROR writing to socket");
     }
 
     close(newsockfd);
@@ -285,6 +291,9 @@ int split(char *line, char **key, char **value) {
 }
 
 int check_password(char *password, char *message) {
+    if (strlen(password) != strlen(message)) {
+        return 0;
+    }
     return strncmp(password, message, strlen(password)) == 0;
 }
 
