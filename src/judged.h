@@ -57,6 +57,7 @@ struct oj_solution_t {
 
 int DEFAULT_BACKLOG = 100;
 int DEFAULT_PORT = 55555;
+int MAX_UPLOAD_FILE_SIZE = 4096;
 const char *DEFAULT_CFG_FILE = "/home/judge/judge.properties";
 const char *PID_FILE = "/var/run/judged.pid";
 const char *LOG_FILE = "/var/log/judged.log";
@@ -72,5 +73,6 @@ void run();
 void update_result();
 void update_system_error(int result);
 void send_multi_result(char* file_path);
+void truncate_upload_file(char* file_path);
 
 #endif  // SRC_JUDGED_H_

@@ -345,62 +345,73 @@ void update_system_error(int result) {
     send_multi_result(buffer);
 }
 
+void truncate_upload_file(char* file_path) {
+    off_t size = file_size(file_path);
+    if (size > MAX_UPLOAD_FILE_SIZE) {
+    FM_LOG_TRACE("truncate_upload_file: %s %d %d", file_path, size, MAX_UPLOAD_FILE_SIZE);
+        if (truncate(file_path, MAX_UPLOAD_FILE_SIZE) != 0) {
+            FM_LOG_WARNING("truncate upload file %s failed: %s", file_path, strerror(errno));
+        }
+    }
+}
+
 void send_multi_result(char* file_path) {
     FM_LOG_TRACE("send_multi_result");
     CURL *curl;
  
-  CURLM *multi_handle;
-  int still_running;
+    CURLM *multi_handle;
+    int still_running;
  
-  struct curl_httppost *formpost=NULL;
-  struct curl_httppost *lastptr=NULL;
-  struct curl_slist *headerlist=NULL;
-  static const char buf[] = "Expect:";
-  char data[25] = {0};
-  curl_formadd(&formpost,
+    struct curl_httppost *formpost=NULL;
+    struct curl_httppost *lastptr=NULL;
+    struct curl_slist *headerlist=NULL;
+    static const char buf[] = "Expect:";
+    char data[25] = {0};
+    curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "sid",
                CURLFORM_COPYCONTENTS, oj_solution.sid,
                CURLFORM_END);
 
-  sprintf(data, "%d", oj_solution.cid);
- curl_formadd(&formpost,
+    sprintf(data, "%d", oj_solution.cid);
+    curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "cid",
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
  
- sprintf(data, "%d", oj_solution.result);
-  curl_formadd(&formpost,
+    sprintf(data, "%d", oj_solution.result);
+    curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "result",
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
-sprintf(data, "%d", oj_solution.time_usage);
-  curl_formadd(&formpost,
+    sprintf(data, "%d", oj_solution.time_usage);
+    curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "time",
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
-sprintf(data, "%d", oj_solution.memory_usage);
-  curl_formadd(&formpost,
+    sprintf(data, "%d", oj_solution.memory_usage);
+    curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "memory",
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
-sprintf(data, "%d", oj_solution.test);
-  curl_formadd(&formpost,
+    sprintf(data, "%d", oj_solution.test);
+    curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "test",
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
   if (file_path != NULL) {
-    FM_LOG_NOTICE("upload error file %s", file_path);
-      curl_formadd(&formpost,
+    truncate_upload_file(file_path);
+    FM_LOG_NOTICE("will upload error file %s", file_path);
+    curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "error",
                CURLFORM_FILE, file_path,
@@ -496,6 +507,7 @@ sprintf(data, "%d", oj_solution.test);
     curl_formfree(formpost);
  
     curl_slist_free_all (headerlist);
+    FM_LOG_DEBUG("send_multi_result finished");
   } else {
     FM_LOG_FATAL("cannot init curl: %s", strerror(errno));
     update_system_error(EXIT_CURL_ERROR);

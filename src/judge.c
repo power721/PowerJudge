@@ -14,11 +14,6 @@ int main(int argc, char *argv[], char *envp[])
 
   parse_arguments(argc, argv);
 
-  // if (geteuid() != 0) {  // effective user is not root
-  //   FM_LOG_FATAL("please run as root, or set suid bit(chmod +4755)");
-  //   exit(EXIT_UNPRIVILEGED);
-  // }
-
   if (geteuid() == 0) {  // effective user is not root
     FM_LOG_FATAL("please do not run as root, run as judge");
     exit(EXIT_PRIVILEGED);
@@ -199,7 +194,7 @@ void compile(void)
 
   if (compiler < 0) {
     FM_LOG_FATAL("fork compiler failed: %s", strerror(errno));
-    exit(EXIT_COMPILE_ERROR);
+    exit(EXIT_FORK_COMPILER);
   } else if (compiler == 0) {
     // child process: run compiler
     log_add_info("compiler");
@@ -210,7 +205,7 @@ void compile(void)
     stderr = freopen(stderr_compiler, "w", stderr);
     if (stdout == NULL || stderr == NULL) {
       FM_LOG_FATAL("error freopen: stdout(%p), stderr(%p)", stdout, stderr);
-      exit(EXIT_COMPILE_ERROR);
+      exit(EXIT_COMPILE_IO);
     }
 
     switch (oj_solution.lang) {
@@ -238,7 +233,7 @@ void compile(void)
 
     // execvp error
     FM_LOG_FATAL("execvp compiler error");
-    exit(EXIT_COMPILE_ERROR);
+    exit(EXIT_COMPILE_EXEC);
   } else {
     // parent process: Judger
     int status = 0;
@@ -711,11 +706,11 @@ void set_limit(off_t fsize)
 
 void set_security_option(void)
 {
-  struct passwd *judge = getpwnam("judge");  // get password file entry for user judge
-  if (judge == NULL) {
-    FM_LOG_FATAL("no user named 'judge': %s", strerror(errno));
-    exit(EXIT_SET_SECURITY);
-  }
+  // struct passwd *judge = getpwnam("judge");  // get password file entry for user judge
+  // if (judge == NULL) {
+  //   FM_LOG_FATAL("no user named 'judge': %s", strerror(errno));
+  //   exit(EXIT_SET_SECURITY);
+  // }
 
   if (oj_solution.lang != LANG_JAVA
 #ifdef FAST_JUDGE
@@ -736,17 +731,19 @@ void set_security_option(void)
     }
   }
 
-  // setgid, must before setuid()
-  if (EXIT_SUCCESS != setgid(judge->pw_gid)) {
-    FM_LOG_FATAL("setgid(%d) failed: %s", judge->pw_gid, strerror(errno));
-    exit(EXIT_SET_SECURITY);
-  }
+  
 
-  // setuid
-  if (EXIT_SUCCESS != setuid(judge->pw_uid)) {
-    FM_LOG_FATAL("setuid(%d) failed: %s", judge->pw_uid, strerror(errno));
-    exit(EXIT_SET_SECURITY);
-  }
+  // // setgid, must before setuid()
+  // if (EXIT_SUCCESS != setgid(judge->pw_gid)) {
+  //   FM_LOG_FATAL("setgid(%d) failed: %s", judge->pw_gid, strerror(errno));
+  //   exit(EXIT_SET_SECURITY);
+  // }
+
+  // // setuid
+  // if (EXIT_SUCCESS != setuid(judge->pw_uid)) {
+  //   FM_LOG_FATAL("setuid(%d) failed: %s", judge->pw_uid, strerror(errno));
+  //   exit(EXIT_SET_SECURITY);
+  // }
 
   FM_LOG_TRACE("set_security_option ok");
 }

@@ -68,6 +68,9 @@ char result_str[][10] = {
 #define EXIT_BAD_PARAM         3
 #define EXIT_MISS_PARAM        4
 #define EXIT_VERY_FIRST        5
+#define EXIT_FORK_COMPILER     6
+#define EXIT_COMPILE_IO        6
+#define EXIT_COMPILE_EXEC      6
 #define EXIT_COMPILE_ERROR     6
 #define EXIT_NO_SOURCE_CODE    7
 #define EXIT_PRIVILEGED        8
