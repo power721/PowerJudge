@@ -25,7 +25,7 @@
 
 struct oj_config_t {
     char ip[20];
-    int port;
+    uint16_t port;
     int backlog;
 
     char password[256];
@@ -33,7 +33,7 @@ struct oj_config_t {
     char temp_dir[PATH_SIZE];
 
     char db_host[256];
-    int db_port;
+    uint16_t db_port;
     char db_user[256];
     char db_password[256];
     char db_database[256];
@@ -56,7 +56,7 @@ struct oj_solution_t {
 }oj_solution;
 
 int DEFAULT_BACKLOG = 100;
-int DEFAULT_PORT = 55555;
+uint16_t DEFAULT_PORT = 55555;
 int MAX_UPLOAD_FILE_SIZE = 4096;
 const char *DEFAULT_CFG_FILE = "/home/judge/judge.properties";
 const char *PID_FILE = "/var/run/judged.pid";
@@ -66,7 +66,7 @@ const char *LOG_FILE = "/var/log/judged.log";
 void work(int newsockfd, struct sockaddr_in cli_addr);
 void check_pid();
 void read_config(const char *cfg_file);
-int split(char *line, char **key, char **value);
+size_t split(char *line, char **key, char **value);
 int check_password(char *password, char *message);
 int parse_arguments(char *str);
 void run();

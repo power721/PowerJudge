@@ -6,16 +6,17 @@
 #define SRC_MISC_H_
 
 #include <ctype.h>
+#include <libgen.h>
 #include "judge_core.h"
 
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define is_space_char(a) ((a == ' ') || (a == '\t') || (a == '\n'))
 
-void error(const char *msg);
+void fatal_error(const char *msg);
 char *trim(char *str);
 off_t file_size(const char *filename);
-int checkInFile(const char *filename);
+size_t checkInFile(const char *filename);
 int malarm(int which, int milliseconds);
 void print_compiler(const char * options[]);
 int execute_cmd(const char *format, ...);
@@ -28,7 +29,7 @@ void clean_workdir(const char * work_dir);
 #endif
 
 
-void error(const char *msg)
+void fatal_error(const char *msg)
 {
     perror(msg);
     exit(1);
@@ -65,9 +66,9 @@ off_t file_size(const char *filename)
   return 0;
 }
 
-int checkInFile(const char *filename)
+size_t checkInFile(const char *filename)
 {
-  int len = strlen(filename);
+  size_t len = strlen(filename);
   if (len <= 3 || strcmp(filename + len - 3, ".in") != 0) {
     return 0;
   } else {
@@ -114,29 +115,29 @@ int execute_cmd(const char *fmt, ...)
 #ifndef FAST_JUDGE
 void copy_shell_runtime(const char *work_dir)
 {
-  execute_cmd("/bin/mkdir %s/lib 2>>error.log", work_dir);
-  execute_cmd("/bin/mkdir %s/bin 2>>error.log", work_dir);
-  execute_cmd("/bin/cp /lib/* %s/lib/ 2>>error.log", work_dir);
-  execute_cmd("/bin/cp -a /lib/i386-linux-gnu %s/lib/ 2>>error.log", work_dir);
+  execute_cmd("/bin/mkdir %s/lib 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/mkdir %s/bin 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp /lib/* %s/lib/ 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp -a /lib/i386-linux-gnu %s/lib/ 2>>fatal_error.log", work_dir);
 #ifndef __i386
-  execute_cmd("/bin/mkdir %s/lib64 2>>error.log", work_dir);
-  execute_cmd("/bin/cp -a /lib/x86_64-linux-gnu %s/lib/ 2>>error.log", work_dir);
-  execute_cmd("/bin/cp /lib64/* %s/lib64/ 2>>error.log", work_dir);
-  execute_cmd("/bin/cp -a /lib32 %s/ 2>>error.log", work_dir);
+  execute_cmd("/bin/mkdir %s/lib64 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp -a /lib/x86_64-linux-gnu %s/lib/ 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp /lib64/* %s/lib64/ 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp -a /lib32 %s/ 2>>fatal_error.log", work_dir);
 #endif
-  execute_cmd("/bin/cp /bin/busybox %s/bin/ 2>>error.log", work_dir);
-  execute_cmd("/bin/cp /bin/bash %s/bin/bash 2>>error.log", work_dir);
+  execute_cmd("/bin/cp /bin/busybox %s/bin/ 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp /bin/bash %s/bin/bash 2>>fatal_error.log", work_dir);
 }
 
 void copy_python_runtime(const char *work_dir)
 {
   copy_shell_runtime(work_dir);
-  execute_cmd("/bin/mkdir -p %s/usr/include 2>>error.log", work_dir);
-  execute_cmd("/bin/mkdir -p %s/usr/lib 2>>error.log", work_dir);
-  execute_cmd("/bin/cp /usr/bin/python* %s/ 2>>error.log", work_dir);
-  execute_cmd("/bin/cp -a /usr/lib/python2* %s/usr/lib/ 2>>error.log", work_dir);
-  execute_cmd("/bin/cp -a /usr/lib/libpython2* %s/usr/lib/ 2>>error.log", work_dir);
-  execute_cmd("/bin/cp -a /usr/include/python2* %s/usr/include/ 2>>error.log", work_dir);
+  execute_cmd("/bin/mkdir -p %s/usr/include 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/mkdir -p %s/usr/lib 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp /usr/bin/python* %s/ 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp -a /usr/lib/python2* %s/usr/lib/ 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp -a /usr/lib/libpython2* %s/usr/lib/ 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp -a /usr/include/python2* %s/usr/include/ 2>>fatal_error.log", work_dir);
 }
 
 void clean_workdir(const char *work_dir)
@@ -158,7 +159,7 @@ void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, con
   char buf[BUFF_SIZE];
   snprintf(buf, BUFF_SIZE, "%s/diff.out", work_dir);
   out = fopen(buf, "a+");
-  fprintf(out, "=================%s\n", basename(path));
+  fprintf(out, "=================%s\n", basename((char *) path));
   fprintf(out, "Right:\n%c", c1);
   if (fgets(buf, 80, f1)) {
     fprintf(out, "%s", buf);

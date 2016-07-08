@@ -27,7 +27,7 @@ const char* DEFAULT_PASSWORD = "PowerJudgeV1.1";
 const char* DEFAULT_PORT = "12345";
 
 
-void error(const char *msg)
+void fatal_error(const char *msg)
 {
     perror(msg);
     exit(1);
@@ -55,7 +55,7 @@ int main(int argc, char *argv[], char *envp[])
 	hints.ai_flags = AI_NUMERICSERV;
 
 	if (getaddrinfo(ip, port, &hints, &result) != 0) {
-		error("cannot get addr info");
+		fatal_error("cannot get addr info");
 	}
 
 	for (rp = result; rp != NULL; rp = rp->ai_next) {
@@ -63,7 +63,7 @@ int main(int argc, char *argv[], char *envp[])
 		if (cfd == -1) {
 			continue;
 		}
-		/* On error, try next address */
+		/* On fatal_error, try next address */
 		if (connect(cfd, rp->ai_addr, rp->ai_addrlen) != -1) {
 			break;
 		}
@@ -73,20 +73,20 @@ int main(int argc, char *argv[], char *envp[])
 	}
 
 	if (rp == NULL) {
-		error("Could not connect socket to any address");
+		fatal_error("Could not connect socket to any address");
 	}
 	freeaddrinfo(result);
 
 	if (write(cfd, password, strlen(password)) != strlen(password)) {
-		error("Partial/failed write (password)");
+		fatal_error("Partial/failed write (password)");
 	}
 
 	numRead = read(cfd, buffer, 256);
 	if (numRead == -1) {
-		error("readLine");
+		fatal_error("readLine");
 	}
 	if (numRead == 0) {
-		error("Unexpected EOF from server");
+		fatal_error("Unexpected EOF from server");
 	}
 	printf("%s\n", buffer);
 
@@ -100,15 +100,15 @@ int main(int argc, char *argv[], char *envp[])
 	sprintf(buffer, "%d %d %d %d %d %d", sid, cid, pid, language, timeLimit, memoryLimit);
 
 	if (write(cfd, buffer, strlen(buffer)) != strlen(buffer)) {
-		error("Partial/failed write (buffer)");
+		fatal_error("Partial/failed write (buffer)");
 	}
 
 	numRead = read(cfd, buffer, 256);
 	if (numRead == -1) {
-		error("readLine");
+		fatal_error("readLine");
 	}
 	if (numRead == 0) {
-		error("Unexpected EOF from server");
+		fatal_error("Unexpected EOF from server");
 	}
 	printf("%s\n", buffer);
 

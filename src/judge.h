@@ -20,9 +20,9 @@
 
 // 编译选项
 const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-Wall",
-                       "-std=c11","-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.c", NULL };
+                       "-std=c11", "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.c", NULL };
 const char* CP_CC[] = { "g++", "-fno-asm", "-lm", "-static", "-Wall",
-                        "-std=c++11","-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", NULL };
+                        "-std=c++11", "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", NULL };
 const char* CP_PAS[] = { "fpc", "Main.pas", "-O2", "-Co", "-Cr", "-Ct", "-Ci", NULL };
 const char* CP_J[] = { "javac", "Main.java", "-g:none", "-Xlint", "-encoding", "UTF-8", NULL };
 const char* CP_PY[] = { "python", "-c", "import py_compile;py_compile.compile(r'Main.py')", NULL };
@@ -35,33 +35,33 @@ const char* EXEC_PY[] = { "python", "Main.py", NULL };
 
 // configruation
 // judge本身的时限(ms)
-static int judge_time_limit            = 15347;
+static unsigned int judge_time_limit            = 15347;
 
 // 编译限制(ms)
-static int compile_time_limit          = 5347;
+static unsigned int compile_time_limit          = 5347;
 
 // 编译限制(MB)
-static int compile_memory_limit        = 1024;
+static unsigned int compile_memory_limit        = 1024;
 
 // 编译输出限制(MB)
-static int compile_fsize_limit         = 64;
+static unsigned int compile_fsize_limit         = 64;
 
 // SPJ时间限制(ms)
-static int spj_time_limit              = 10347;
+static unsigned int spj_time_limit              = 10347;
 
 // 程序运行的栈空间大小(KB)
-static int stack_size_limit            = 65536;
+static unsigned int stack_size_limit            = 65536;
 
 // ms
-static int time_limit_addtion          = 347;
+static unsigned int time_limit_addtion          = 347;
 
-static int java_time_factor            = 3;
+static unsigned int java_time_factor            = 3;
 
-static int java_memory_factor          = 3;
+static unsigned int java_memory_factor          = 3;
 
-static int python_time_factor          = 2;
+static unsigned int python_time_factor          = 2;
 
-static int python_memory_factor        = 2;
+static unsigned int python_memory_factor        = 2;
 /* -- end of configruation -- */
 
 static off_t page_size;

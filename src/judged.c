@@ -28,7 +28,7 @@ int main(int argc, char *argv[], char *envp[])
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-        error("ERROR opening socket");
+        fatal_error("ERROR opening socket");
     }
     FM_LOG_TRACE("socket");
 
@@ -44,18 +44,18 @@ int main(int argc, char *argv[], char *envp[])
     int yes = 1;
     if ( setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1 )
     {
-        error("setsockopt SO_REUSEADDR failed");
+        fatal_error("setsockopt SO_REUSEADDR failed");
     }
 
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-        error("ERROR on binding");
+        fatal_error("ERROR on binding");
     }
     FM_LOG_TRACE("bind");
 
     clilen = sizeof(cli_addr);
 
     if (listen(sockfd, oj_config.backlog) < 0) {
-        error("ERROR on listening");
+        fatal_error("ERROR on listening");
     }
     FM_LOG_NOTICE("listen  backlog: %d", oj_config.backlog);
 
@@ -87,7 +87,7 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
 
     char buffer[BUFF_SIZE];
     bzero(buffer, BUFF_SIZE);
-    int n = read(newsockfd, buffer, BUFF_SIZE);
+    ssize_t n = read(newsockfd, buffer, BUFF_SIZE);
     if (n < 0) FM_LOG_WARNING("ERROR reading from socket");
 
     FM_LOG_NOTICE("Here is the password: %s", buffer);
@@ -97,7 +97,7 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
         if (n < 0) FM_LOG_WARNING("ERROR writing to socket");
 
         bzero(buffer, BUFF_SIZE);
-        int n = read(newsockfd, buffer, BUFF_SIZE);
+        n = read(newsockfd, buffer, BUFF_SIZE);
         if (n <= 0) {
             FM_LOG_WARNING("ERROR reading from socket");
             close(newsockfd);
@@ -131,33 +131,35 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
 
 void run() {
     if (oj_solution.cid > 0) {
-        sprintf(oj_solution.work_dir, "%s/c%d", oj_config.temp_dir, oj_solution.cid);
+        snprintf(oj_solution.work_dir, PATH_SIZE, "%s/c%d", oj_config.temp_dir, oj_solution.cid);
     } else {
         strncpy(oj_solution.work_dir, oj_config.temp_dir, strlen(oj_config.temp_dir));
     }
     char stderr_file[PATH_SIZE];
-    sprintf(stderr_file, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
-    FM_LOG_NOTICE("/usr/local/bin/powerjudge -s %s -p %s -l %s -t %s -m %s -w %s -D %s", oj_solution.sid, oj_solution.pid, oj_solution.language, oj_solution.time_limit, oj_solution.memory_limit, oj_solution.work_dir, oj_config.data_dir);
+    snprintf(stderr_file, PATH_SIZE, "%s/%s/fatal_error.txt", oj_solution.work_dir, oj_solution.sid);
+    FM_LOG_NOTICE("/usr/local/bin/powerjudge -s %s -p %s -l %s -t %s -m %s -w %s -D %s",
+                  oj_solution.sid, oj_solution.pid, oj_solution.language,
+                  oj_solution.time_limit, oj_solution.memory_limit,
+                  oj_solution.work_dir, oj_config.data_dir);
     pid_t pid = fork();
     if (pid < 0) {
         FM_LOG_FATAL("fork judger failed: %s", strerror(errno));
         update_system_error(EXIT_FORK_ERROR);
     } else if (pid == 0) {
         stderr = freopen(stderr_file, "a+", stderr);
-        execl("/usr/local/bin/powerjudge", 
-            "/usr/local/bin/powerjudge", 
-            "-s", oj_solution.sid, 
-            "-p", oj_solution.pid, 
-            "-l", oj_solution.language, 
-            "-t", oj_solution.time_limit, 
-            "-m", oj_solution.memory_limit, 
-            "-w", oj_solution.work_dir, 
-            "-D", oj_config.data_dir, 
+        execl("/usr/local/bin/powerjudge",
+            "/usr/local/bin/powerjudge",
+            "-s", oj_solution.sid,
+            "-p", oj_solution.pid,
+            "-l", oj_solution.language,
+            "-t", oj_solution.time_limit,
+            "-m", oj_solution.memory_limit,
+            "-w", oj_solution.work_dir,
+            "-D", oj_config.data_dir,
             NULL);
-        FM_LOG_FATAL("exec error: %s", strerror(errno));
+        FM_LOG_FATAL("exec fatal_error: %s", strerror(errno));
         update_system_error(EXIT_EXEC_ERROR);
     } else {
-        // TODO: wait judger and update result to DataBase
         int status = 0;
         FM_LOG_TRACE("process ID=%d", pid);
         if (waitpid(pid, &status, WUNTRACED) == -1) {
@@ -169,10 +171,10 @@ void run() {
             FM_LOG_DEBUG("judge succeeded");
             update_result();
           } else if (EXIT_JUDGE == WEXITSTATUS(status)) {
-            FM_LOG_TRACE("judge error");
+            FM_LOG_TRACE("judge fatal_error");
             update_system_error(OJ_SE);
           } else {
-            FM_LOG_TRACE("judge error");
+            FM_LOG_TRACE("judge fatal_error");
             update_system_error(WEXITSTATUS(status));
           }
         } else {
@@ -216,14 +218,14 @@ void read_config(const char *cfg_file) {
     ssize_t read;
 
     if (fp == NULL) {
-        error("cannot open configuration file");
+        fatal_error("cannot open configuration file");
     }
 
     char *key;
     char *value;
     while ((read = getline(&line, &len, fp)) != -1) {
         if (read > 0) {
-            int val_len = split(line, &key, &value);
+            size_t val_len = split(line, &key, &value);
             if (val_len == 0) {
                 continue;
             }
@@ -231,7 +233,7 @@ void read_config(const char *cfg_file) {
             if (strcmp("ip", key) == 0) {
                 strncpy(oj_config.ip, value, val_len);
             } else if (strcmp("port", key) == 0) {
-                oj_config.port = atoi(value);
+                oj_config.port = (uint16_t) atoi(value);
             } else if (strcmp("backlog", key) == 0) {
                 oj_config.backlog = atoi(value);
             } else if (strcmp("password", key) == 0) {
@@ -243,7 +245,7 @@ void read_config(const char *cfg_file) {
             } else if (strcmp("db.host", key) == 0) {
                 strncpy(oj_config.db_host, value, val_len);
             } else if (strcmp("db.port", key) == 0) {
-                oj_config.db_port = atoi(value);
+                oj_config.db_port = (uint16_t) atoi(value);
             } else if (strcmp("db.user", key) == 0) {
                 strncpy(oj_config.db_user, value, val_len);
             } else if (strcmp("db.password", key) == 0) {
@@ -271,9 +273,9 @@ void read_config(const char *cfg_file) {
     }
 }
 
-int split(char *line, char **key, char **value) {
+size_t split(char *line, char **key, char **value) {
     int index = 0;
-    int val_len = 0;
+    size_t val_len = 0;
     for (char *p = line; *p; p++, index++) {
         if (*p == '=') {
             line[index] = '\0';
@@ -295,9 +297,12 @@ int check_password(char *password, char *message) {
 }
 
 int parse_arguments(char *str) {
-    int number = sscanf(str, "%s %d %s %s %s %s", oj_solution.sid, &oj_solution.cid, oj_solution.pid, oj_solution.language, oj_solution.time_limit, oj_solution.memory_limit);
-    FM_LOG_TRACE("sid=%s cid=%d  pid=%s  language=%s  timeLimit=%s ms  memoryLimit=%s KB", 
-        oj_solution.sid, oj_solution.cid, oj_solution.pid, oj_solution.language, oj_solution.time_limit, oj_solution.memory_limit);
+    int number = sscanf(str, "%s %d %s %s %s %s", oj_solution.sid, &oj_solution.cid,
+                        oj_solution.pid, oj_solution.language,
+                        oj_solution.time_limit, oj_solution.memory_limit);
+    FM_LOG_TRACE("sid=%s cid=%d  pid=%s  language=%s  timeLimit=%s ms  memoryLimit=%s KB",
+                 oj_solution.sid, oj_solution.cid, oj_solution.pid, oj_solution.language,
+                 oj_solution.time_limit, oj_solution.memory_limit);
     if (number < 5) {
         return -1;
     }
@@ -306,7 +311,7 @@ int parse_arguments(char *str) {
 
 void update_result() {
     char buffer[BUFF_SIZE];
-    sprintf(buffer, "%s/%s/result.txt", oj_solution.work_dir, oj_solution.sid);
+    snprintf(buffer, BUFF_SIZE, "%s/%s/result.txt", oj_solution.work_dir, oj_solution.sid);
     FILE* fp = fopen(buffer, "r");
     if (fp == NULL) {
         FM_LOG_WARNING("cannot open file %s", buffer);
@@ -314,7 +319,8 @@ void update_result() {
         return;
     }
 
-    int number = fscanf(fp, "%d %d %d %d", &oj_solution.result, &oj_solution.time_usage, &oj_solution.memory_usage, &oj_solution.test);
+    int number = fscanf(fp, "%d %d %d %d", &oj_solution.result,
+                        &oj_solution.time_usage, &oj_solution.memory_usage, &oj_solution.test);
     fclose(fp);
     if (number < 4) {
         FM_LOG_WARNING("read result failed!");
@@ -324,13 +330,13 @@ void update_result() {
 
     char *p = NULL;
     if (oj_solution.result == OJ_CE) {
-        sprintf(buffer, "%s/%s/stderr_compiler.txt", oj_solution.work_dir, oj_solution.sid);
+        snprintf(buffer, BUFF_SIZE, "%s/%s/stderr_compiler.txt", oj_solution.work_dir, oj_solution.sid);
         p = buffer;
     } else if (oj_solution.result == OJ_RE) {
-        sprintf(buffer, "%s/%s/stderr_executive.txt", oj_solution.work_dir, oj_solution.sid);
+        snprintf(buffer, BUFF_SIZE, "%s/%s/stderr_executive.txt", oj_solution.work_dir, oj_solution.sid);
         p = buffer;
     } else if (oj_solution.result == OJ_SE || oj_solution.result == OJ_RF) {
-        sprintf(buffer, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
+        snprintf(buffer, BUFF_SIZE, "%s/%s/fatal_error.txt", oj_solution.work_dir, oj_solution.sid);
         p = buffer;
     }
 
@@ -338,10 +344,10 @@ void update_result() {
 }
 
 void update_system_error(int result) {
-    FM_LOG_WARNING("system error %d", result);
+    FM_LOG_WARNING("system fatal_error %d", result);
     oj_solution.result = OJ_SE;
     char buffer[BUFF_SIZE];
-    sprintf(buffer, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
+    snprintf(buffer, BUFF_SIZE, "%s/%s/fatal_error.txt", oj_solution.work_dir, oj_solution.sid);
     send_multi_result(buffer);
 }
 
@@ -358,50 +364,51 @@ void truncate_upload_file(char* file_path) {
 void send_multi_result(char* file_path) {
     FM_LOG_TRACE("send_multi_result");
     CURL *curl;
- 
+
     CURLM *multi_handle;
     int still_running;
- 
-    struct curl_httppost *formpost=NULL;
-    struct curl_httppost *lastptr=NULL;
-    struct curl_slist *headerlist=NULL;
+
+    struct curl_httppost *formpost = NULL;
+    struct curl_httppost *lastptr = NULL;
+    struct curl_slist *headerlist = NULL;
     static const char buf[] = "Expect:";
-    char data[25] = {0};
+    const size_t size = 25;
+    char data[size] = {0};
     curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "sid",
                CURLFORM_COPYCONTENTS, oj_solution.sid,
                CURLFORM_END);
 
-    sprintf(data, "%d", oj_solution.cid);
+    snprintf(data, size, "%d", oj_solution.cid);
     curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "cid",
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
- 
-    sprintf(data, "%d", oj_solution.result);
+
+    snprintf(data, size, "%d", oj_solution.result);
     curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "result",
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
-    sprintf(data, "%d", oj_solution.time_usage);
+    snprintf(data, size, "%d", oj_solution.time_usage);
     curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "time",
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
-    sprintf(data, "%d", oj_solution.memory_usage);
+    snprintf(data, size, "%d", oj_solution.memory_usage);
     curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "memory",
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
-    sprintf(data, "%d", oj_solution.test);
+    snprintf(data, size, "%d", oj_solution.test);
     curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "test",
@@ -410,103 +417,102 @@ void send_multi_result(char* file_path) {
 
   if (file_path != NULL) {
     truncate_upload_file(file_path);
-    FM_LOG_NOTICE("will upload error file %s", file_path);
+    FM_LOG_NOTICE("will upload fatal_error file %s", file_path);
     curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "error",
                CURLFORM_FILE, file_path,
                CURLFORM_END);
   }
- 
- FM_LOG_TRACE("try curl_easy_init");
+
+  FM_LOG_TRACE("try curl_easy_init");
   curl = curl_easy_init();
   multi_handle = curl_multi_init();
 
   headerlist = curl_slist_append(headerlist, buf);
-  if(curl && multi_handle) {
+  if (curl && multi_handle) {
     FM_LOG_TRACE("curl_multi_init OK");
     curl_easy_setopt(curl, CURLOPT_URL, oj_config.api_url);
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
- 
+
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
- 
+
     curl_multi_add_handle(multi_handle, curl);
- 
+
     curl_multi_perform(multi_handle, &still_running);
- 
+
     do {
       struct timeval timeout;
-      int rc; /* select() return code */ 
-      CURLMcode mc; /* curl_multi_fdset() return code */ 
- 
+      int rc; /* select() return code */
+      CURLMcode mc; /* curl_multi_fdset() return code */
+
       fd_set fdread;
       fd_set fdwrite;
       fd_set fdexcep;
       int maxfd = -1;
- 
+
       long curl_timeo = -1;
- 
+
       FD_ZERO(&fdread);
       FD_ZERO(&fdwrite);
       FD_ZERO(&fdexcep);
- 
-      /* set a suitable timeout to play around with */ 
+
+      /* set a suitable timeout to play around with */
       timeout.tv_sec = 1;
       timeout.tv_usec = 0;
- 
+
       curl_multi_timeout(multi_handle, &curl_timeo);
-      if(curl_timeo >= 0) {
+      if (curl_timeo >= 0) {
         timeout.tv_sec = curl_timeo / 1000;
-        if(timeout.tv_sec > 1)
+        if (timeout.tv_sec > 1)
           timeout.tv_sec = 1;
         else
           timeout.tv_usec = (curl_timeo % 1000) * 1000;
       }
- 
-      /* get file descriptors from the transfers */ 
+
+      /* get file descriptors from the transfers */
       mc = curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
- 
-      if(mc != CURLM_OK) {
+
+      if (mc != CURLM_OK) {
         fprintf(stderr, "curl_multi_fdset() failed, code %d.\n", mc);
         break;
       }
- 
-      if(maxfd == -1) {
+
+      if (maxfd == -1) {
 #ifdef _WIN32
         Sleep(100);
         rc = 0;
 #else
-        /* Portable sleep for platforms other than Windows. */ 
-        struct timeval wait = { 0, 100 * 1000 }; /* 100ms */ 
+        /* Portable sleep for platforms other than Windows. */
+        struct timeval wait = { 0, 100 * 1000 }; /* 100ms */
         rc = select(0, NULL, NULL, NULL, &wait);
 #endif
-      }
-      else {
+      } else {
         /* Note that on some platforms 'timeout' may be modified by select().
-           If you need access to the original value save a copy beforehand. */ 
+           If you need access to the original value save a copy beforehand. */
         rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
       }
- 
-      switch(rc) {
+
+      switch (rc) {
       case -1:
-        /* select error */ 
+        /* select fatal_error */
         break;
       case 0:
       default:
-        /* timeout or readable/writable sockets */ 
+        /* timeout or readable/writable sockets */
         curl_multi_perform(multi_handle, &still_running);
         break;
       }
-    } while(still_running);
- 
+    } while (still_running);
+
     curl_multi_cleanup(multi_handle);
- 
+
     curl_easy_cleanup(curl);
- 
+
     curl_formfree(formpost);
- 
-    curl_slist_free_all (headerlist);
+
+    curl_slist_free_all(headerlist);
     FM_LOG_DEBUG("send_multi_result finished");
   } else {
     FM_LOG_FATAL("cannot init curl: %s", strerror(errno));

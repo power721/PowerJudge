@@ -88,7 +88,7 @@ int log_open(const char* filename)
     fprintf(stderr, "logger: log already opened\n");
     return 0;
   }
-  int len = strlen(filename);
+  size_t len = strlen(filename);
   log_filename = (char *)malloc(sizeof(char) * len + 1);
   snprintf(log_filename, len + 1, "%s", filename);
   log_fp = fopen(log_filename, "a");
@@ -159,19 +159,19 @@ static void log_write(int level, const char *file,
   int log_fd = log_fp->_fileno;
   if (flock(log_fd, LOCK_EX) == 0) {
     if (write(log_fd, buffer, count) < 0) {
-      perror("write log error");
+      perror("write log fatal_error");
       exit(1);
     }
     flock(log_fd, LOCK_UN);
   } else {
-    perror("flock log file error");
+    perror("flock log file fatal_error");
     exit(1);
   }
 }
 
 void log_add_info(const char *info)
 {
-  int len = strlen(log_extra_info);
+  size_t len = strlen(log_extra_info);
   snprintf(log_extra_info + len, LOG_BUFFER_SIZE - len, " [%s]", info);
 }
 

@@ -20,8 +20,9 @@ endif
 all: clean $(TARGET) $(TARGETD)
 $(TARGET): $(OBJECTS)
 	$(LD) -o $@ $(LDFLAGS) $(OBJECTS)
-	sudo chown root:root $(TARGET)
+	sudo chown judge:tomcat $(TARGET)
 	sudo chmod 4755 $(TARGET)
+	sudo setcap cap_sys_chroot+ep $(TARGET)
 
 $(TARGETD): $(OBJECTSD)
 	$(LD) -o $@ $(LDFLAGS) $(OBJECTSD) $(LIBS)
@@ -33,8 +34,8 @@ bin/%.o: src/%.c src/*.h
 
 test: all
 	g++ -o test/data/1405/spj test/data/1405/spj.cc
-	chmod a+x test/unitTest.sh
-	cd test && ./unitTest.sh
+	sudo chmod a+x test/unitTest.sh
+	cd test && sudo su judge -c ./unitTest.sh
 
 check: all
 	-cd src && ../bin/cpplint.py --linelength=100 --extensions=c,h \
@@ -44,8 +45,6 @@ check: all
 
 install: all
 	sudo cp $(TARGET) /usr/local/bin/
-	sudo chown judge:tomcat /usr/local/bin/powerjudge
-	sudo chmod 4755 /usr/local/bin/powerjudge
 	sudo setcap cap_sys_chroot+ep /usr/local/bin/powerjudge
 	sudo pkill -f /usr/local/bin/powerjudged
 	sudo cp $(TARGETD) /usr/local/bin/

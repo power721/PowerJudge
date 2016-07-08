@@ -174,7 +174,7 @@ void timeout_hander(int signo)
 }
 
   /*
-   * #error "This make CE"
+   * #fatal_error "This make CE"
    * #warning "Just warning message"
    * #include </dev/core>
    * #include </dev/zero>
@@ -204,7 +204,7 @@ void compile(void)
     stdout = freopen(stdout_compiler, "w", stdout);
     stderr = freopen(stderr_compiler, "w", stderr);
     if (stdout == NULL || stderr == NULL) {
-      FM_LOG_FATAL("error freopen: stdout(%p), stderr(%p)", stdout, stderr);
+      FM_LOG_FATAL("fatal_error freopen: stdout(%p), stderr(%p)", stdout, stderr);
       exit(EXIT_COMPILE_IO);
     }
 
@@ -229,10 +229,13 @@ void compile(void)
         print_compiler(CP_PY);
         execvp(CP_PY[0], (char * const *) CP_PY);
         break;
+      default:
+        FM_LOG_FATAL("Unknown language %d", oj_solution.lang);
+        break;
     }
 
-    // execvp error
-    FM_LOG_FATAL("execvp compiler error");
+    // execvp fatal_error
+    FM_LOG_FATAL("execvp compiler fatal_error");
     exit(EXIT_COMPILE_EXEC);
   } else {
     // parent process: Judger
@@ -244,7 +247,7 @@ void compile(void)
     FM_LOG_DEBUG("compiler finished");
 
     if (oj_solution.lang == LANG_PYTHON && file_size(stderr_compiler)) {
-      FM_LOG_TRACE("compile error");
+      FM_LOG_TRACE("compile fatal_error");
       output_result(OJ_CE, 0, 0, 0);
       exit(EXIT_OK);
     }
@@ -253,7 +256,7 @@ void compile(void)
       if (EXIT_SUCCESS == WEXITSTATUS(status)) {
         FM_LOG_DEBUG("compile succeeded");
       } else if (GCC_COMPILE_ERROR == WEXITSTATUS(status)) {
-        FM_LOG_TRACE("compile error");
+        FM_LOG_TRACE("compile fatal_error");
         output_result(OJ_CE, 0, 0, 0);
         exit(EXIT_OK);
       } else {
@@ -289,7 +292,7 @@ void set_compile_limit(void)
 {
   if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON) return;
 
-  rlimit lim;
+  struct rlimit lim;
 
   lim.rlim_cur = lim.rlim_max = compile_time_limit / 1000;
   if (setrlimit(RLIMIT_CPU, &lim) < 0) {
@@ -431,8 +434,8 @@ bool judge(const char *input_file,
       execl("./Main", "./Main", NULL);
     }
 
-    // exec error
-    FM_LOG_FATAL("exec error");
+    // exec fatal_error
+    FM_LOG_FATAL("exec fatal_error");
     exit(EXIT_PRE_JUDGE_EXECLP);
   } else {
     // Judger
@@ -517,6 +520,7 @@ bool judge(const char *input_file,
                 FM_LOG_WARNING("Runtime Error: %s", strsignal(signo));
               } else {
                 fprintf(fp, "%s\n", strsignal(signo));
+                fclose(fp);
               }
               break;
         }  // end of swtich
@@ -605,7 +609,7 @@ void check_spj(void)
 
 int data_filter(const struct dirent *dirp)
 {
-  int namelen = checkInFile(dirp->d_name);  // check if the file is *.in
+  size_t namelen = checkInFile(dirp->d_name);  // check if the file is *.in
   if (namelen == 0)
     return 0;
 
@@ -629,7 +633,7 @@ void prepare_files(const char *filename,
                    char *outfile,
                    char *userfile)
 {
-  int namelen = strlen(filename) - 3;
+  size_t namelen = strlen(filename) - 3;
   char fname[PATH_SIZE];
   strncpy(fname, filename, namelen);
   fname[namelen] = 0;
@@ -659,7 +663,7 @@ void io_redirect(const char *input_file,
   stderr = freopen(stderr_file, "a+", stderr);
 
   if (stdin == NULL || stdout == NULL || stderr == NULL) {
-    FM_LOG_FATAL("error freopen: stdin(%p) stdout(%p), stderr(%p)", stdin, stdout, stderr);
+    FM_LOG_FATAL("fatal_error freopen: stdin(%p) stdout(%p), stderr(%p)", stdin, stdout, stderr);
     exit(EXIT_PRE_JUDGE);
   }
   FM_LOG_TRACE("io redirect ok!");
@@ -667,7 +671,7 @@ void io_redirect(const char *input_file,
 
 void set_limit(off_t fsize)
 {
-  rlimit lim;
+  struct rlimit lim;
 
   // Set CPU time limit round up, raise SIGXCPU
   lim.rlim_max = (oj_solution.time_limit - oj_solution.time_usage + 999) / 1000 + 1;
@@ -706,12 +710,6 @@ void set_limit(off_t fsize)
 
 void set_security_option(void)
 {
-  // struct passwd *judge = getpwnam("judge");  // get password file entry for user judge
-  // if (judge == NULL) {
-  //   FM_LOG_FATAL("no user named 'judge': %s", strerror(errno));
-  //   exit(EXIT_SET_SECURITY);
-  // }
-
   if (oj_solution.lang != LANG_JAVA
 #ifdef FAST_JUDGE
     && oj_solution.lang != LANG_PYTHON
@@ -730,20 +728,6 @@ void set_security_option(void)
       exit(EXIT_SET_SECURITY);
     }
   }
-
-  
-
-  // // setgid, must before setuid()
-  // if (EXIT_SUCCESS != setgid(judge->pw_gid)) {
-  //   FM_LOG_FATAL("setgid(%d) failed: %s", judge->pw_gid, strerror(errno));
-  //   exit(EXIT_SET_SECURITY);
-  // }
-
-  // // setuid
-  // if (EXIT_SUCCESS != setuid(judge->pw_uid)) {
-  //   FM_LOG_FATAL("setuid(%d) failed: %s", judge->pw_uid, strerror(errno));
-  //   exit(EXIT_SET_SECURITY);
-  // }
 
   FM_LOG_TRACE("set_security_option ok");
 }
@@ -937,7 +921,7 @@ int fix_gcc_result(const char *stderr_compiler)
     return 0;
   }
 
-  int comp_res = execute_cmd("/bin/grep -q 'compiler error' %s", stderr_compiler);
+  int comp_res = execute_cmd("/bin/grep -q 'compiler fatal_error' %s", stderr_compiler);
   if (!comp_res) {
     execute_cmd("/bin/sed -n -i '1p' stderr_compiler.txt");
     return 1;
@@ -955,4 +939,5 @@ void output_result(int result, int time_usage, int memory_usage, int test)
   printf("%d %d %d %d\n", result, time_usage, memory_usage, test);
   FILE* fp = fopen("result.txt", "w");
   fprintf(fp, "%d %d %d %d", result, time_usage, memory_usage, test);
+  fclose(fp);
 }
