@@ -18,10 +18,10 @@ JAVA_POLICY_FILE=${WORK_DIR}/java.policy
 CONFIG_FILE=${JUDGE_HOME}/judge.properties
 
 function create_user() {
-    if id judge >/dev/null ; then
-        echo "create user judge"
-        useradd --system --home ${JUDGE_HOME} --create-home --comment "Power Judge" \
-                --groups ${JUDGE_GROUP} ${JUDGE_USER}
+    if ! id ${JUDGE_USER} >/dev/null 2>&1 ; then
+        echo "try to create user ${JUDGE_USER}."
+        useradd --system --home ${JUDGE_HOME} --create-home --user-group \
+                --comment "Power Judge" ${JUDGE_USER}
         RET=$?
         if [ ${RET} -ne 0 ]; then
             echo "create user ${JUDGE_USER} failed!"
@@ -29,7 +29,11 @@ function create_user() {
         fi
         mkdir -p ${DATA_DIR}/
         mkdir -p ${WORK_DIR}/
+        echo "create user ${JUDGE_USER} completed."
+    else
+     echo "user ${JUDGE_USER} already exist."
     fi
+
 }
 
 TOMCAT_USER=
@@ -37,7 +41,7 @@ TOMCAT_GROUP=
 function find_tomcat() {
   WEBAPPS=${CATALINA_HOME}/webapps
   if [ ! -d "${WEBAPPS}" ]; then
-    echo "cannot find tomcat, please set env CATALINA_HOME"
+    echo "cannot find tomcat, please set env CATALINA_HOME" >&2
     return 1
   fi
   TOMCAT_USER=`stat -c '%U' ${WEBAPPS}/`
@@ -59,8 +63,9 @@ cp java.policy ${WORK_DIR}/
 cp install/judged /etc/init.d/judged && chmod a+x /etc/init.d/judged
 update-rc.d judged defaults
 
-cp install/logrotate /etc/logrotate.d/judged
-cp install/ufw /etc/ufw/applications.d/judged
+[ -d "/etc/logrotate.d/" ] && cp install/logrotate /etc/logrotate.d/judged
+
+[ -d "/etc/ufw/applications.d/" ] && cp install/ufw /etc/ufw/applications.d/judged
 
 if [ ! -f ${JUDGE_HOME}/judge.properties ]; then
     cp -p judge.properties ${JUDGE_HOME}/

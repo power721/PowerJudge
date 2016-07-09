@@ -138,7 +138,7 @@ case "$1" in
 		status_of_proc -p $PID "$DAEMON" "$NAME" && exit 0 || exit $?
 		;;
 	*)
-		echo "Usage: $NAME {start|stop|restart|reload|force-reload|status|configtest|rotate|upgrade}" >&2
+		echo "Usage: $NAME {start|stop|restart|status}" >&2
 		exit 3
 		;;
 esac
