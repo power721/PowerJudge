@@ -733,24 +733,6 @@ void set_security_option(void)
     FM_LOG_DEBUG("chroot(%s)", cwd);
   }
 
-  struct passwd *judge = getpwnam("judge");  // get password file entry for user judge
-  if (judge == NULL) {
-    FM_LOG_FATAL("no user named 'judge': %s", strerror(errno));
-    exit(EXIT_SET_SECURITY);
-  }
-
-  // setgid, must before setuid()
-  if (EXIT_SUCCESS != setgid(judge->pw_gid)) {
-    FM_LOG_FATAL("setgid(%d) failed: %s", judge->pw_gid, strerror(errno));
-    exit(EXIT_SET_SECURITY);
-  }
-
-  // setuid
-  if (EXIT_SUCCESS != setuid(judge->pw_uid)) {
-    FM_LOG_FATAL("setuid(%d) failed: %s", judge->pw_uid, strerror(errno));
-    exit(EXIT_SET_SECURITY);
-  }
-
   FM_LOG_TRACE("set_security_option ok");
 }
 
