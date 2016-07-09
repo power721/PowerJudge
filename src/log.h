@@ -159,12 +159,12 @@ static void log_write(int level, const char *file,
   int log_fd = log_fp->_fileno;
   if (flock(log_fd, LOCK_EX) == 0) {
     if (write(log_fd, buffer, count) < 0) {
-      perror("write log fatal_error");
+      perror("write log error");
       exit(1);
     }
     flock(log_fd, LOCK_UN);
   } else {
-    perror("flock log file fatal_error");
+    perror("flock log file error");
     exit(1);
   }
 }

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -58,7 +58,6 @@ if find_tomcat; then
     adduser ${TOMCAT_USER} ${JUDGE_GROUP}
 fi
 
-make install
 cp java.policy ${WORK_DIR}/
 cp install/judged /etc/init.d/judged && chmod a+x /etc/init.d/judged
 update-rc.d judged defaults
@@ -71,5 +70,7 @@ if [ ! -f ${JUDGE_HOME}/judge.properties ]; then
     cp -p judge.properties ${JUDGE_HOME}/
 fi
 
-service judged restart
+service judged stop
+make clean install
+service judged start
 service judged status

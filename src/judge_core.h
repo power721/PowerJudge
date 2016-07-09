@@ -17,7 +17,6 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-
 // OJ结果代码
 #define OJ_AC       0
 #define OJ_PE       1

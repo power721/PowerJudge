@@ -17,7 +17,7 @@ ifdef FAST_JUDGE
 endif
 
 .PHONY: test check install clean
-all: clean $(TARGET) $(TARGETD)
+all: $(TARGET) $(TARGETD)
 $(TARGET): $(OBJECTS)
 	$(LD) -o $@ $(LDFLAGS) $(OBJECTS)
 

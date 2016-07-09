@@ -89,6 +89,25 @@ int malarm(int which, int milliseconds)
   return setitimer(which, &t, NULL);
 }
 
+void print_word_dir() {
+  char cwd[PATH_SIZE];
+  char *tmp = getcwd(cwd, PATH_SIZE-1);
+  if (tmp == NULL) {
+    FM_LOG_WARNING("getcwd failed: %s", strerror(errno));
+  } else {
+    FM_LOG_NOTICE(cwd);
+  }
+}
+
+void print_user_group() {
+  uid_t ruid, euid, suid;
+  gid_t rgid, egid, sgid;
+  getresuid(&ruid, &euid, &suid);
+  getresgid(&rgid, &egid, &sgid);
+  FM_LOG_DEBUG("ruid=%d euid=%d suid=%d rgid=%d egid=%d sgid=%d",
+               ruid, euid, suid, rgid, egid, sgid);
+}
+
 void print_compiler(const char *options[])
 {
   int i = 0;
@@ -115,29 +134,29 @@ int execute_cmd(const char *fmt, ...)
 #ifndef FAST_JUDGE
 void copy_shell_runtime(const char *work_dir)
 {
-  execute_cmd("/bin/mkdir %s/lib 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/mkdir %s/bin 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/cp /lib/* %s/lib/ 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/cp -a /lib/i386-linux-gnu %s/lib/ 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/mkdir %s/lib 2>>error.log", work_dir);
+  execute_cmd("/bin/mkdir %s/bin 2>>error.log", work_dir);
+  execute_cmd("/bin/cp /lib/* %s/lib/ 2>>error.log", work_dir);
+  execute_cmd("/bin/cp -a /lib/i386-linux-gnu %s/lib/ 2>>error.log", work_dir);
 #ifndef __i386
-  execute_cmd("/bin/mkdir %s/lib64 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/cp -a /lib/x86_64-linux-gnu %s/lib/ 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/cp /lib64/* %s/lib64/ 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/cp -a /lib32 %s/ 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/mkdir %s/lib64 2>>error.log", work_dir);
+  execute_cmd("/bin/cp -a /lib/x86_64-linux-gnu %s/lib/ 2>>error.log", work_dir);
+  execute_cmd("/bin/cp /lib64/* %s/lib64/ 2>>error.log", work_dir);
+  execute_cmd("/bin/cp -a /lib32 %s/ 2>>error.log", work_dir);
 #endif
-  execute_cmd("/bin/cp /bin/busybox %s/bin/ 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/cp /bin/bash %s/bin/bash 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/cp /bin/busybox %s/bin/ 2>>error.log", work_dir);
+  execute_cmd("/bin/cp /bin/bash %s/bin/bash 2>>error.log", work_dir);
 }
 
 void copy_python_runtime(const char *work_dir)
 {
   copy_shell_runtime(work_dir);
-  execute_cmd("/bin/mkdir -p %s/usr/include 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/mkdir -p %s/usr/lib 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/cp /usr/bin/python* %s/ 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/cp -a /usr/lib/python2* %s/usr/lib/ 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/cp -a /usr/lib/libpython2* %s/usr/lib/ 2>>fatal_error.log", work_dir);
-  execute_cmd("/bin/cp -a /usr/include/python2* %s/usr/include/ 2>>fatal_error.log", work_dir);
+  execute_cmd("/bin/mkdir -p %s/usr/include 2>>error.log", work_dir);
+  execute_cmd("/bin/mkdir -p %s/usr/lib 2>>error.log", work_dir);
+  execute_cmd("/bin/cp /usr/bin/python* %s/ 2>>error.log", work_dir);
+  execute_cmd("/bin/cp -a /usr/lib/python2* %s/usr/lib/ 2>>error.log", work_dir);
+  execute_cmd("/bin/cp -a /usr/lib/libpython2* %s/usr/lib/ 2>>error.log", work_dir);
+  execute_cmd("/bin/cp -a /usr/include/python2* %s/usr/include/ 2>>error.log", work_dir);
 }
 
 void clean_workdir(const char *work_dir)

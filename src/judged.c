@@ -156,7 +156,7 @@ void run() {
         strncpy(oj_solution.work_dir, oj_config.temp_dir, strlen(oj_config.temp_dir));
     }
     char stderr_file[PATH_SIZE];
-    snprintf(stderr_file, PATH_SIZE, "%s/%s/fatal_error.txt", oj_solution.work_dir, oj_solution.sid);
+    snprintf(stderr_file, PATH_SIZE, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
     FM_LOG_NOTICE("/usr/local/bin/powerjudge -s %s -p %s -l %s -t %s -m %s -w %s -D %s",
                   oj_solution.sid, oj_solution.pid, oj_solution.language,
                   oj_solution.time_limit, oj_solution.memory_limit,
@@ -177,7 +177,7 @@ void run() {
             "-w", oj_solution.work_dir,
             "-D", oj_config.data_dir,
             NULL);
-        FM_LOG_FATAL("exec fatal_error: %s", strerror(errno));
+        FM_LOG_FATAL("exec error: %s", strerror(errno));
         update_system_error(EXIT_EXEC_ERROR);
     } else {
         int status = 0;
@@ -190,11 +190,14 @@ void run() {
           if (EXIT_SUCCESS == WEXITSTATUS(status)) {
             FM_LOG_DEBUG("judge succeeded");
             update_result();
-          } else if (EXIT_JUDGE == WEXITSTATUS(status)) {
-            FM_LOG_TRACE("judge fatal_error");
+          } else if (EXIT_COMPILE_ERROR == WEXITSTATUS(status)) {
+            FM_LOG_TRACE("compile error");
+            update_result();
+          }  else if (EXIT_JUDGE == WEXITSTATUS(status)) {
+            FM_LOG_TRACE("judge error");
             update_system_error(OJ_SE);
           } else {
-            FM_LOG_TRACE("judge fatal_error");
+            FM_LOG_TRACE("judge error");
             update_system_error(WEXITSTATUS(status));
           }
         } else {
@@ -356,7 +359,7 @@ void update_result() {
         snprintf(buffer, BUFF_SIZE, "%s/%s/stderr_executive.txt", oj_solution.work_dir, oj_solution.sid);
         p = buffer;
     } else if (oj_solution.result == OJ_SE || oj_solution.result == OJ_RF) {
-        snprintf(buffer, BUFF_SIZE, "%s/%s/fatal_error.txt", oj_solution.work_dir, oj_solution.sid);
+        snprintf(buffer, BUFF_SIZE, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
         p = buffer;
     }
 
@@ -364,10 +367,10 @@ void update_result() {
 }
 
 void update_system_error(int result) {
-    FM_LOG_WARNING("system fatal_error %d", result);
+    FM_LOG_WARNING("system error %d", result);
     oj_solution.result = OJ_SE;
     char buffer[BUFF_SIZE];
-    snprintf(buffer, BUFF_SIZE, "%s/%s/fatal_error.txt", oj_solution.work_dir, oj_solution.sid);
+    snprintf(buffer, BUFF_SIZE, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
     send_multi_result(buffer);
 }
 
@@ -437,7 +440,7 @@ void send_multi_result(char* file_path) {
 
   if (file_path != NULL) {
     truncate_upload_file(file_path);
-    FM_LOG_NOTICE("will upload fatal_error file %s", file_path);
+    FM_LOG_NOTICE("will upload rror file %s", file_path);
     curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "error",
@@ -516,7 +519,7 @@ void send_multi_result(char* file_path) {
 
       switch (rc) {
       case -1:
-        /* select fatal_error */
+        /* select error */
         break;
       case 0:
       default:

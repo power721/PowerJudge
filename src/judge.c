@@ -158,7 +158,7 @@ void print_solution(void)
   FM_LOG_DEBUG("-- Solution Information --");
   FM_LOG_MONITOR("solution id %d", oj_solution.sid);
   FM_LOG_TRACE("problem id    %d", oj_solution.pid);
-  FM_LOG_TRACE("language(%d)  %s", oj_solution.lang, languages[oj_solution.lang]);
+  FM_LOG_TRACE("language(%d)   %s", oj_solution.lang, languages[oj_solution.lang]);
   FM_LOG_TRACE("time limit    %d ms", oj_solution.time_limit);
   FM_LOG_TRACE("memory limit  %d KB", oj_solution.memory_limit);
   FM_LOG_DEBUG("work dir      %s", oj_solution.work_dir);
@@ -174,7 +174,7 @@ void timeout_hander(int signo)
 }
 
   /*
-   * #fatal_error "This make CE"
+   * #error "This make CE"
    * #warning "Just warning message"
    * #include </dev/core>
    * #include </dev/zero>
@@ -204,9 +204,11 @@ void compile(void)
     stdout = freopen(stdout_compiler, "w", stdout);
     stderr = freopen(stderr_compiler, "w", stderr);
     if (stdout == NULL || stderr == NULL) {
-      FM_LOG_FATAL("fatal_error freopen: stdout(%p), stderr(%p)", stdout, stderr);
+      FM_LOG_FATAL("error freopen: stdout(%p), stderr(%p)", stdout, stderr);
       exit(EXIT_COMPILE_IO);
     }
+    print_user_group();
+    print_word_dir();
 
     switch (oj_solution.lang) {
       case LANG_C:
@@ -234,8 +236,8 @@ void compile(void)
         break;
     }
 
-    // execvp fatal_error
-    FM_LOG_FATAL("execvp compiler fatal_error");
+    // execvp error
+    FM_LOG_FATAL("execvp compiler error");
     exit(EXIT_COMPILE_EXEC);
   } else {
     // parent process: Judger
@@ -247,7 +249,7 @@ void compile(void)
     FM_LOG_DEBUG("compiler finished");
 
     if (oj_solution.lang == LANG_PYTHON && file_size(stderr_compiler)) {
-      FM_LOG_TRACE("compile fatal_error");
+      FM_LOG_TRACE("compile error");
       output_result(OJ_CE, 0, 0, 0);
       exit(EXIT_OK);
     }
@@ -256,7 +258,7 @@ void compile(void)
       if (EXIT_SUCCESS == WEXITSTATUS(status)) {
         FM_LOG_DEBUG("compile succeeded");
       } else if (GCC_COMPILE_ERROR == WEXITSTATUS(status)) {
-        FM_LOG_TRACE("compile fatal_error");
+        FM_LOG_TRACE("compile error");
         output_result(OJ_CE, 0, 0, 0);
         exit(EXIT_OK);
       } else {
@@ -266,7 +268,8 @@ void compile(void)
           exit(EXIT_OK);
         } else {
           FM_LOG_FATAL("compiler unknown exit status %d", WEXITSTATUS(status));
-          exit(EXIT_COMPILE_ERROR);  // SE
+          output_result(OJ_CE, 0, 0, 0);
+          exit(EXIT_COMPILE_ERROR);
         }
       }
     } else {
@@ -434,8 +437,8 @@ bool judge(const char *input_file,
       execl("./Main", "./Main", NULL);
     }
 
-    // exec fatal_error
-    FM_LOG_FATAL("exec fatal_error");
+    // exec error
+    FM_LOG_FATAL("exec error");
     exit(EXIT_PRE_JUDGE_EXECLP);
   } else {
     // Judger
@@ -663,7 +666,7 @@ void io_redirect(const char *input_file,
   stderr = freopen(stderr_file, "a+", stderr);
 
   if (stdin == NULL || stdout == NULL || stderr == NULL) {
-    FM_LOG_FATAL("fatal_error freopen: stdin(%p) stdout(%p), stderr(%p)", stdin, stdout, stderr);
+    FM_LOG_FATAL("error freopen: stdin(%p) stdout(%p), stderr(%p)", stdin, stdout, stderr);
     exit(EXIT_PRE_JUDGE);
   }
   FM_LOG_TRACE("io redirect ok!");
@@ -727,6 +730,25 @@ void set_security_option(void)
       FM_LOG_FATAL("chroot(%s) failed: %s", cwd, strerror(errno));
       exit(EXIT_SET_SECURITY);
     }
+    FM_LOG_DEBUG("chroot(%s)", cwd);
+  }
+
+  struct passwd *judge = getpwnam("judge");  // get password file entry for user judge
+  if (judge == NULL) {
+    FM_LOG_FATAL("no user named 'judge': %s", strerror(errno));
+    exit(EXIT_SET_SECURITY);
+  }
+
+  // setgid, must before setuid()
+  if (EXIT_SUCCESS != setgid(judge->pw_gid)) {
+    FM_LOG_FATAL("setgid(%d) failed: %s", judge->pw_gid, strerror(errno));
+    exit(EXIT_SET_SECURITY);
+  }
+
+  // setuid
+  if (EXIT_SUCCESS != setuid(judge->pw_uid)) {
+    FM_LOG_FATAL("setuid(%d) failed: %s", judge->pw_uid, strerror(errno));
+    exit(EXIT_SET_SECURITY);
   }
 
   FM_LOG_TRACE("set_security_option ok");
@@ -921,7 +943,7 @@ int fix_gcc_result(const char *stderr_compiler)
     return 0;
   }
 
-  int comp_res = execute_cmd("/bin/grep -q 'compiler fatal_error' %s", stderr_compiler);
+  int comp_res = execute_cmd("/bin/grep -q 'compiler error' %s", stderr_compiler);
   if (!comp_res) {
     execute_cmd("/bin/sed -n -i '1p' stderr_compiler.txt");
     return 1;
