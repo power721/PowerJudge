@@ -52,6 +52,16 @@ install: all
 	sudo chmod 4755 /usr/local/bin/powerjudged
 	sudo setcap cap_sys_chroot+ep /usr/local/bin/powerjudge
 
+# powerjudge
+# must chown judge:judge
+# must chmod 4755, so it will run as judge:judge
+# must setcap cap_sys_chroot+ep, so chroot() can work
+#
+# powerjudged
+# must chown root:root
+# must chmod 4755
+# must run with user judge
+
 clean:
 	sudo rm -f bin/judge.o bin/powerjudge bin/judged.o bin/powerjudged
 	sudo rm -rf test/temp
