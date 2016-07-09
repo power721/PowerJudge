@@ -1,0 +1,4 @@
+[Power Judge]
+title=Power Judge Server
+description=Judge Server for ACM/ICPC Online Judge
+ports=55555/tcp

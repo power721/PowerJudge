@@ -5,6 +5,7 @@
 #include "judged.h"
 
 struct pidfh *pfh;
+bool isRunning = 1;
 
 int main(int argc, char *argv[], char *envp[])
 {
@@ -42,8 +43,7 @@ int main(int argc, char *argv[], char *envp[])
     FM_LOG_NOTICE("port: %d %d", oj_config.port, ntohs(serv_addr.sin_port));
 
     int yes = 1;
-    if ( setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1 )
-    {
+    if ( setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1 ) {
         fatal_error("setsockopt SO_REUSEADDR failed");
     }
 
@@ -68,14 +68,34 @@ int main(int argc, char *argv[], char *envp[])
 
     pidfile_write(pfh);
 
-    while (true) {
+    struct sigaction sa;
+    sa.sa_handler = signal_handler;
+    sigemptyset (&sa.sa_mask);
+    sa.sa_flags = 0;
+    if (sigaction(SIGTERM, &sa, NULL) == -1) {  // install signal hander for timeout
+      FM_LOG_FATAL("cannot handle SIGTERM");
+      exit(EXIT_FAILURE);
+    } else {
+      FM_LOG_DEBUG("set signal_handler");
+    }
+
+    while (isRunning) {
         int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-        work(newsockfd, cli_addr);
+        if (newsockfd != -1) {
+          work(newsockfd, cli_addr);
+        }
     }
 
     pidfile_remove(pfh);
     close(sockfd);
     return 0;
+}
+
+void signal_handler(int signo) {
+  if (signo == SIGTERM) {
+    FM_LOG_NOTICE("SIGTERM received, Power Judge Exiting..");
+    isRunning = 0;
+  }
 }
 
 void work(int newsockfd, struct sockaddr_in cli_addr) {

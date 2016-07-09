@@ -63,6 +63,7 @@ const char *PID_FILE = "/var/run/judged.pid";
 const char *LOG_FILE = "/var/log/judged.log";
 
 
+void signal_handler(int signo);
 void work(int newsockfd, struct sockaddr_in cli_addr);
 void check_pid();
 void read_config(const char *cfg_file);

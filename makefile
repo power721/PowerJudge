@@ -44,13 +44,12 @@ check: all
 	-cppcheck src/judge.c  src/judged.c
 
 install: all
-	sudo cp $(TARGET) /usr/local/bin/
+	sudo cp $(TARGET) /usr/local/bin/powerjudge
 	sudo setcap cap_sys_chroot+ep /usr/local/bin/powerjudge
 	sudo pkill -f /usr/local/bin/powerjudged
-	sudo cp $(TARGETD) /usr/local/bin/
+	sudo cp $(TARGETD) /usr/local/bin/powerjudged
 	sudo chown root:root /usr/local/bin/powerjudged
 	sudo chmod 4755 /usr/local/bin/powerjudged
-	sudo cp -p judge.properties /home/judge/
 	sudo su judge -c /usr/local/bin/powerjudged
 
 clean:
