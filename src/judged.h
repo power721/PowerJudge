@@ -59,7 +59,7 @@ struct oj_solution_t {
 int DEFAULT_BACKLOG = 100;
 uint16_t DEFAULT_PORT = 55555;
 int MAX_UPLOAD_FILE_SIZE = 4096;
-const char *DEFAULT_CFG_FILE = "/home/judge/judge.properties";
+const char *DEFAULT_CFG_FILE = "/etc/judged.conf";
 const char *PID_FILE = "/var/run/judged.pid";
 const char *LOG_FILE = "/var/log/judged.log";
 

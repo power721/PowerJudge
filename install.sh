@@ -61,12 +61,12 @@ cp java.policy ${WORK_DIR}/
 cp install/judged /etc/init.d/judged && chmod a+x /etc/init.d/judged
 update-rc.d judged defaults
 
-[ -d "/etc/logrotate.d/" ] && cp install/logrotate /etc/logrotate.d/judged
+[ -d /etc/logrotate.d/ ] && cp install/logrotate /etc/logrotate.d/judged
 
-[ -d "/etc/ufw/applications.d/" ] && cp install/ufw /etc/ufw/applications.d/judged
+[ -d /etc/ufw/applications.d/ ] && cp install/ufw /etc/ufw/applications.d/judged
 
-if [ ! -f ${JUDGE_HOME}/judge.properties ]; then
-    cp -p judge.properties ${JUDGE_HOME}/
+if [ ! -f /etc/judged.conf ]; then
+    cp -p install/judged.conf /etc/judged.conf
 fi
 
 service judged stop
