@@ -137,11 +137,12 @@ void copy_shell_runtime(const char *work_dir)
   execute_cmd("/bin/mkdir %s/lib 2>>error.log", work_dir);
   execute_cmd("/bin/mkdir %s/bin 2>>error.log", work_dir);
   execute_cmd("/bin/cp /lib/* %s/lib/ 2>>error.log", work_dir);
-  execute_cmd("/bin/cp -a /lib/i386-linux-gnu %s/lib/ 2>>error.log", work_dir);
 #ifndef __i386
   execute_cmd("/bin/mkdir %s/lib64 2>>error.log", work_dir);
   execute_cmd("/bin/cp -a /lib/x86_64-linux-gnu %s/lib/ 2>>error.log", work_dir);
   execute_cmd("/bin/cp /lib64/* %s/lib64/ 2>>error.log", work_dir);
+#else
+  execute_cmd("/bin/cp -a /lib/i386-linux-gnu %s/lib/ 2>>error.log", work_dir);
   execute_cmd("/bin/cp -a /lib32 %s/ 2>>error.log", work_dir);
 #endif
   execute_cmd("/bin/cp /bin/busybox %s/bin/ 2>>error.log", work_dir);
@@ -153,7 +154,8 @@ void copy_python_runtime(const char *work_dir)
   copy_shell_runtime(work_dir);
   execute_cmd("/bin/mkdir -p %s/usr/include 2>>error.log", work_dir);
   execute_cmd("/bin/mkdir -p %s/usr/lib 2>>error.log", work_dir);
-  execute_cmd("/bin/cp /usr/bin/python* %s/ 2>>error.log", work_dir);
+  execute_cmd("/bin/cp /usr/bin/python %s/ 2>>error.log", work_dir);
+  execute_cmd("/bin/cp /usr/bin/python2* %s/ 2>>error.log", work_dir);
   execute_cmd("/bin/cp -a /usr/lib/python2* %s/usr/lib/ 2>>error.log", work_dir);
   execute_cmd("/bin/cp -a /usr/lib/libpython2* %s/usr/lib/ 2>>error.log", work_dir);
   execute_cmd("/bin/cp -a /usr/include/python2* %s/usr/include/ 2>>error.log", work_dir);
@@ -162,8 +164,11 @@ void copy_python_runtime(const char *work_dir)
 void clean_workdir(const char *work_dir)
 {
   execute_cmd("rm -Rf %s/lib", work_dir);
+#ifdef __i386
   execute_cmd("rm -Rf %s/lib32", work_dir);
+#else
   execute_cmd("rm -Rf %s/lib64", work_dir);
+#endif
   execute_cmd("rm -Rf %s/bin", work_dir);
   execute_cmd("rm -Rf %s/usr", work_dir);
   execute_cmd("rm -f %s/python*", work_dir);
