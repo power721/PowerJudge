@@ -21,6 +21,7 @@ int malarm(int which, int milliseconds);
 void print_compiler(const char * options[]);
 int execute_cmd(const char *format, ...);
 void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path);
+void make_diff_out2(const char *file_out, const char *file_user, const char *work_dir, const char *path);
 void check_and_rename_log(const char* filename);
 #ifndef FAST_JUDGE
 void copy_shell_runtime(const char * work_dir);
@@ -185,15 +186,76 @@ void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, con
   out = fopen(buf, "a+");
   fprintf(out, "=================%s\n", basename((char *) path));
   fprintf(out, "Right:\n%c", c1);
-  if (fgets(buf, 80, f1)) {
+  if (fgets(buf, BUFF_SIZE, f1)) {
     fprintf(out, "%s", buf);
   }
   fprintf(out, "\n-----------------\n");
   fprintf(out, "Your:\n%c", c2);
-  if (fgets(buf, 80, f2)) {
+  if (fgets(buf, BUFF_SIZE, f2)) {
     fprintf(out, "%s", buf);
   }
   fprintf(out, "\n=================\n");
+  fclose(out);
+}
+
+void make_diff_out2(const char *file_out, const char *file_user, const char *work_dir, const char *path) {
+  FM_LOG_DEBUG("make_diff_out2");
+  FILE *fp_std = fopen(file_out, "r");
+  if (fp_std == NULL) {
+    FM_LOG_WARNING("open standard output file (%s) failed: %s", file_out, strerror(errno));
+    return;
+  }
+
+  FILE *fp_exe = fopen(file_user, "r");
+  if (fp_exe == NULL) {
+    FM_LOG_WARNING("open user output file (%s) failed: %s", file_user, strerror(errno));
+    return;
+  }
+
+  FILE *out;
+  bool findDiff = false;
+  int line = 0;
+  char buf[BUFF_SIZE];
+  char line1[BUFF_SIZE];
+  char line2[BUFF_SIZE];
+  snprintf(buf, BUFF_SIZE, "%s/diff.out", work_dir);
+  out = fopen(buf, "a+");
+  fprintf(out, "=================%s\n", basename((char *) path));
+  while (fgets(line1, BUFF_SIZE, fp_std) != NULL) {
+    line++;
+    if (fgets(line2, BUFF_SIZE, fp_exe) != NULL) {
+      if (strcmp(line1, line2) != 0) {
+        findDiff = true;
+        break;
+      }
+    } else {
+      strncpy(line2, "<EOF>", 5);
+      findDiff = true;
+      break;
+    }
+  }
+
+  if (!findDiff) {
+    if (fgets(line2, BUFF_SIZE, fp_exe) != NULL) {
+      strncpy(line1, "<EOF>", 5);
+    }
+  }
+
+  size_t n = strlen(line1);
+  if (line1[n-1] == '\n') {
+    line1[n-1] = '\0';
+  }
+  n = strlen(line2);
+  if (line2[n-1] == '\n') {
+    line2[n-1] = '\0';
+  }
+  fprintf(out, "Expect(Line #%d):\n%s", line, line1);
+  fprintf(out, "\n-----------------\n");
+  fprintf(out, "Your(Line #%d):\n%s", line, line2);
+  fprintf(out, "\n=================\n");
+
+  fclose(fp_std);
+  fclose(fp_exe);
   fclose(out);
 }
 

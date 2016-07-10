@@ -44,7 +44,8 @@ char result_str[][10] = {
   "RF",
   "SE",
   "VE",
-  "WAIT"
+  "WAIT",
+  "Running"
 };
 
 

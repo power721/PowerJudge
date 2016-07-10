@@ -880,13 +880,13 @@ int oj_compare_output(const char *file_out, const char *file_user)
     }
   }  // end of while
 
-  if (status == WA) {
-    make_diff_out(fp_std, fp_exe, a, b, oj_solution.work_dir, file_out);
-  }
   fclose(fp_std);
   fclose(fp_exe);
-  FM_LOG_TRACE("compare finished, result = %s",
-               status == AC ? "AC" : (status == PE ? "PE" : "WA"));
+
+  if (status == WA || status == PE) {
+    make_diff_out2(file_out, file_user, oj_solution.work_dir, file_out);
+  }
+  FM_LOG_TRACE("compare finished, result=%s", status == AC ? "AC" : (status == PE ? "PE" : "WA"));
   return status;
 }
 

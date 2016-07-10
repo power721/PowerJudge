@@ -65,6 +65,8 @@ int main(int argc, char *argv[], char *envp[])
 
         exit(EXIT_FAILURE);
     }
+    print_word_dir();
+    print_user_group();
 
     pidfile_write(pfh);
 

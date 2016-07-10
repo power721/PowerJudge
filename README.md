@@ -4,18 +4,19 @@ Judge Core for PowerOJ on Linux platform.
 Based on UESTC and HUST judge core.
 
 ##Features##
-auto get data files from data directory and sort by lexicographical.
+auto get data files from data directory and sort by version.
 
 set process limit for compiler, executor and spj.
 
-chroot and setgid/setuid with nobody account for secuirty.
+run as upstart service.
+
+compile/execute with user judge for security.
 
 fast judge for Python which doesn't use chroot or copy rutime env.
 
 support Linux 32 bit and 64 bit.
-  * Ubuntu 12.10 Desktop 32bit
-  * Ubuntu 12.04 Desktop 64bit
   * Ubuntu 14.04 Server 32bit
+  * Ubuntu 14.04 Server 64bit
   * Linux Mint 14 32bit
   * Linux Mint 14 64bit
   * Debian 7.5 32bit
@@ -28,7 +29,7 @@ support Linux 32 bit and 64 bit.
     git clone https://github.com/power721/PowerJudge.git
 
 
-##Compilers##
+##Dependencies##
     sudo apt-get update && sudo apt-get install -y fpc openjdk-7-jdk python2.7 gcc g++ libbsd-dev libcurl4-openssl-dev
 
     sudo yum install glibc-devel glibc-static gcc gcc-c++ java-1.7.0-openjdk java-1.7.0-openjdk-devel gpm libbsd-dev
@@ -50,11 +51,11 @@ or
 
 
 ##Install##
-    make install
+    sudo ./install.sh
 
 
-##Usage##
-    /usr/local/bin/powerjudge -s 10000 -p 1000 -t 1000 -m 65536 -l 2 -D ./data -d ./temp
+##Client Usage##
+    /usr/local/bin/powerjudge -s 10000 -p 1000 -t 1000 -m 65536 -l 2 -D ./data -w ./temp
 
 * **-s**    solution id
 * **-p**    problem id
@@ -67,7 +68,7 @@ or
   4. 4 -- Java
   5. 5 -- Python
 * **-D**    root data directory, e.g. ~/oj/data/
-* **-d**    root work directory, e.g. ~/oj/temp/
+* **-w**    root work directory, e.g. ~/oj/temp/
 
 简要流程：
 
