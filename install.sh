@@ -57,16 +57,16 @@ if find_tomcat; then
     adduser ${TOMCAT_USER} ${JUDGE_GROUP}
 fi
 
-cp java.policy ${WORK_DIR}/
-cp install/judged /etc/init.d/judged && chmod a+x /etc/init.d/judged
+cp config/java.policy ${WORK_DIR}/
+cp config/judged /etc/init.d/judged && chmod a+x /etc/init.d/judged
 update-rc.d judged defaults
 
-[ -d /etc/logrotate.d/ ] && cp install/logrotate /etc/logrotate.d/judged
+[ -d /etc/logrotate.d/ ] && cp config/logrotate /etc/logrotate.d/judged
 
-[ -d /etc/ufw/applications.d/ ] && cp install/ufw /etc/ufw/applications.d/judged
+[ -d /etc/ufw/applications.d/ ] && cp config/ufw /etc/ufw/applications.d/judged
 
 if [ ! -f /etc/judged.conf ]; then
-    cp -p install/judged.conf /etc/judged.conf
+    cp -p config/judged.conf /etc/judged.conf
 fi
 
 service judged stop
