@@ -320,13 +320,13 @@ int check_password(char *password, char *message) {
 }
 
 int parse_arguments(char *str) {
-    int number = sscanf(str, "%s %d %s %s %s %s", oj_solution.sid, &oj_solution.cid,
+    int number = sscanf(str, "%s %d %s %s %s %s %s", oj_solution.sid, &oj_solution.cid,
                         oj_solution.pid, oj_solution.language,
-                        oj_solution.time_limit, oj_solution.memory_limit);
-    FM_LOG_TRACE("sid=%s cid=%d  pid=%s  language=%s  timeLimit=%s ms  memoryLimit=%s KB",
+                        oj_solution.time_limit, oj_solution.memory_limit, oj_solution.token);
+    FM_LOG_TRACE("sid=%s cid=%d  pid=%s  language=%s  timeLimit=%s ms  memoryLimit=%s KB %s",
                  oj_solution.sid, oj_solution.cid, oj_solution.pid, oj_solution.language,
-                 oj_solution.time_limit, oj_solution.memory_limit);
-    if (number < 5) {
+                 oj_solution.time_limit, oj_solution.memory_limit, oj_solution.token);
+    if (number < 6) {
         return -1;
     }
     return 0;
@@ -401,6 +401,12 @@ void send_multi_result(char* file_path) {
                &lastptr,
                CURLFORM_COPYNAME, "sid",
                CURLFORM_COPYCONTENTS, oj_solution.sid,
+               CURLFORM_END);
+
+    curl_formadd(&formpost,
+               &lastptr,
+               CURLFORM_COPYNAME, "token",
+               CURLFORM_COPYCONTENTS, oj_solution.token,
                CURLFORM_END);
 
     snprintf(data, size, "%d", oj_solution.cid);

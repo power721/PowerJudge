@@ -33,7 +33,6 @@ function create_user() {
     else
      echo "user ${JUDGE_USER} already exist."
     fi
-
 }
 
 TOMCAT_USER=

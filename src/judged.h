@@ -48,6 +48,7 @@ struct oj_solution_t {
   char language[5];       // language id
   char time_limit[15];    // ms
   char memory_limit[15];  // KB
+  char token[255];
   char work_dir[PATH_SIZE];
   int result;
   int time_usage;
