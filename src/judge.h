@@ -74,13 +74,13 @@ struct oj_solution_t {
   int sid;           // solution id
   int pid;           // problem id
   int lang;          // language id
-  int time_limit;    // ms
-  int memory_limit;  // KB
+  unsigned int time_limit;    // ms
+  unsigned int memory_limit;  // KB
 
   int result;
 
-  int time_usage;    // ms
-  int memory_usage;  // KB
+  unsigned int time_usage;    // ms
+  unsigned int memory_usage;  // KB
 
   bool spj;
 

@@ -72,7 +72,7 @@ int main(int argc, char *argv[], char *envp[])
 
     struct sigaction sa;
     sa.sa_handler = signal_handler;
-    sigemptyset (&sa.sa_mask);
+    sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     if (sigaction(SIGTERM, &sa, NULL) == -1) {  // install signal hander for timeout
       FM_LOG_FATAL("cannot handle SIGTERM");

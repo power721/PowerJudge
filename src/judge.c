@@ -68,10 +68,10 @@ void parse_arguments(int argc, char *argv[])
         oj_solution.lang              = atoi(optarg);
         break;
       case 't':  // Time limit
-        oj_solution.time_limit        = atoi(optarg);
+        oj_solution.time_limit        = (unsigned int) atoi(optarg);
         break;
       case 'm':  // Memory limit
-        oj_solution.memory_limit      = atoi(optarg);
+        oj_solution.memory_limit      = (unsigned int) atoi(optarg);
         break;
       case 'w':
       case 'd':  // Work directory
@@ -701,7 +701,7 @@ void set_limit(off_t fsize)
   }
 
   // Output file size limit, raise SIGXFSZ
-  lim.rlim_cur = lim.rlim_max = fsize + (fsize >> 3) + MAX_LOG_FILE_SIZE;
+  lim.rlim_cur = lim.rlim_max = (rlim_t) (fsize + (fsize >> 3) + MAX_LOG_FILE_SIZE);
   if (setrlimit(RLIMIT_FSIZE, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed: %s", strerror(errno));
     exit(EXIT_SET_LIMIT);
