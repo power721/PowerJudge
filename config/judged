@@ -28,6 +28,7 @@ fi
 
 . /lib/init/vars.sh
 . /lib/lsb/init-functions
+export ONLINE_JUDGE=true
 
 PID=/var/run/judged.pid
 

@@ -19,6 +19,7 @@ off_t file_size(const char *filename);
 size_t checkInFile(const char *filename);
 int malarm(int which, int milliseconds);
 void print_compiler(const char * options[]);
+void print_executor(const char *options[]);
 int execute_cmd(const char *format, ...);
 void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path);
 void make_diff_out2(const char *file_out, const char *file_user, const char *work_dir, const char *path);
@@ -86,7 +87,7 @@ int malarm(int which, int milliseconds)
   t.it_value.tv_usec      = milliseconds % 1000 * 1000;
   t.it_interval.tv_sec    = 0;
   t.it_interval.tv_usec   = 0;
-  FM_LOG_TRACE("malarm: %d", milliseconds);
+  FM_LOG_TRACE("malarm: %d ms", milliseconds);
   return setitimer(which, &t, NULL);
 }
 
@@ -109,8 +110,7 @@ void print_user_group() {
                ruid, euid, suid, rgid, egid, sgid);
 }
 
-void print_compiler(const char *options[])
-{
+void print_compiler(const char *options[]) {
   int i = 0;
   char buff[BUFF_SIZE] = {0};
   while (options[i] != NULL) {
@@ -120,8 +120,17 @@ void print_compiler(const char *options[])
   FM_LOG_DEBUG(buff);
 }
 
-int execute_cmd(const char *fmt, ...)
-{
+void print_executor(const char *options[]) {
+  int i = 0;
+  char buff[BUFF_SIZE] = {0};
+  while (options[i] != NULL) {
+    strcat(buff, options[i++]);
+    strcat(buff, " ");
+  }
+  FM_LOG_DEBUG(buff);
+}
+
+int execute_cmd(const char *fmt, ...) {
   char cmd[BUFF_SIZE];
   va_list ap;
 

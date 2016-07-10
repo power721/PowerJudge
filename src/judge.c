@@ -426,8 +426,10 @@ bool judge(const char *input_file,
 
     // load program
     if (oj_solution.lang == LANG_JAVA) {
+      print_executor(EXEC_J);
       execvp(EXEC_J[0], (char * const *) EXEC_J);
     } else if (oj_solution.lang == LANG_PYTHON) {
+      print_executor(EXEC_PY);
 #ifdef FAST_JUDGE
       execvp(EXEC_PY[0], (char * const *) EXEC_PY);
 #else
