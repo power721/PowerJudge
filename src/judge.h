@@ -32,7 +32,6 @@ const char* EXEC_J[] = { "java", "-cp", ".", "-DONLINE_JUDGE=true", "-Djava.secu
                          "-Djava.security.policy=../java.policy", "Main", NULL };
 const char* EXEC_PY[] = { "python", "Main.py", NULL };
 
-
 // configruation
 // judge本身的时限(ms)
 static unsigned int judge_time_limit            = 15347;
@@ -97,6 +96,8 @@ static void timeout_hander(int signo);
 static void print_solution();
 
 static void check_spj(void);
+static bool check_spj_source(const char *name);
+static void compile_spj(const char *source, char *target);
 static int data_filter(const struct dirent *dirp);
 static void prepare_files(const char *filen_ame,
                           char *infile,

@@ -338,7 +338,7 @@ void run_solution(void)
   struct dirent **namelist;
   int num_of_test;
 
-  num_of_test = scandir(oj_solution.data_dir, &namelist, data_filter, alphasort);
+  num_of_test = scandir(oj_solution.data_dir, &namelist, data_filter, versionsort);
   if (num_of_test < 0) {
     FM_LOG_FATAL("scan data directory failed: %s", strerror(errno));
     exit(EXIT_PRE_JUDGE_DAA);
@@ -608,7 +608,32 @@ void check_spj(void)
   snprintf(oj_solution.spj_exe_file, PATH_SIZE, "%s/spj", oj_solution.data_dir);
   if (access(oj_solution.spj_exe_file, F_OK) != -1) {  // spj file exists
     oj_solution.spj = true;
-    FM_LOG_MONITOR("Special Judged");
+    FM_LOG_MONITOR("Special Judged: %s", oj_solution.spj_exe_file);
+  } else {
+    if(!check_spj_source("spj.cc")) {
+      check_spj_source("spj.c");
+    }
+  }
+}
+
+bool check_spj_source(const char *name) {
+  char buffer[PATH_SIZE];
+  snprintf(buffer, PATH_SIZE, "%s/%s", oj_solution.data_dir, name);
+  if (access(buffer, F_OK) != -1) {
+    compile_spj(buffer, oj_solution.spj_exe_file);
+    if (access(oj_solution.spj_exe_file, F_OK) != -1) {
+      oj_solution.spj = true;
+      FM_LOG_MONITOR("Special Judged: %s", oj_solution.spj_exe_file);
+      return true;
+    }
+  }
+  return false;
+}
+
+void compile_spj(const char *source, char *target) {
+  int status = execute_cmd("g++ -lm -static -w -std=c++11 -O2 -o %s %s", target, source);
+  if(status == -1) {
+    FM_LOG_WARNING("compile spj failed: %s", strerror(errno));
   }
 }
 

@@ -16,7 +16,7 @@ ifdef FAST_JUDGE
 	CXXFLAGS+= -DFAST_JUDGE
 endif
 
-.PHONY: test check install clean
+.PHONY: test check install sim clean
 all: $(TARGET) $(TARGETD)
 $(TARGET): $(OBJECTS)
 	$(LD) -o $@ $(LDFLAGS) $(OBJECTS)
@@ -61,6 +61,17 @@ install: all
 # must chown root:root
 # must chmod 4755
 # must run with user judge
+
+sim:
+	cd sim && make fresh && make exes
+	chmod a+x sim/sim*
+	sudo cp sim/sim_c.exe /usr/local/bin/sim_c
+	sudo cp sim/sim_java.exe /usr/local/bin/sim_java
+	sudo cp sim/sim_pasc.exe /usr/local/bin/sim_pas
+	sudo cp sim.sh /usr/local/bin
+	sudo chmod a+x /usr/local/bin/sim.sh
+	sudo rm -f /usr/local/bin/sim_cc
+	sudo ln -s /usr/local/bin/sim_c /usr/local/bin/sim_cc
 
 clean:
 	sudo rm -f bin/judge.o bin/powerjudge bin/judged.o bin/powerjudged
