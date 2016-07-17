@@ -391,7 +391,7 @@ void send_multi_result(char* file_path) {
     CURL *curl;
 
     CURLM *multi_handle;
-    int still_running;
+    int still_running = 1;
 
     struct curl_httppost *formpost = NULL;
     struct curl_httppost *lastptr = NULL;
@@ -446,9 +446,9 @@ void send_multi_result(char* file_path) {
                CURLFORM_COPYCONTENTS, data,
                CURLFORM_END);
 
-  if (file_path != NULL) {
+  if (file_path != NULL && access(file_path, F_OK) != -1) {
     truncate_upload_file(file_path);
-    FM_LOG_NOTICE("will upload rror file %s", file_path);
+    FM_LOG_NOTICE("will upload error file %s", file_path);
     curl_formadd(&formpost,
                &lastptr,
                CURLFORM_COPYNAME, "error",
