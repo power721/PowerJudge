@@ -77,6 +77,7 @@ struct oj_solution_t {
   unsigned int memory_limit;  // KB
 
   int result;
+  int judge_type;
 
   unsigned int time_usage;    // ms
   unsigned int memory_usage;  // KB
@@ -117,7 +118,7 @@ static int oj_compare_output_spj(const char *file_in,    // std input
 static int oj_compare_output(const char *file_out, const char *file_user);
 static void fix_java_result(const char *stdout_file, const char *stderr_file);
 static int fix_gcc_result(const char *stderr_file);
-static void output_result(int result, int time_usage, int memory_usage, int test);
+static void output_acm_result(int result, int time_usage, int memory_usage, int test);
 
 static void compile(void);
 static void run_solution(void);

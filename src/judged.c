@@ -155,7 +155,7 @@ void run() {
     if (oj_solution.cid > 0) {
         snprintf(oj_solution.work_dir, PATH_SIZE, "%s/c%d", oj_config.temp_dir, oj_solution.cid);
     } else {
-        strncpy(oj_solution.work_dir, oj_config.temp_dir, strlen(oj_config.temp_dir));
+        strncpy(oj_solution.work_dir, oj_config.temp_dir, strlen(oj_config.temp_dir) + 1);
     }
     char stderr_file[PATH_SIZE];
     snprintf(stderr_file, PATH_SIZE, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);

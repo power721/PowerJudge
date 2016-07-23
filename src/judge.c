@@ -56,7 +56,7 @@ void parse_arguments(int argc, char *argv[])
   int opt;
   extern char *optarg;
 
-  while ((opt = getopt(argc, argv, "s:p:t:m:l:w:d:D:")) != -1) {
+  while ((opt = getopt(argc, argv, "s:p:t:m:l:w:d:D:j:")) != -1) {
     switch (opt) {
       case 's':  // Solution ID
         oj_solution.sid               = atoi(optarg);
@@ -66,6 +66,9 @@ void parse_arguments(int argc, char *argv[])
         break;
       case 'l':  // Language ID
         oj_solution.lang              = atoi(optarg);
+        break;
+      case 'j':  // judge type
+        oj_solution.judge_type        = atoi(optarg);
         break;
       case 't':  // Time limit
         oj_solution.time_limit        = (unsigned int) atoi(optarg);
@@ -250,7 +253,7 @@ void compile(void)
 
     if (oj_solution.lang == LANG_PYTHON && file_size(stderr_compiler)) {
       FM_LOG_TRACE("compile error");
-      output_result(OJ_CE, 0, 0, 0);
+      output_acm_result(OJ_CE, 0, 0, 0);
       exit(EXIT_OK);
     }
 
@@ -259,16 +262,16 @@ void compile(void)
         FM_LOG_DEBUG("compile succeeded");
       } else if (GCC_COMPILE_ERROR == WEXITSTATUS(status)) {
         FM_LOG_TRACE("compile error");
-        output_result(OJ_CE, 0, 0, 0);
+        output_acm_result(OJ_CE, 0, 0, 0);
         exit(EXIT_OK);
       } else {
         if (fix_gcc_result(stderr_compiler)) {
           FM_LOG_WARNING("Compiler Limit Exceeded!");
-          output_result(OJ_CE, 0, 0, 0);
+          output_acm_result(OJ_CE, 0, 0, 0);
           exit(EXIT_OK);
         } else {
           FM_LOG_FATAL("compiler unknown exit status %d", WEXITSTATUS(status));
-          output_result(OJ_CE, 0, 0, 0);
+          output_acm_result(OJ_CE, 0, 0, 0);
           exit(EXIT_COMPILE_ERROR);
         }
       }
@@ -276,7 +279,7 @@ void compile(void)
       if (WIFSIGNALED(status)) {  // killed by signal
         int signo = WTERMSIG(status);
         FM_LOG_WARNING("Compiler Limit Exceeded: %s", strsignal(signo));
-        output_result(OJ_CE, 0, 0, 0);
+        output_acm_result(OJ_CE, 0, 0, 0);
         stderr = freopen(stderr_compiler, "w", stderr);
         fprintf(stderr, "Compiler Limit Exceeded: %s\n", strsignal(signo));
         exit(EXIT_OK);
@@ -344,7 +347,6 @@ void run_solution(void)
     exit(EXIT_PRE_JUDGE_DAA);
   }
 
-  bool flag = true;
   int  first_failed_test = 0;
   char input_file[PATH_SIZE];
   char output_file_std[PATH_SIZE];
@@ -353,20 +355,23 @@ void run_solution(void)
   snprintf(stderr_file_executive, PATH_SIZE, "%s/stderr_executive.txt", oj_solution.work_dir);
 
   FM_LOG_DEBUG("start run solution (%d cases)", num_of_test);
-  int i;
-  for (i = 0; flag && i < num_of_test; ++i) {
+  for (int i = 0;  i < num_of_test; ++i) {
     prepare_files(namelist[i]->d_name, input_file, output_file_std, stdout_file_executive);
 
     FM_LOG_TRACE("run case: %d", i + 1);
 
-    flag = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
+    bool result = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
 
     if (oj_solution.result != OJ_AC && !first_failed_test) {
       first_failed_test = i + 1;
     }
+
+    if (!result && oj_solution.judge_type == ACM) {
+      break;
+    }
   }
 
-  for (i = 0; i < num_of_test; ++i) {
+  for (int i = 0; i < num_of_test; ++i) {
     free(namelist[i]);
   }
   free(namelist);
@@ -377,8 +382,8 @@ void run_solution(void)
   }
 #endif
 
-  output_result(oj_solution.result, oj_solution.time_usage,
-                oj_solution.memory_usage, first_failed_test);
+  output_acm_result(oj_solution.result, oj_solution.time_usage,
+                    oj_solution.memory_usage, first_failed_test);
 }
 
 bool judge(const char *input_file,
@@ -587,7 +592,9 @@ bool judge(const char *input_file,
   }
 
   if (oj_solution.result != OJ_AC && oj_solution.result != OJ_PE) {
-    FM_LOG_NOTICE("not AC/PE, no need to continue");
+    if (oj_solution.judge_type == ACM) {
+      FM_LOG_NOTICE("not AC/PE, no need to continue");
+    }
     if (oj_solution.result == OJ_TLE) {
       oj_solution.time_usage = oj_solution.time_limit;
     } else if (oj_solution.result == OJ_WA) {
@@ -962,7 +969,7 @@ int fix_gcc_result(const char *stderr_compiler)
 }
 
 // Output result
-void output_result(int result, int time_usage, int memory_usage, int test)
+void output_acm_result(int result, int time_usage, int memory_usage, int test)
 {
   FM_LOG_MONITOR("result(%d): %s, time: %d ms, memory: %d KB",
                   result, result_str[result], time_usage, memory_usage);

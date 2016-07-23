@@ -60,6 +60,12 @@ char result_str[][10] = {
 #define MAX_LOG_FILE_SIZE (STD_MB << 4)
 
 
+// judge 类型
+#define ACM 0
+#define OI 1
+#define TC 2
+#define CF 3
+
 
 // 退出原因
 #define EXIT_OK                0

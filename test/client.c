@@ -24,7 +24,7 @@
 
 const char* DEFAULT_IP = "127.0.0.1";
 const char* DEFAULT_PASSWORD = "PowerJudgeV1.1";
-const char* DEFAULT_PORT = "12345";
+const char* DEFAULT_PORT = "55555";
 
 
 void fatal_error(const char *msg)
@@ -91,13 +91,13 @@ int main(int argc, char *argv[], char *envp[])
 	printf("%s\n", buffer);
 
 	// strcpy(buffer, "test");
-	int sid = 1065;
+	int sid = 110522;
 	int cid = 0;
 	int pid = 2549;
 	int language = 2;
 	int timeLimit = 5000;
 	int memoryLimit = 65536;
-	sprintf(buffer, "%d %d %d %d %d %d", sid, cid, pid, language, timeLimit, memoryLimit);
+	sprintf(buffer, "%d %d %d %d %d %d 123456", sid, cid, pid, language, timeLimit, memoryLimit);
 
 	if (write(cfd, buffer, strlen(buffer)) != strlen(buffer)) {
 		fatal_error("Partial/failed write (buffer)");
