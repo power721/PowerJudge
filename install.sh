@@ -14,8 +14,7 @@ JUDGE_HOME=/home/${JUDGE_USER}
 DATA_DIR=${JUDGE_HOME}/data
 WORK_DIR=${JUDGE_HOME}/temp
 
-JAVA_POLICY_FILE=${WORK_DIR}/java.policy
-CONFIG_FILE=${JUDGE_HOME}/judge.properties
+JAVA_POLICY_FILE=${JUDGE_HOME}/java.policy
 
 function create_user() {
     if ! id ${JUDGE_USER} >/dev/null 2>&1 ; then
@@ -57,6 +56,12 @@ if find_tomcat; then
     adduser ${TOMCAT_USER} ${JUDGE_GROUP}
 fi
 
+if [ -d /var/log/nginx/ ]; then
+    GROUP=`stat -c '%G' /var/log/nginx/`
+    echo "try to add user ${TOMCAT_USER} to group ${GROUP}"
+    adduser ${TOMCAT_USER} ${GROUP}
+fi
+
 cp config/java.policy ${WORK_DIR}/
 cp config/judged /etc/init.d/judged && chmod a+x /etc/init.d/judged
 update-rc.d judged defaults
@@ -67,6 +72,12 @@ update-rc.d judged defaults
 
 if [ ! -f /etc/judged.conf ]; then
     cp -p config/judged.conf /etc/judged.conf
+fi
+
+if [ ! -f ${JAVA_POLICY_FILE} ]; then
+  cp config/java.policy ${JAVA_POLICY_FILE}
+  chmod 440 ${JAVA_POLICY_FILE}
+  chown ${JUDGE_USER}:${JUDGE_GROUP} ${JAVA_POLICY_FILE}
 fi
 
 service judged stop
