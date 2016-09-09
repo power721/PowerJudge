@@ -7,6 +7,7 @@ if [ `id -u` -ne 0 ]; then
     exit 1
 fi
 
+CATALINA_HOME=/var/lib/tomcat7
 JUDGE_USER=judge
 JUDGE_GROUP=judge
 JUDGE_HOME=/home/${JUDGE_USER}
@@ -24,10 +25,12 @@ function create_user() {
         RET=$?
         if [ ${RET} -ne 0 ]; then
             echo "create user ${JUDGE_USER} failed!"
-            exit ${RET}
+            return ${RET}
         fi
         mkdir -p ${DATA_DIR}/
+        chown ${JUDGE_USER}:${JUDGE_GROUP} ${DATA_DIR}
         mkdir -p ${WORK_DIR}/
+        chown ${JUDGE_USER}:${JUDGE_GROUP} ${WORK_DIR}
         echo "create user ${JUDGE_USER} completed."
     else
      echo "user ${JUDGE_USER} already exist."
@@ -39,7 +42,7 @@ TOMCAT_GROUP=
 function find_tomcat() {
   WEBAPPS=${CATALINA_HOME}/webapps
   if [ ! -d "${WEBAPPS}" ]; then
-    echo "cannot find tomcat, please set env CATALINA_HOME" >&2
+    echo -e "\x1b[31mcannot find tomcat, please set env CATALINA_HOME\x1b[0m" >&2
     return 1
   fi
   TOMCAT_USER=`stat -c '%U' ${WEBAPPS}/`
@@ -50,19 +53,18 @@ function find_tomcat() {
 create_user
 
 if find_tomcat; then
-    echo "try to add user ${JUDGE_USER} to group ${TOMCAT_GROUP}"
+    echo "try to add user ${JUDGE_USER} to tomcat group ${TOMCAT_GROUP}"
     adduser ${JUDGE_USER} ${TOMCAT_GROUP}
-    echo "try to add user ${TOMCAT_USER} to group ${JUDGE_GROUP}"
+    echo "try to add user ${TOMCAT_USER} to judge group ${JUDGE_GROUP}"
     adduser ${TOMCAT_USER} ${JUDGE_GROUP}
+
+    if [ -d /var/log/nginx/ ]; then
+        GROUP=`stat -c '%G' /var/log/nginx/`
+        echo "try to add user ${TOMCAT_USER} to nginx group ${GROUP}"
+        adduser ${TOMCAT_USER} ${GROUP}
+    fi
 fi
 
-if [ -d /var/log/nginx/ ]; then
-    GROUP=`stat -c '%G' /var/log/nginx/`
-    echo "try to add user ${TOMCAT_USER} to group ${GROUP}"
-    adduser ${TOMCAT_USER} ${GROUP}
-fi
-
-cp config/java.policy ${WORK_DIR}/
 cp config/judged /etc/init.d/judged && chmod a+x /etc/init.d/judged
 update-rc.d judged defaults
 
