@@ -1,0 +1,8 @@
+/var/log/judged.log {
+  copytruncate
+  weekly
+  rotate 52
+  compress
+  missingok
+  create 640 judge judge
+}

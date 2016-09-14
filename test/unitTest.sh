@@ -84,6 +84,8 @@ function init()
   cp code/1000/ac_no_header.c temp/10/Main.c
   mkdir temp/127
   cp code/1000/ce_no_header.cc temp/127/Main.cc
+
+  cp ././../config/java.policy temp/
 } 2> error.log
 
 resultStr=(

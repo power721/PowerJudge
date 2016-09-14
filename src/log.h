@@ -44,6 +44,7 @@
 #include <unistd.h>
 #include <error.h>
 #include <sys/file.h>
+#include <sys/time.h>
 
 
 int log_open(const char *filename);
@@ -87,7 +88,7 @@ int log_open(const char* filename)
     fprintf(stderr, "logger: log already opened\n");
     return 0;
   }
-  int len = strlen(filename);
+  size_t len = strlen(filename);
   log_filename = (char *)malloc(sizeof(char) * len + 1);
   snprintf(log_filename, len + 1, "%s", filename);
   log_fp = fopen(log_filename, "a");
@@ -170,7 +171,7 @@ static void log_write(int level, const char *file,
 
 void log_add_info(const char *info)
 {
-  int len = strlen(log_extra_info);
+  size_t len = strlen(log_extra_info);
   snprintf(log_extra_info + len, LOG_BUFFER_SIZE - len, " [%s]", info);
 }
 

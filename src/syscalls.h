@@ -426,6 +426,7 @@ bool is_valid_syscall(int syscall_id)
     return false;
   } else if (syscalls[syscall_id] > 0) {
     if (in_syscall == false) {
+      // FM_LOG_TRACE("system call id: %d  remaining count: %d", syscall_id, syscalls[syscall_id]);
       syscalls[syscall_id]--;
     }
   } else {

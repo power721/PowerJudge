@@ -14,9 +14,9 @@ int main(int argc, char *argv[], char *envp[])
 
   parse_arguments(argc, argv);
 
-  if (geteuid() != 0) {  // effective user is not root
-    FM_LOG_FATAL("please run as root, or set suid bit(chmod +4755)");
-    exit(EXIT_UNPRIVILEGED);
+  if (geteuid() == 0) {  // effective user is not root
+    FM_LOG_FATAL("please do not run as root, run as judge");
+    exit(EXIT_PRIVILEGED);
   }
 
   if (EXIT_SUCCESS != chdir(oj_solution.work_dir)) {  // change current directory
@@ -56,7 +56,7 @@ void parse_arguments(int argc, char *argv[])
   int opt;
   extern char *optarg;
 
-  while ((opt = getopt(argc, argv, "s:p:t:m:l:w:d:D:")) != -1) {
+  while ((opt = getopt(argc, argv, "s:p:t:m:l:w:d:D:j:")) != -1) {
     switch (opt) {
       case 's':  // Solution ID
         oj_solution.sid               = atoi(optarg);
@@ -67,11 +67,14 @@ void parse_arguments(int argc, char *argv[])
       case 'l':  // Language ID
         oj_solution.lang              = atoi(optarg);
         break;
+      case 'j':  // judge type
+        oj_solution.judge_type        = atoi(optarg);
+        break;
       case 't':  // Time limit
-        oj_solution.time_limit        = atoi(optarg);
+        oj_solution.time_limit        = (unsigned int) atoi(optarg);
         break;
       case 'm':  // Memory limit
-        oj_solution.memory_limit      = atoi(optarg);
+        oj_solution.memory_limit      = (unsigned int) atoi(optarg);
         break;
       case 'w':
       case 'd':  // Work directory
@@ -158,7 +161,7 @@ void print_solution(void)
   FM_LOG_DEBUG("-- Solution Information --");
   FM_LOG_MONITOR("solution id %d", oj_solution.sid);
   FM_LOG_TRACE("problem id    %d", oj_solution.pid);
-  FM_LOG_TRACE("language      %s", languages[oj_solution.lang]);
+  FM_LOG_TRACE("language(%d)   %s", oj_solution.lang, languages[oj_solution.lang]);
   FM_LOG_TRACE("time limit    %d ms", oj_solution.time_limit);
   FM_LOG_TRACE("memory limit  %d KB", oj_solution.memory_limit);
   FM_LOG_DEBUG("work dir      %s", oj_solution.work_dir);
@@ -194,7 +197,7 @@ void compile(void)
 
   if (compiler < 0) {
     FM_LOG_FATAL("fork compiler failed: %s", strerror(errno));
-    exit(EXIT_COMPILE_ERROR);
+    exit(EXIT_FORK_COMPILER);
   } else if (compiler == 0) {
     // child process: run compiler
     log_add_info("compiler");
@@ -205,8 +208,10 @@ void compile(void)
     stderr = freopen(stderr_compiler, "w", stderr);
     if (stdout == NULL || stderr == NULL) {
       FM_LOG_FATAL("error freopen: stdout(%p), stderr(%p)", stdout, stderr);
-      exit(EXIT_COMPILE_ERROR);
+      exit(EXIT_COMPILE_IO);
     }
+    print_user_group();
+    print_word_dir();
 
     switch (oj_solution.lang) {
       case LANG_C:
@@ -229,11 +234,14 @@ void compile(void)
         print_compiler(CP_PY);
         execvp(CP_PY[0], (char * const *) CP_PY);
         break;
+      default:
+        FM_LOG_FATAL("Unknown language %d", oj_solution.lang);
+        break;
     }
 
     // execvp error
     FM_LOG_FATAL("execvp compiler error");
-    exit(EXIT_COMPILE_ERROR);
+    exit(EXIT_COMPILE_EXEC);
   } else {
     // parent process: Judger
     int status = 0;
@@ -245,7 +253,7 @@ void compile(void)
 
     if (oj_solution.lang == LANG_PYTHON && file_size(stderr_compiler)) {
       FM_LOG_TRACE("compile error");
-      output_result(OJ_CE, 0, 0, 0);
+      output_acm_result(OJ_CE, 0, 0, 0);
       exit(EXIT_OK);
     }
 
@@ -254,23 +262,24 @@ void compile(void)
         FM_LOG_DEBUG("compile succeeded");
       } else if (GCC_COMPILE_ERROR == WEXITSTATUS(status)) {
         FM_LOG_TRACE("compile error");
-        output_result(OJ_CE, 0, 0, 0);
+        output_acm_result(OJ_CE, 0, 0, 0);
         exit(EXIT_OK);
       } else {
         if (fix_gcc_result(stderr_compiler)) {
           FM_LOG_WARNING("Compiler Limit Exceeded!");
-          output_result(OJ_CE, 0, 0, 0);
+          output_acm_result(OJ_CE, 0, 0, 0);
           exit(EXIT_OK);
         } else {
           FM_LOG_FATAL("compiler unknown exit status %d", WEXITSTATUS(status));
-          exit(EXIT_COMPILE_ERROR);  // SE
+          output_acm_result(OJ_CE, 0, 0, 0);
+          exit(EXIT_COMPILE_ERROR);
         }
       }
     } else {
       if (WIFSIGNALED(status)) {  // killed by signal
         int signo = WTERMSIG(status);
         FM_LOG_WARNING("Compiler Limit Exceeded: %s", strsignal(signo));
-        output_result(OJ_CE, 0, 0, 0);
+        output_acm_result(OJ_CE, 0, 0, 0);
         stderr = freopen(stderr_compiler, "w", stderr);
         fprintf(stderr, "Compiler Limit Exceeded: %s\n", strsignal(signo));
         exit(EXIT_OK);
@@ -289,7 +298,7 @@ void set_compile_limit(void)
 {
   if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON) return;
 
-  rlimit lim;
+  struct rlimit lim;
 
   lim.rlim_cur = lim.rlim_max = compile_time_limit / 1000;
   if (setrlimit(RLIMIT_CPU, &lim) < 0) {
@@ -338,7 +347,6 @@ void run_solution(void)
     exit(EXIT_PRE_JUDGE_DAA);
   }
 
-  bool flag = true;
   int  first_failed_test = 0;
   char input_file[PATH_SIZE];
   char output_file_std[PATH_SIZE];
@@ -347,20 +355,23 @@ void run_solution(void)
   snprintf(stderr_file_executive, PATH_SIZE, "%s/stderr_executive.txt", oj_solution.work_dir);
 
   FM_LOG_DEBUG("start run solution (%d cases)", num_of_test);
-  int i;
-  for (i = 0; flag && i < num_of_test; ++i) {
+  for (int i = 0;  i < num_of_test; ++i) {
     prepare_files(namelist[i]->d_name, input_file, output_file_std, stdout_file_executive);
 
     FM_LOG_TRACE("run case: %d", i + 1);
 
-    flag = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
+    bool result = judge(input_file, output_file_std, stdout_file_executive, stderr_file_executive);
 
     if (oj_solution.result != OJ_AC && !first_failed_test) {
       first_failed_test = i + 1;
     }
+
+    if (!result && oj_solution.judge_type == ACM) {
+      break;
+    }
   }
 
-  for (i = 0; i < num_of_test; ++i) {
+  for (int i = 0; i < num_of_test; ++i) {
     free(namelist[i]);
   }
   free(namelist);
@@ -371,8 +382,8 @@ void run_solution(void)
   }
 #endif
 
-  output_result(oj_solution.result, oj_solution.time_usage,
-                oj_solution.memory_usage, first_failed_test);
+  output_acm_result(oj_solution.result, oj_solution.time_usage,
+                    oj_solution.memory_usage, first_failed_test);
 }
 
 bool judge(const char *input_file,
@@ -420,8 +431,10 @@ bool judge(const char *input_file,
 
     // load program
     if (oj_solution.lang == LANG_JAVA) {
+      print_executor(EXEC_J);
       execvp(EXEC_J[0], (char * const *) EXEC_J);
     } else if (oj_solution.lang == LANG_PYTHON) {
+      print_executor(EXEC_PY);
 #ifdef FAST_JUDGE
       execvp(EXEC_PY[0], (char * const *) EXEC_PY);
 #else
@@ -511,8 +524,14 @@ bool judge(const char *input_file,
           case SIGKILL:  // exceeds hard processor limit
           default:
               oj_solution.result = OJ_RE;
-              fprintf(stderr, "%s\n", strsignal(signo));
-              FM_LOG_TRACE("Runtime Error");
+              FILE * fp = fopen(stderr_file_executive, "a+");
+              if (fp == NULL) {
+                fprintf(stderr, "%s\n", strsignal(signo));
+                FM_LOG_WARNING("Runtime Error: %s", strsignal(signo));
+              } else {
+                fprintf(fp, "%s\n", strsignal(signo));
+                fclose(fp);
+              }
               break;
         }  // end of swtich
         kill(executor, SIGKILL);
@@ -544,7 +563,7 @@ bool judge(const char *input_file,
   #endif
       if (syscall_id > 0 && !is_valid_syscall(syscall_id)) {
         oj_solution.result = OJ_RF;
-        FM_LOG_NOTICE("restricted function, syscall_id: %d", syscall_id);
+        FM_LOG_FATAL("restricted function, syscall_id: %d", syscall_id);
         kill(executor, SIGKILL);
         break;
       }
@@ -573,7 +592,9 @@ bool judge(const char *input_file,
   }
 
   if (oj_solution.result != OJ_AC && oj_solution.result != OJ_PE) {
-    FM_LOG_NOTICE("not AC/PE, no need to continue");
+    if (oj_solution.judge_type == ACM) {
+      FM_LOG_NOTICE("not AC/PE, no need to continue");
+    }
     if (oj_solution.result == OJ_TLE) {
       oj_solution.time_usage = oj_solution.time_limit;
     } else if (oj_solution.result == OJ_WA) {
@@ -594,13 +615,38 @@ void check_spj(void)
   snprintf(oj_solution.spj_exe_file, PATH_SIZE, "%s/spj", oj_solution.data_dir);
   if (access(oj_solution.spj_exe_file, F_OK) != -1) {  // spj file exists
     oj_solution.spj = true;
-    FM_LOG_MONITOR("Special Judged");
+    FM_LOG_MONITOR("Special Judged: %s", oj_solution.spj_exe_file);
+  } else {
+    if(!check_spj_source("spj.cc")) {
+      check_spj_source("spj.c");
+    }
+  }
+}
+
+bool check_spj_source(const char *name) {
+  char buffer[PATH_SIZE];
+  snprintf(buffer, PATH_SIZE, "%s/%s", oj_solution.data_dir, name);
+  if (access(buffer, F_OK) != -1) {
+    compile_spj(buffer, oj_solution.spj_exe_file);
+    if (access(oj_solution.spj_exe_file, F_OK) != -1) {
+      oj_solution.spj = true;
+      FM_LOG_MONITOR("Special Judged: %s", oj_solution.spj_exe_file);
+      return true;
+    }
+  }
+  return false;
+}
+
+void compile_spj(const char *source, char *target) {
+  int status = execute_cmd("g++ -lm -static -w -std=c++11 -O2 -o %s %s", target, source);
+  if(status == -1) {
+    FM_LOG_WARNING("compile spj failed: %s", strerror(errno));
   }
 }
 
 int data_filter(const struct dirent *dirp)
 {
-  int namelen = checkInFile(dirp->d_name);  // check if the file is *.in
+  size_t namelen = checkInFile(dirp->d_name);  // check if the file is *.in
   if (namelen == 0)
     return 0;
 
@@ -624,7 +670,7 @@ void prepare_files(const char *filename,
                    char *outfile,
                    char *userfile)
 {
-  int namelen = strlen(filename) - 3;
+  size_t namelen = strlen(filename) - 3;
   char fname[PATH_SIZE];
   strncpy(fname, filename, namelen);
   fname[namelen] = 0;
@@ -662,7 +708,7 @@ void io_redirect(const char *input_file,
 
 void set_limit(off_t fsize)
 {
-  rlimit lim;
+  struct rlimit lim;
 
   // Set CPU time limit round up, raise SIGXCPU
   lim.rlim_max = (oj_solution.time_limit - oj_solution.time_usage + 999) / 1000 + 1;
@@ -689,7 +735,7 @@ void set_limit(off_t fsize)
   }
 
   // Output file size limit, raise SIGXFSZ
-  lim.rlim_cur = lim.rlim_max = fsize + (fsize >> 3) + MAX_LOG_FILE_SIZE;
+  lim.rlim_cur = lim.rlim_max = (rlim_t) (fsize + (fsize >> 3) + MAX_LOG_FILE_SIZE);
   if (setrlimit(RLIMIT_FSIZE, &lim) < 0) {
     FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed: %s", strerror(errno));
     exit(EXIT_SET_LIMIT);
@@ -701,12 +747,6 @@ void set_limit(off_t fsize)
 
 void set_security_option(void)
 {
-  struct passwd *nobody = getpwnam("nobody");  // get password file entry for user nobody
-  if (nobody == NULL) {
-    FM_LOG_FATAL("no user named 'nobody': %s", strerror(errno));
-    exit(EXIT_SET_SECURITY);
-  }
-
   if (oj_solution.lang != LANG_JAVA
 #ifdef FAST_JUDGE
     && oj_solution.lang != LANG_PYTHON
@@ -724,18 +764,7 @@ void set_security_option(void)
       FM_LOG_FATAL("chroot(%s) failed: %s", cwd, strerror(errno));
       exit(EXIT_SET_SECURITY);
     }
-  }
-
-  // setgid, must before setuid()
-  if (EXIT_SUCCESS != setgid(nobody->pw_gid)) {
-    FM_LOG_FATAL("setgid(%d) failed: %s", nobody->pw_gid, strerror(errno));
-    exit(EXIT_SET_SECURITY);
-  }
-
-  // setuid
-  if (EXIT_SUCCESS != setuid(nobody->pw_uid)) {
-    FM_LOG_FATAL("setuid(%d) failed: %s", nobody->pw_uid, strerror(errno));
-    exit(EXIT_SET_SECURITY);
+    FM_LOG_DEBUG("chroot(%s)", cwd);
   }
 
   FM_LOG_TRACE("set_security_option ok");
@@ -885,13 +914,13 @@ int oj_compare_output(const char *file_out, const char *file_user)
     }
   }  // end of while
 
-  if (status == WA) {
-    make_diff_out(fp_std, fp_exe, a, b, oj_solution.work_dir, file_out);
-  }
   fclose(fp_std);
   fclose(fp_exe);
-  FM_LOG_TRACE("compare finished, result = %s",
-               status == AC ? "AC" : (status == PE ? "PE" : "WA"));
+
+  if (status == WA || status == PE) {
+    make_diff_out2(file_out, file_user, oj_solution.work_dir, file_out);
+  }
+  FM_LOG_TRACE("compare finished, result=%s", status == AC ? "AC" : (status == PE ? "PE" : "WA"));
   return status;
 }
 
@@ -940,10 +969,13 @@ int fix_gcc_result(const char *stderr_compiler)
 }
 
 // Output result
-void output_result(int result, int time_usage, int memory_usage, int test)
+void output_acm_result(int result, int time_usage, int memory_usage, int test)
 {
   FM_LOG_MONITOR("result(%d): %s, time: %d ms, memory: %d KB",
                   result, result_str[result], time_usage, memory_usage);
   // this is judge result for Web app
   printf("%d %d %d %d\n", result, time_usage, memory_usage, test);
+  FILE* fp = fopen("result.txt", "w");
+  fprintf(fp, "%d %d %d %d", result, time_usage, memory_usage, test);
+  fclose(fp);
 }
