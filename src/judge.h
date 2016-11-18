@@ -19,10 +19,10 @@
 
 
 // 编译选项
-const char* CP_C[] = { "gcc", "-fno-asm", "-lm", "-static", "-Wall",
-                       "-std=c11", "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.c", NULL };
-const char* CP_CC[] = { "g++", "-fno-asm", "-lm", "-static", "-Wall",
-                        "-std=c++11", "-O2", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", NULL };
+const char* CP_C[] = { "gcc", "Main.c", "-fno-asm", "-lm", "-static", "-Wall",
+                       "-std=c11", "-O2", "-DONLINE_JUDGE", "-o", "Main", NULL };
+const char* CP_CC[] = { "g++", "Main.cc", "-fno-asm", "-lm", "-static", "-Wall",
+                        "-std=c++11", "-O2", "-DONLINE_JUDGE", "-o", "Main", NULL };
 const char* CP_PAS[] = { "fpc", "Main.pas", "-O2", "-Co", "-Cr", "-Ct", "-Ci", NULL };
 const char* CP_J[] = { "javac", "-g:none", "-Xlint", "-encoding", "UTF-8", "Main.java", NULL };
 const char* CP_PY[] = { "python", "-c", "import py_compile;py_compile.compile(r'Main.py')", NULL };
