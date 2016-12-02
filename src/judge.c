@@ -418,7 +418,7 @@ bool judge(const char *input_file,
                         + time_limit_addtion;  // time fix
     // set real time alarm
     if (EXIT_SUCCESS != malarm(ITIMER_REAL, real_time_limit)) {
-      FM_LOG_FATAL("malarm  for executor failed: %s", strerror(errno));
+      FM_LOG_FATAL("malarm for executor failed: %s", strerror(errno));
       exit(EXIT_PRE_JUDGE);
     }
 
@@ -451,6 +451,7 @@ bool judge(const char *input_file,
     // Judger
     int status          = 0;
     struct user_regs_struct regs;
+    stderr = freopen("error.txt", "a+", stderr);
 
     init_syscalls(oj_solution.lang);
 

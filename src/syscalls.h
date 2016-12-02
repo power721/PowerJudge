@@ -375,6 +375,7 @@ static int SC_PYTHON[512] = {
   SYS_set_robust_list, SYSCALLS_INFINITE,
   SYS_set_tid_address, SYSCALLS_INFINITE,
   SYS_stat,            SYSCALLS_INFINITE,
+  SYS_sysinfo,         SYSCALLS_INFINITE,
   SYS_write,           SYSCALLS_INFINITE,
   SYSCALLS_END
 };
