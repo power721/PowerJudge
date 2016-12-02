@@ -1,6 +1,6 @@
-/*		
- * Copyright 2015 power <power0721#gmail.com>		
- * PowerOJ GPLv2		
+/*
+ * Copyright 2015 power <power0721#gmail.com>
+ * PowerOJ GPLv2
  * modify to run multi-thread 2016 w703710691d <w703710691d#163.com>
  */
 #include<bits/stdc++.h>
@@ -28,6 +28,8 @@ void ThreadWork(int x)
     while(1)
     {
         oj_solution_t oj_solution = ProcessQueue.GetFrontAndPop();
+        pthread_t ptid = pthread_self();
+        FM_LOG_TRACE("Thread id: %d", ptid);
         run(oj_solution);
     }
 
@@ -122,6 +124,7 @@ int main(int argc, char *argv[], char *envp[])
         thread t(ThreadWork,i);
         t.detach();
     }
+    FM_LOG_NOTICE("thread count: %d", oj_config.thread_num);
     while (isRunning)
     {
         int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
