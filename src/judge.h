@@ -1,120 +1,130 @@
-/*		
- * Copyright 2015 power <power0721#gmail.com>		
- * PowerOJ GPLv2		
- * modify to run multi-thread 2016 w703710691d <w703710691d#163.com>
+/*
+ * Copyright 2014 power <power0721#gmail.com>
+ * PowerOJ GPLv2
  */
-#ifndef SRC_JUDGED_H_
-#define SRC_JUDGED_H_
+#ifndef SRC_JUDGE_H_
+#define SRC_JUDGE_H_
 
-#include<bits/stdc++.h>
-
-#define OJ_AC       0
-#define OJ_PE       1
-#define OJ_TLE      2
-#define OJ_MLE      3
-#define OJ_WA       4
-#define OJ_RE       5
-#define OJ_OLE      6
-#define OJ_CE       7
-#define OJ_RF       8
-#define OJ_SE       9
-#define OJ_VE       10
-#define OJ_WAIT     11
-#define OJ_RUN      12
-
-#define EXIT_OK                0
-#define EXIT_UNPRIVILEGED      1
-#define EXIT_CHDIR             2
-#define EXIT_BAD_PARAM         3
-#define EXIT_MISS_PARAM        4
-#define EXIT_VERY_FIRST        5
-#define EXIT_FORK_COMPILER     6
-#define EXIT_COMPILE_IO        6
-#define EXIT_COMPILE_EXEC      6
-#define EXIT_COMPILE_ERROR     6
-#define EXIT_NO_SOURCE_CODE    7
-#define EXIT_PRIVILEGED        8
-#define EXIT_PRE_JUDGE         9
-#define EXIT_PRE_JUDGE_PTRACE  10
-#define EXIT_PRE_JUDGE_EXECLP  11
-#define EXIT_PRE_JUDGE_DAA     12
-#define EXIT_FORK_ERROR        13
-#define EXIT_EXEC_ERROR        14
-#define EXIT_SET_LIMIT         15
-#define EXIT_CURL_ERROR        16
-#define EXIT_SET_SECURITY      17
-#define EXIT_JUDGE             21
-#define EXIT_COMPARE           27
-#define EXIT_COMPARE_SPJ       30
-#define EXIT_COMPARE_SPJ_FORK  31
-#define EXIT_TIMEOUT           36
-#define EXIT_UNKNOWN           127
-
-#define ERROR_READ_FILE 40
-#define ERROR_READ_RESULT 41
-#define PATH_SIZE 4096
-#define BUFF_SIZE 8192
-
-struct oj_config_t
-{
-	char ip[20];
-	uint16_t port;
-	int backlog;
-
-	char password[256];
-	char data_dir[PATH_SIZE];
-	char temp_dir[PATH_SIZE];
-
-	char db_host[256];
-	uint16_t db_port;
-	char db_user[256];
-	char db_password[256];
-	char db_database[256];
-	char api_url[256];
-	char user_agent[256];
-	uint16_t thread_num;
-} oj_config;
-
-struct oj_solution_t
-{
-	char sid[15];           // solution id
-	char pid[15];           // problem id
-	int cid;                // contest id
-	char language[5];       // language id
-	char time_limit[15];    // ms
-	char memory_limit[15];  // KB
-	char token[255];
-	char work_dir[PATH_SIZE];
-	int result;
-	int time_usage;
-	int memory_usage;
-	int test;
-};
-
-int DEFAULT_BACKLOG = 100;
-uint16_t DEFAULT_PORT = 55555;
-int MAX_UPLOAD_FILE_SIZE = 4096;
-uint16_t DEFAULT_THREAD_NUM = 1;
-const char *DEFAULT_CFG_FILE = "/etc/judged.conf";
-const char *PID_FILE = "/var/run/judged.pid";
-const char *LOG_FILE = "/var/log/judged.log";
+#include <sys/wait.h>
+#include <sys/user.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/syscall.h>
+#include <sys/ptrace.h>
+#include <sys/reg.h>
+#include <dirent.h>
+#include "log.h"
+#include "misc.h"
+#include "syscalls.h"
 
 
-void signal_handler(int signo);
-void work(int newsockfd, struct sockaddr_in cli_addr);
-void check_pid();
-void read_config(const char *cfg_file);
-size_t split(char *line, char **key, char **value);
-int check_password(char *password, char *message);
-int parse_arguments(char *str, oj_solution_t &oj_solution);
-void run(oj_solution_t &oj_solution);
-void update_result(oj_solution_t &oj_solution);
-void update_system_error(int result, oj_solution_t &oj_solution);
-void send_multi_result(char* file_path, oj_solution_t &oj_solution);
-void truncate_upload_file(char* file_path);
-void fatal_error(const char *msg);
-void print_user_group();
-void print_word_dir();
-char *trim(char *str);
-off_t file_size(const char *filename);
-#endif  // SRC_JUDGED_H_
+// 编译选项
+const char* CP_C[] = { "gcc", "Main.c", "-fno-asm", "-lm", "-static", "-Wall",
+                       "-std=c11", "-O2", "-DONLINE_JUDGE", "-o", "Main", NULL };
+const char* CP_CC[] = { "g++", "Main.cc", "-fno-asm", "-lm", "-static", "-Wall",
+                        "-std=c++11", "-O2", "-DONLINE_JUDGE", "-o", "Main", NULL };
+const char* CP_PAS[] = { "fpc", "Main.pas", "-O2", "-Co", "-Cr", "-Ct", "-Ci", NULL };
+const char* CP_J[] = { "javac", "-g:none", "-Xlint", "-encoding", "UTF-8", "Main.java", NULL };
+const char* CP_PY[] = { "python", "-c", "import py_compile;py_compile.compile(r'Main.py')", NULL };
+
+// "-Xms512m", "-Xmx512m", "-Xss256k"
+const char* EXEC_J[] = { "java", "-cp", ".", "-DONLINE_JUDGE=true", "-Djava.security.manager",
+                         "-Djava.security.policy=/home/judge/java.policy", "Main", NULL };
+const char* EXEC_PY[] = { "python", "Main.py", NULL };
+
+// configruation
+// judge本身的时限(ms)
+static unsigned int judge_time_limit            = 15347;
+
+// 编译限制(ms)
+static unsigned int compile_time_limit          = 5347;
+
+// 编译限制(MB)
+static unsigned int compile_memory_limit        = 1024;
+
+// 编译输出限制(MB)
+static unsigned int compile_fsize_limit         = 64;
+
+// SPJ时间限制(ms)
+static unsigned int spj_time_limit              = 10347;
+
+// 程序运行的栈空间大小(KB)
+static unsigned int stack_size_limit            = 65536;
+
+// ms
+static unsigned int time_limit_addtion          = 347;
+
+static unsigned int java_time_factor            = 3;
+
+static unsigned int java_memory_factor          = 3;
+
+static unsigned int python_time_factor          = 2;
+
+static unsigned int python_memory_factor        = 2;
+/* -- end of configruation -- */
+
+static off_t page_size;
+
+static char work_dir_root[PATH_SIZE] = ".";
+
+static char data_dir_root[PATH_SIZE];
+
+struct oj_solution_t {
+  int sid;           // solution id
+  int pid;           // problem id
+  int lang;          // language id
+  unsigned int time_limit;    // ms
+  unsigned int memory_limit;  // KB
+
+  int result;
+  int judge_type;
+
+  unsigned int time_usage;    // ms
+  unsigned int memory_usage;  // KB
+
+  bool spj;
+
+  char work_dir[PATH_SIZE];
+  char data_dir[PATH_SIZE];
+  char spj_exe_file[PATH_SIZE];
+}oj_solution;
+
+
+static void init(void);
+static void check_arguments(void);
+static void parse_arguments(int argc, char *argv[]);
+static void timeout_hander(int signo);
+static void print_solution();
+
+static void check_spj(void);
+static bool check_spj_source(const char *name);
+static void compile_spj(const char *source, char *target);
+static int data_filter(const struct dirent *dirp);
+static void prepare_files(const char *filen_ame,
+                          char *infile,
+                          char *outfile,
+                          char *userfile);
+static void io_redirect(const char *input_file,
+                        const char *stdout_file,
+                        const char *stderr_file);
+static void set_limit(off_t fsize);
+static void set_compile_limit(void);
+static void set_security_option(void);
+
+static int oj_compare_output_spj(const char *file_in,    // std input
+                                 const char *file_out,   // std output
+                                 const char *file_user,  // user output
+                                 const char *spj_exec);  // path of spj
+static int oj_compare_output(const char *file_out, const char *file_user);
+static void fix_java_result(const char *stdout_file, const char *stderr_file);
+static int fix_gcc_result(const char *stderr_file);
+static void output_acm_result(int result, int time_usage, int memory_usage, int test);
+
+static void compile(void);
+static void run_solution(void);
+static bool judge(const char *input_file,
+                  const char *output_file_std,
+                  const char *stdout_file_executive,
+                  const char *stderr_file_executive);
+
+#endif  // SRC_JUDGE_H_
