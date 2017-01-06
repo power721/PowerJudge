@@ -7,7 +7,7 @@ if [ `id -u` -ne 0 ]; then
     exit 1
 fi
 
-CATALINA_HOME=/var/lib/tomcat7
+CATALINA_HOME=/usr/share/tomcat8
 JUDGE_USER=judge
 JUDGE_GROUP=judge
 JUDGE_HOME=/home/${JUDGE_USER}
