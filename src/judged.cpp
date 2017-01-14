@@ -41,7 +41,7 @@ void SendWork()
   pair<int,oj_solution_t> item = SendQueue.GetFrontAndPop();
     pthread_t ptid = pthread_self();
     FM_LOG_TRACE("Send thread id: %d", ptid);
-    if(item.first == 0) {
+    if(item.first == EXIT_OK) {
       update_result(item.second);
     } else {
       update_system_error(item.first, item.second);
@@ -240,10 +240,10 @@ void run(oj_solution_t &oj_solution) {
     {
       if (EXIT_SUCCESS == WEXITSTATUS(status)) {
         FM_LOG_DEBUG("judge succeeded");
-        SendQueue.push(make_pair(0, oj_solution));
+        SendQueue.push(make_pair(EXIT_OK, oj_solution));
       } else if (EXIT_COMPILE_ERROR == WEXITSTATUS(status)) {
         FM_LOG_TRACE("compile error");
-        SendQueue.push(make_pair(0, oj_solution));
+        SendQueue.push(make_pair(EXIT_OK, oj_solution));
       } else if (EXIT_JUDGE == WEXITSTATUS(status)) {
         FM_LOG_TRACE("judge error");
         SendQueue.push(make_pair(OJ_SE, oj_solution));
