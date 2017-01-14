@@ -7,7 +7,7 @@ if [ `id -u` -ne 0 ]; then
     exit 1
 fi
 
-CATALINA_HOME=/var/lib/tomcat7
+CATALINA_HOME=/usr/share/tomcat8
 JUDGE_USER=judge
 JUDGE_GROUP=judge
 JUDGE_HOME=/home/${JUDGE_USER}
@@ -59,8 +59,12 @@ if find_tomcat; then
     adduser ${TOMCAT_USER} ${JUDGE_GROUP}
 
     if [ -d /var/log/nginx/ ]; then
+        USER=`stat -c '%U' /var/log/nginx/`
+        echo "try to add nginx user ${USER} to tomcat group ${TOMCAT_GROUP}"
+        usermod -a -G ${TOMCAT_GROUP} ${USER}
+
         GROUP=`stat -c '%G' /var/log/nginx/`
-        echo "try to add user ${TOMCAT_USER} to nginx group ${GROUP}"
+        echo "try to add tomcat user ${TOMCAT_USER} to nginx group ${GROUP}"
         adduser ${TOMCAT_USER} ${GROUP}
     fi
 fi
