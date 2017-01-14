@@ -24,6 +24,7 @@ struct pidfh *pfh;
 bool isRunning = 1;
 
 ThreadSafeQueue<oj_solution_t> ProcessQueue;
+ThreadSafeQueue<pair<int,oj_solution_t> > SendQueue;
 
 void ThreadWork(int x) {
   while (1) {
@@ -31,6 +32,20 @@ void ThreadWork(int x) {
     pthread_t ptid = pthread_self();
     FM_LOG_TRACE("Thread id: %d", ptid);
     run(oj_solution);
+  }
+}
+
+void SendWork()
+{
+  while(1) {
+  pair<int,oj_solution_t> item = SendQueue.GetFrontAndPop();
+    pthread_t ptid = pthread_self();
+    FM_LOG_TRACE("Send thread id: %d", ptid);
+    if(item.first == 0) {
+      update_result(item.second);
+    } else {
+      update_system_error(item.first, item.second);
+    }
   }
 }
 
@@ -111,6 +126,9 @@ int main(int argc, char *argv[], char *envp[]) {
     t.detach();
   }
   FM_LOG_NOTICE("thread count: %d", oj_config.thread_num);
+  
+  thread(SendWork).detach();  
+
   while (isRunning) {
     int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
     if (newsockfd != -1) {
@@ -196,7 +214,7 @@ void run(oj_solution_t &oj_solution) {
   pid_t pid = fork();
   if (pid < 0) {
     FM_LOG_FATAL("fork judger failed: %s", strerror(errno));
-    update_system_error(EXIT_FORK_ERROR, oj_solution);
+    SendQueue.push(make_pair(EXIT_FORK_ERROR, oj_solution));
   } else if (pid == 0) {
     execl("/usr/local/bin/powerjudge",
           "/usr/local/bin/powerjudge",
@@ -210,7 +228,7 @@ void run(oj_solution_t &oj_solution) {
           NULL);
     stderr = freopen(stderr_file, "a+", stderr);
     FM_LOG_FATAL("exec error: %s", strerror(errno));
-    update_system_error(EXIT_EXEC_ERROR, oj_solution);
+    SendQueue.push(make_pair(EXIT_EXEC_ERROR, oj_solution));
   } else {
     int status = 0;
     FM_LOG_TRACE("process ID=%d", pid);
@@ -222,31 +240,31 @@ void run(oj_solution_t &oj_solution) {
     {
       if (EXIT_SUCCESS == WEXITSTATUS(status)) {
         FM_LOG_DEBUG("judge succeeded");
-        update_result(oj_solution);
+        SendQueue.push(make_pair(0, oj_solution));
       } else if (EXIT_COMPILE_ERROR == WEXITSTATUS(status)) {
         FM_LOG_TRACE("compile error");
-        update_result(oj_solution);
+        SendQueue.push(make_pair(0, oj_solution));
       } else if (EXIT_JUDGE == WEXITSTATUS(status)) {
         FM_LOG_TRACE("judge error");
-        update_system_error(OJ_SE, oj_solution);
+        SendQueue.push(make_pair(OJ_SE, oj_solution));
       } else {
         FM_LOG_TRACE("judge error");
-        update_system_error(WEXITSTATUS(status), oj_solution);
+        SendQueue.push(make_pair(WEXITSTATUS(status), oj_solution));
       }
     } else {
       if (WIFSIGNALED(status))    // killed by signal
       {
         int signo = WTERMSIG(status);
         FM_LOG_WARNING("judger killed by signal: %s", strsignal(signo));
-        update_system_error(signo, oj_solution);
+        SendQueue.push(make_pair(signo, oj_solution));
       } else if (WIFSTOPPED(status))      // stopped by signal
       {
         int signo = WSTOPSIG(status);
         FM_LOG_FATAL("judger stopped by signal: %s\n", strsignal(signo));
-        update_system_error(signo, oj_solution);
+        SendQueue.push(make_pair(signo, oj_solution));
       } else {
         FM_LOG_FATAL("judger stopped with unknown reason, status(%d)", status);
-        update_system_error(EXIT_UNKNOWN, oj_solution);
+        SendQueue.push(make_pair(EXIT_UNKNOWN, oj_solution));
       }
     }
   }
