@@ -224,8 +224,8 @@ static int SC_C[512] =
                 SYS_uname, 1,
                 SYS_write, SYSCALLS_INFINITE,
                 SYS_writev, SYSCALLS_INFINITE,
-        	SYS_lseek, SYSCALLS_INFINITE,
-	        SYSCALLS_END
+                SYS_lseek, SYSCALLS_INFINITE,
+                SYSCALLS_END
         
 	};
 
