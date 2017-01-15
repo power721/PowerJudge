@@ -33,19 +33,19 @@
 #define OJ_RUN      12
 
 char result_str[][10] = {
-  "AC",
-  "PE",
-  "TLE",
-  "MLE",
-  "WA",
-  "RE",
-  "OLE",
-  "CE",
-  "RF",
-  "SE",
-  "VE",
-  "WAIT",
-  "Running"
+        "AC",
+        "PE",
+        "TLE",
+        "MLE",
+        "WA",
+        "RE",
+        "OLE",
+        "CE",
+        "RF",
+        "SE",
+        "VE",
+        "WAIT",
+        "Running"
 };
 
 
@@ -111,7 +111,7 @@ char result_str[][10] = {
 #define LANG_JAVA              4
 #define LANG_PYTHON            5
 
-const char languages[][10]  = { "unknown", "c", "c++", "pascal", "java", "python" };
-const char lang_ext[][10]   = { "unknown", "c", "cc",  "pas",    "java", "py" };
+const char languages[][10] = {"unknown", "c", "c++", "pascal", "java", "python"};
+const char lang_ext[][10] = {"unknown", "c", "cc", "pas", "java", "py"};
 
 #endif  // SRC_JUDGE_CORE_H_

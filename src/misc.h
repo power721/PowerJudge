@@ -14,31 +14,45 @@
 #define is_space_char(a) ((a == ' ') || (a == '\t') || (a == '\n'))
 
 void fatal_error(const char *msg);
+
 char *trim(char *str);
+
 off_t file_size(const char *filename);
+
 size_t checkInFile(const char *filename);
+
 int malarm(int which, int milliseconds);
-void print_compiler(const char * options[]);
+
+void print_compiler(const char *options[]);
+
 void print_executor(const char *options[]);
+
 int execute_cmd(const char *format, ...);
+
 void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path);
-void make_diff_out2(const char *file_out, const char *file_user, const char *work_dir, const char *path);
-void check_and_rename_log(const char* filename);
+
+void
+make_diff_out2(const char *file_out, const char *file_user, const char *work_dir, const char *path);
+
+void check_and_rename_log(const char *filename);
+
 #ifndef FAST_JUDGE
-void copy_shell_runtime(const char * work_dir);
-void copy_python_runtime(const char * work_dir);
-void clean_workdir(const char * work_dir);
+
+void copy_shell_runtime(const char *work_dir);
+
+void copy_python_runtime(const char *work_dir);
+
+void clean_workdir(const char *work_dir);
+
 #endif
 
 
-void fatal_error(const char *msg)
-{
-    perror(msg);
-    exit(1);
+void fatal_error(const char *msg) {
+  perror(msg);
+  exit(1);
 }
 
-char *trim(char *str)
-{
+char *trim(char *str) {
   char *end;
 
   // Trim leading space
@@ -52,13 +66,12 @@ char *trim(char *str)
   while (end > str && isspace(*end)) end--;
 
   // Write new null terminator
-  *(end+1) = 0;
+  *(end + 1) = 0;
 
   return str;
 }
 
-off_t file_size(const char *filename)
-{
+off_t file_size(const char *filename) {
   struct stat st;
 
   if (!stat(filename, &st)) {
@@ -68,8 +81,7 @@ off_t file_size(const char *filename)
   return 0;
 }
 
-size_t checkInFile(const char *filename)
-{
+size_t checkInFile(const char *filename) {
   size_t len = strlen(filename);
   if (len <= 3 || strcmp(filename + len - 3, ".in") != 0) {
     return 0;
@@ -80,20 +92,19 @@ size_t checkInFile(const char *filename)
 
 // a simpler interface for setitimer
 // which can be ITIMER_REAL, ITIMER_VIRTUAL, ITIMER_PROF
-int malarm(int which, int milliseconds)
-{
+int malarm(int which, int milliseconds) {
   struct itimerval t;
-  t.it_value.tv_sec       = milliseconds / 1000;
-  t.it_value.tv_usec      = milliseconds % 1000 * 1000;
-  t.it_interval.tv_sec    = 0;
-  t.it_interval.tv_usec   = 0;
+  t.it_value.tv_sec = milliseconds / 1000;
+  t.it_value.tv_usec = milliseconds % 1000 * 1000;
+  t.it_interval.tv_sec = 0;
+  t.it_interval.tv_usec = 0;
   FM_LOG_TRACE("malarm: %d ms", milliseconds);
   return setitimer(which, &t, NULL);
 }
 
 void print_word_dir() {
   char cwd[PATH_SIZE];
-  char *tmp = getcwd(cwd, PATH_SIZE-1);
+  char *tmp = getcwd(cwd, PATH_SIZE - 1);
   if (tmp == NULL) {
     FM_LOG_WARNING("getcwd failed: %s", strerror(errno));
   } else {
@@ -142,8 +153,8 @@ int execute_cmd(const char *fmt, ...) {
 }
 
 #ifndef FAST_JUDGE
-void copy_shell_runtime(const char *work_dir)
-{
+
+void copy_shell_runtime(const char *work_dir) {
   execute_cmd("/bin/mkdir %s/lib 2>>error.log", work_dir);
   execute_cmd("/bin/mkdir %s/bin 2>>error.log", work_dir);
   execute_cmd("/bin/cp /lib/* %s/lib/ 2>>error.log", work_dir);
@@ -159,8 +170,7 @@ void copy_shell_runtime(const char *work_dir)
   execute_cmd("/bin/cp /bin/bash %s/bin/bash 2>>error.log", work_dir);
 }
 
-void copy_python_runtime(const char *work_dir)
-{
+void copy_python_runtime(const char *work_dir) {
   copy_shell_runtime(work_dir);
   execute_cmd("/bin/mkdir -p %s/usr/include 2>>error.log", work_dir);
   execute_cmd("/bin/mkdir -p %s/usr/lib 2>>error.log", work_dir);
@@ -171,8 +181,7 @@ void copy_python_runtime(const char *work_dir)
   execute_cmd("/bin/cp -a /usr/include/python2* %s/usr/include/ 2>>error.log", work_dir);
 }
 
-void clean_workdir(const char *work_dir)
-{
+void clean_workdir(const char *work_dir) {
   execute_cmd("rm -Rf %s/lib", work_dir);
 #ifdef __i386
   execute_cmd("rm -Rf %s/lib32", work_dir);
@@ -183,11 +192,11 @@ void clean_workdir(const char *work_dir)
   execute_cmd("rm -Rf %s/usr", work_dir);
   execute_cmd("rm -f %s/python*", work_dir);
 }
+
 #endif
 
 // not very helpful, should diff line by line and give line number
-void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path)
-{
+void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, const char *path) {
   FM_LOG_DEBUG("make_diff_out");
   FILE *out;
   char buf[BUFF_SIZE];
@@ -207,7 +216,8 @@ void make_diff_out(FILE *f1, FILE *f2, int c1, int c2, const char *work_dir, con
   fclose(out);
 }
 
-void make_diff_out2(const char *file_out, const char *file_user, const char *work_dir, const char *path) {
+void make_diff_out2(const char *file_out, const char *file_user, const char *work_dir,
+                    const char *path) {
   FM_LOG_DEBUG("make_diff_out2");
   FILE *fp_std = fopen(file_out, "r");
   if (fp_std == NULL) {
@@ -251,12 +261,12 @@ void make_diff_out2(const char *file_out, const char *file_user, const char *wor
   }
 
   size_t n = strlen(line1);
-  if (line1[n-1] == '\n') {
-    line1[n-1] = '\0';
+  if (line1[n - 1] == '\n') {
+    line1[n - 1] = '\0';
   }
   n = strlen(line2);
-  if (line2[n-1] == '\n') {
-    line2[n-1] = '\0';
+  if (line2[n - 1] == '\n') {
+    line2[n - 1] = '\0';
   }
   fprintf(out, "Expect(Line #%d):\n%s", line, line1);
   fprintf(out, "\n-----------------\n");
@@ -268,11 +278,9 @@ void make_diff_out2(const char *file_out, const char *file_user, const char *wor
   fclose(out);
 }
 
-void check_and_rename_log(const char* filename)
-{
+void check_and_rename_log(const char *filename) {
   off_t fsize = file_size(filename);
-  if (fsize < MAX_LOG_FILE_SIZE)
-  {
+  if (fsize < MAX_LOG_FILE_SIZE) {
     return;
   }
 

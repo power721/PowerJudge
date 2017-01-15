@@ -55,40 +55,38 @@
 #define PATH_SIZE 4096
 #define BUFF_SIZE 8192
 
-struct oj_config_t
-{
-	char ip[20];
-	uint16_t port;
-	int backlog;
+struct oj_config_t {
+    char ip[20];
+    uint16_t port;
+    int backlog;
 
-	char password[256];
-	char data_dir[PATH_SIZE];
-	char temp_dir[PATH_SIZE];
+    char password[256];
+    char data_dir[PATH_SIZE];
+    char temp_dir[PATH_SIZE];
 
-	char db_host[256];
-	uint16_t db_port;
-	char db_user[256];
-	char db_password[256];
-	char db_database[256];
-	char api_url[256];
-	char user_agent[256];
-	uint16_t thread_num;
+    char db_host[256];
+    uint16_t db_port;
+    char db_user[256];
+    char db_password[256];
+    char db_database[256];
+    char api_url[256];
+    char user_agent[256];
+    uint16_t thread_num;
 } oj_config;
 
-struct oj_solution_t
-{
-	char sid[15];           // solution id
-	char pid[15];           // problem id
-	int cid;                // contest id
-	char language[5];       // language id
-	char time_limit[15];    // ms
-	char memory_limit[15];  // KB
-	char token[255];
-	char work_dir[PATH_SIZE];
-	int result;
-	int time_usage;
-	int memory_usage;
-	int test;
+struct oj_solution_t {
+    char sid[15];           // solution id
+    char pid[15];           // problem id
+    int cid;                // contest id
+    char language[5];       // language id
+    char time_limit[15];    // ms
+    char memory_limit[15];  // KB
+    char token[255];
+    char work_dir[PATH_SIZE];
+    int result;
+    int time_usage;
+    int memory_usage;
+    int test;
 };
 
 int DEFAULT_BACKLOG = 100;
@@ -101,20 +99,37 @@ const char *LOG_FILE = "/var/log/judged.log";
 
 
 void signal_handler(int signo);
+
 void work(int newsockfd, struct sockaddr_in cli_addr);
+
 void check_pid();
+
 void read_config(const char *cfg_file);
+
 size_t split(char *line, char **key, char **value);
+
 int check_password(char *password, char *message);
+
 int parse_arguments(char *str, oj_solution_t &oj_solution);
+
 void run(oj_solution_t &oj_solution);
+
 void update_result(oj_solution_t &oj_solution);
+
 void update_system_error(int result, oj_solution_t &oj_solution);
-void send_multi_result(char* file_path, oj_solution_t &oj_solution);
-void truncate_upload_file(char* file_path);
+
+void send_multi_result(char *file_path, oj_solution_t &oj_solution);
+
+void truncate_upload_file(char *file_path);
+
 void fatal_error(const char *msg);
+
 void print_user_group();
+
 void print_word_dir();
+
 char *trim(char *str);
+
 off_t file_size(const char *filename);
+
 #endif  // SRC_JUDGED_H_
