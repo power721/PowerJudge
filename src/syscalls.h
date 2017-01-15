@@ -54,6 +54,8 @@ static int SC_C[512] =
   SYS_time,             SYSCALLS_INFINITE,
   SYS_uname,            SYSCALLS_INFINITE,
   SYS_write,            SYSCALLS_INFINITE,
+  SYS_open,             SYSCALLS_INFINITE,
+  SYS_lseek,            SYSCALLS_INFINITE,
   SYSCALLS_END
 };
 
@@ -77,6 +79,8 @@ static int SC_CPP[512] =
   SYS_time,             SYSCALLS_INFINITE,
   SYS_uname,            SYSCALLS_INFINITE,
   SYS_write,            SYSCALLS_INFINITE,
+  SYS_open,             SYSCALLS_INFINITE,
+  SYS_lseek,            SYSCALLS_INFINITE,
   SYSCALLS_END
 };
 
@@ -207,7 +211,7 @@ static int SC_C[512] =
                 SYS_fstat, 3,
                 SYS_get_thread_area, 1,
                 SYS_gettid, 1,
-                SYS_open, 1,
+                SYS_open, SYSCALLS_INFINITE,
                 SYS_mmap, SYSCALLS_INFINITE,
                 SYS_mprotect, 16,
                 SYS_munmap, SYSCALLS_INFINITE,
@@ -220,8 +224,10 @@ static int SC_C[512] =
                 SYS_uname, 1,
                 SYS_write, SYSCALLS_INFINITE,
                 SYS_writev, SYSCALLS_INFINITE,
-                SYSCALLS_END
-        };
+        	SYS_lseek, SYSCALLS_INFINITE,
+	        SYSCALLS_END
+        
+	};
 
 // C++
 static int SC_CPP[512] =
@@ -241,7 +247,7 @@ static int SC_CPP[512] =
                 SYS_mprotect, 16,
                 SYS_mmap, SYSCALLS_INFINITE,
                 SYS_munmap, SYSCALLS_INFINITE,
-                SYS_open, 2,
+                SYS_open, SYSCALLS_INFINITE,
                 SYS_read, SYSCALLS_INFINITE,
                 SYS_readlink, 1,
                 SYS_rt_sigprocmask, 1,
@@ -252,7 +258,8 @@ static int SC_CPP[512] =
                 SYS_uname, 1,
                 SYS_write, SYSCALLS_INFINITE,
                 SYS_writev, SYSCALLS_INFINITE,
-                SYSCALLS_END
+                SYS_lseek, SYSCALLS_INFINITE,
+  		SYSCALLS_END
         };
 
 // Pascal
