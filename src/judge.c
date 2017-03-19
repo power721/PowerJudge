@@ -530,7 +530,8 @@ bool judge(const char *input_file,
       }  // end of  "if (WIFSIGNALED(status) ...)"
 
       oj_solution.memory_usage = max(oj_solution.memory_usage,
-                                     rused.ru_minflt * (page_size / STD_KB));
+      //                               rused.ru_minflt * (page_size / STD_KB));
+                                       rused.ru_maxrss);
       // TODO(power): check why memory exceed too much
       // FM_LOG_DEBUG("memory_usage: %d %d %d", oj_solution.memory_usage,
       //                            rused.ru_minflt, page_size / STD_KB);
@@ -568,7 +569,8 @@ bool judge(const char *input_file,
   }  // end of fork for judge process
 
   oj_solution.memory_usage = max(oj_solution.memory_usage,
-                                 rused.ru_minflt * (page_size / STD_KB));
+  //                               rused.ru_minflt * (page_size / STD_KB));
+                                   rused.ru_maxrss);
   if (oj_solution.memory_usage > oj_solution.memory_limit) {
     oj_solution.result = OJ_MLE;
     FM_LOG_NOTICE("memory limit exceeded: %d (fault: %d * %d)",
