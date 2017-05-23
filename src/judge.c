@@ -114,6 +114,9 @@ void parse_arguments(int argc, char *argv[]) {
   } else if (oj_solution.lang == LANG_PYTHON) {
     oj_solution.memory_limit *= python_memory_factor;
     oj_solution.time_limit *= python_time_factor;
+  } else if (oj_solution.lang == LANG_KOTLIN) {
+    oj_solution.memory_limit *= kotlin_memory_factor;
+    oj_solution.time_limit *= kotlin_time_factor;
   }
 
   snprintf(buff, PATH_SIZE, "%s/last", work_dir_root);
@@ -145,6 +148,7 @@ void check_arguments(void) {
     case LANG_PASCAL:
     case LANG_JAVA:
     case LANG_PYTHON:
+    case LANG_KOTLIN:
       break;
     default:
       FM_LOG_FATAL("Unknown language id: %d", oj_solution.lang);
@@ -227,6 +231,10 @@ void compile(void) {
         print_compiler(CP_PY);
         execvp(CP_PY[0], (char *const *) CP_PY);
         break;
+      case LANG_KOTLIN:
+        print_compiler(CP_KT);
+        execvp(CP_KT[0], (char *const *) CP_KT);
+        break;
       default:
         FM_LOG_FATAL("Unknown language %d", oj_solution.lang);
         break;
@@ -288,7 +296,7 @@ void compile(void) {
 }
 
 void set_compile_limit(void) {
-  if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON) return;
+  if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON || oj_solution.lang == LANG_KOTLIN) return;
 
   struct rlimit lim;
 
@@ -423,6 +431,9 @@ bool judge(const char *input_file,
     if (oj_solution.lang == LANG_JAVA) {
       print_executor(EXEC_J);
       execvp(EXEC_J[0], (char *const *) EXEC_J);
+    } else if (oj_solution.lang == LANG_KOTLIN) {
+      print_executor(EXEC_KT);
+      execvp(EXEC_KT[0], (char *const *) EXEC_KT);
     } else if (oj_solution.lang == LANG_PYTHON) {
       print_executor(EXEC_PY);
 #ifdef FAST_JUDGE
@@ -453,7 +464,7 @@ bool judge(const char *input_file,
       }
 
       if (WIFEXITED(status)) {
-        if (oj_solution.lang != LANG_JAVA || WEXITSTATUS(status) == EXIT_SUCCESS) {
+        if ((oj_solution.lang != LANG_JAVA && oj_solution.lang != LANG_KOTLIN) || WEXITSTATUS(status) == EXIT_SUCCESS) {
           // AC PE WA
           FM_LOG_TRACE("normal quit");
           int result;
@@ -495,6 +506,10 @@ bool judge(const char *input_file,
           FM_LOG_NOTICE("child process stopped by signal %d, %s", signo, strsignal(signo));
         }
         switch (signo) {
+          // Ignore
+          case SIGCHLD:
+            oj_solution.result = OJ_AC;
+            break;
           // TLE
           case SIGALRM:    // alarm() and setitimer(ITIMER_REAL)
           case SIGVTALRM:  // setitimer(ITIMER_VIRTUAL)
@@ -591,7 +606,7 @@ bool judge(const char *input_file,
     if (oj_solution.result == OJ_TLE) {
       oj_solution.time_usage = oj_solution.time_limit;
     } else if (oj_solution.result == OJ_WA) {
-      if (oj_solution.lang == LANG_JAVA) {
+      if (oj_solution.lang == LANG_JAVA) { // TODO: kotlin
         fix_java_result(stdout_file_executive, stderr_file_executive);
       } else if (oj_solution.lang == LANG_PYTHON && file_size(stderr_file_executive)) {
         oj_solution.result = OJ_RE;
@@ -734,7 +749,7 @@ void set_limit(off_t fsize) {
 }
 
 void set_security_option(void) {
-  if (oj_solution.lang != LANG_JAVA
+  if (oj_solution.lang != LANG_JAVA && oj_solution.lang != LANG_KOTLIN
 #ifdef FAST_JUDGE
     && oj_solution.lang != LANG_PYTHON
 #endif

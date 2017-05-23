@@ -26,11 +26,13 @@ const char *CP_CC[] = {"g++", "Main.cc", "-fno-asm", "-lm", "-static", "-Wall",
 const char *CP_PAS[] = {"fpc", "Main.pas", "-O2", "-Co", "-Cr", "-Ct", "-Ci", NULL};
 const char *CP_J[] = {"javac", "-g:none", "-Xlint", "-encoding", "UTF-8", "Main.java", NULL};
 const char *CP_PY[] = {"python", "-c", "import py_compile;py_compile.compile(r'Main.py')", NULL};
+const char *CP_KT[] = {"kotlinc", "Main.kt", NULL};
 
 // "-Xms512m", "-Xmx512m", "-Xss256k"
 const char *EXEC_J[] = {"java", "-cp", ".", "-DONLINE_JUDGE=true", "-Djava.security.manager","-Xss64m",
                         "-Djava.security.policy=/home/judge/java.policy", "Main", NULL};
 const char *EXEC_PY[] = {"python", "Main.py", NULL};
+const char *EXEC_KT[] = {"kotlin", "-DONLINE_JUDGE=true", "MainKt", NULL};
 
 // configruation
 // judge本身的时限(ms)
@@ -61,6 +63,11 @@ static unsigned int java_memory_factor = 3;
 static unsigned int python_time_factor = 2;
 
 static unsigned int python_memory_factor = 2;
+
+static unsigned int kotlin_time_factor = 3;
+
+static unsigned int kotlin_memory_factor = 3;
+
 /* -- end of configruation -- */
 
 static off_t page_size;

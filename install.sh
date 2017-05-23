@@ -31,6 +31,7 @@ function create_user() {
         chown ${JUDGE_USER}:${JUDGE_GROUP} ${DATA_DIR}
         mkdir -p ${WORK_DIR}/
         chown ${JUDGE_USER}:${JUDGE_GROUP} ${WORK_DIR}
+        chmod 775 ${WORK_DIR}
         echo "create user ${JUDGE_USER} completed."
     else
      echo "user ${JUDGE_USER} already exist."

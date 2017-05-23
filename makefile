@@ -36,7 +36,7 @@ test: all
 	sudo chown judge:judge $(TARGET)
 	sudo chmod 4755 $(TARGET)
 	sudo setcap cap_sys_chroot+ep $(TARGET)
-	sudo chown judge:judge test/
+	sudo chown -R judge:judge test/
 	g++ -o test/data/1405/spj test/data/1405/spj.cc
 	cd test && sudo su judge -c ./unitTest.sh
 
