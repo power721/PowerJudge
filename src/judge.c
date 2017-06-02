@@ -111,7 +111,7 @@ void parse_arguments(int argc, char *argv[]) {
   if (oj_solution.lang == LANG_JAVA) {
     oj_solution.memory_limit *= java_memory_factor;
     oj_solution.time_limit *= java_time_factor;
-  } else if (oj_solution.lang == LANG_PYTHON) {
+  } else if (oj_solution.lang == LANG_PYTHON27 || oj_solution.lang == LANG_PYTHON3) {
     oj_solution.memory_limit *= python_memory_factor;
     oj_solution.time_limit *= python_time_factor;
   }
@@ -140,11 +140,16 @@ void check_arguments(void) {
   }
 
   switch (oj_solution.lang) {
-    case LANG_C:
-    case LANG_CPP:
+    case LANG_C99:
+    case LANG_C11:
+    case LANG_CPP98:
+    case LANG_CPP11:
+    case LANG_CPP14:
+    case LANG_CPP17:
     case LANG_PASCAL:
     case LANG_JAVA:
-    case LANG_PYTHON:
+    case LANG_PYTHON27:
+    case LANG_PYTHON3:
       break;
     default:
       FM_LOG_FATAL("Unknown language id: %d", oj_solution.lang);
@@ -207,13 +212,29 @@ void compile(void) {
     print_word_dir();
 
     switch (oj_solution.lang) {
-      case LANG_C:
-        print_compiler(CP_C);
-        execvp(CP_C[0], (char *const *) CP_C);
+      case LANG_C99:
+        print_compiler(CP_C99);
+        execvp(CP_C99[0], (char *const *) CP_C99);
         break;
-      case LANG_CPP:
-        print_compiler(CP_CC);
-        execvp(CP_CC[0], (char *const *) CP_CC);
+      case LANG_C11:
+        print_compiler(CP_C11);
+        execvp(CP_C11[0], (char *const *) CP_C11);
+        break;
+      case LANG_CPP98:
+        print_compiler(CP_CC98);
+        execvp(CP_CC98[0], (char *const *) CP_CC98);
+        break;
+      case LANG_CPP11:
+        print_compiler(CP_CC11);
+        execvp(CP_CC11[0], (char *const *) CP_CC11);
+        break;
+      case LANG_CPP14:
+        print_compiler(CP_CC14);
+        execvp(CP_CC14[0], (char *const *) CP_CC14);
+        break;
+      case LANG_CPP17:
+        print_compiler(CP_CC98);
+        execvp(CP_CC98[0], (char *const *) CP_CC17);
         break;
       case LANG_PASCAL:
         print_compiler(CP_PAS);
@@ -223,9 +244,13 @@ void compile(void) {
         print_compiler(CP_J);
         execvp(CP_J[0], (char *const *) CP_J);
         break;
-      case LANG_PYTHON:
-        print_compiler(CP_PY);
-        execvp(CP_PY[0], (char *const *) CP_PY);
+      case LANG_PYTHON27:
+        print_compiler(CP_PY27);
+        execvp(CP_PY27[0], (char *const *) CP_PY27);
+        break;
+      case LANG_PYTHON3:
+        print_compiler(CP_PY3);
+        execvp(CP_PY3[0], (char *const *) CP_PY3);
         break;
       default:
         FM_LOG_FATAL("Unknown language %d", oj_solution.lang);
@@ -244,7 +269,7 @@ void compile(void) {
     }
     FM_LOG_DEBUG("compiler finished");
 
-    if (oj_solution.lang == LANG_PYTHON && file_size(stderr_compiler)) {
+    if ((oj_solution.lang == LANG_PYTHON27 || oj_solution.lang == LANG_PYTHON3) && file_size(stderr_compiler)) {
       FM_LOG_TRACE("compile error");
       output_acm_result(OJ_CE, 0, 0, 0);
       exit(EXIT_OK);
@@ -288,7 +313,7 @@ void compile(void) {
 }
 
 void set_compile_limit(void) {
-  if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON) return;
+  if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON27 || oj_solution.lang == LANG_PYTHON3) return;
 
   struct rlimit lim;
 
@@ -321,7 +346,7 @@ void set_compile_limit(void) {
 void run_solution(void) {
   FM_LOG_DEBUG("run_solution");
 #ifndef FAST_JUDGE
-  if (oj_solution.lang == LANG_PYTHON) {
+  if (oj_solution.lang == LANG_PYTHON27 || oj_solution.lang == LANG_PYTHON3) {
     copy_python_runtime(oj_solution.work_dir);
     FM_LOG_DEBUG("copy_python_runtime");
   }
@@ -368,7 +393,7 @@ void run_solution(void) {
   free(namelist);
 
 #ifndef FAST_JUDGE
-  if (oj_solution.lang == LANG_PYTHON) {
+  if (oj_solution.lang == LANG_PYTHON27 || oj_solution.lang == LANG_PYTHON3) {
     clean_workdir(oj_solution.work_dir);
   }
 #endif
@@ -423,12 +448,19 @@ bool judge(const char *input_file,
     if (oj_solution.lang == LANG_JAVA) {
       print_executor(EXEC_J);
       execvp(EXEC_J[0], (char *const *) EXEC_J);
-    } else if (oj_solution.lang == LANG_PYTHON) {
-      print_executor(EXEC_PY);
+    } else if (oj_solution.lang == LANG_PYTHON27) {
+      print_executor(EXEC_PY27);
 #ifdef FAST_JUDGE
-      execvp(EXEC_PY[0], (char * const *) EXEC_PY);
+      execvp(EXEC_PY27[0], (char * const *) EXEC_PY27);
 #else
-      execv(EXEC_PY[0], (char *const *) EXEC_PY);
+      execv(EXEC_PY27[0], (char *const *) EXEC_PY27);
+#endif
+    } else if (oj_solution.lang == LANG_PYTHON3) {
+      print_executor(EXEC_PY3);
+#ifdef FAST_JUDGE
+      execvp(EXEC_PY3[0], (char * const *) EXEC_PY3);
+#else
+      execv(EXEC_PY3[0], (char *const *) EXEC_PY3);
 #endif
     } else {
       execl("./Main", "./Main", NULL);
@@ -593,7 +625,7 @@ bool judge(const char *input_file,
     } else if (oj_solution.result == OJ_WA) {
       if (oj_solution.lang == LANG_JAVA) {
         fix_java_result(stdout_file_executive, stderr_file_executive);
-      } else if (oj_solution.lang == LANG_PYTHON && file_size(stderr_file_executive)) {
+      } else if ((oj_solution.lang == LANG_PYTHON27 || oj_solution.lang == LANG_PYTHON3) && file_size(stderr_file_executive)) {
         oj_solution.result = OJ_RE;
         FM_LOG_TRACE("Runtime Error");
       }
@@ -939,7 +971,12 @@ void fix_java_result(const char *stdout_file, const char *stderr_file) {
 }
 
 int fix_gcc_result(const char *stderr_compiler) {
-  if (oj_solution.lang != LANG_C && oj_solution.lang != LANG_CPP) {
+  if (oj_solution.lang != LANG_C99 &&
+      oj_solution.lang != LANG_C11 &&
+      oj_solution.lang != LANG_CPP98 &&
+      oj_solution.lang != LANG_CPP11 &&
+      oj_solution.lang != LANG_CPP14 &&
+      oj_solution.lang != LANG_CPP17) {
     return 0;
   }
 
