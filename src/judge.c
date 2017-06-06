@@ -346,8 +346,13 @@ void set_compile_limit(void) {
 void run_solution(void) {
   FM_LOG_DEBUG("run_solution");
 #ifndef FAST_JUDGE
-  if (oj_solution.lang == LANG_PYTHON27 || oj_solution.lang == LANG_PYTHON3) {
-    copy_python_runtime(oj_solution.work_dir);
+  if (oj_solution.lang == LANG_PYTHON27) {
+    copy_python_runtime_python2(oj_solution.work_dir);
+    FM_LOG_DEBUG("copy_python_runtime");
+  }
+  else if (oj_solution.lang == LANG_PYTHON3)
+  {
+    copy_python_runtime_python3(oj_solution.work_dir);
     FM_LOG_DEBUG("copy_python_runtime");
   }
 #endif
