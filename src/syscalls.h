@@ -149,6 +149,7 @@ static int SC_JAVA[512] =
 
 // Python
 static int SC_PYTHON[512] = {
+  318,                  SYSCALLS_INFINITE,
   102,                  SYSCALLS_INFINITE,
   117,                  SYSCALLS_INFINITE,
   146,                  SYSCALLS_INFINITE,
