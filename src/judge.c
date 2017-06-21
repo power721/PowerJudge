@@ -788,7 +788,7 @@ void set_limit(off_t fsize) {
 void set_security_option(void) {
   if (oj_solution.lang != LANG_JAVA && oj_solution.lang != LANG_KOTLIN
 #ifdef FAST_JUDGE
-    && oj_solution.lang != LANG_PYTHON
+    && oj_solution.lang != LANG_PYTHON3 && oj_solution.lang != LANG_PYTHON27
 #endif
           ) {
     char cwd[PATH_SIZE];
