@@ -115,7 +115,8 @@ char result_str[][10] = {
 #define LANG_CPP14             8
 #define LANG_CPP17             9
 #define LANG_PYTHON3           10
-const char languages[][10] = {"unknown", "gcc11", "g++11", "pascal", "java", "python2.7", "gcc99", "g++98", "g++14", "g++17", "python3"};
-const char lang_ext[][10] = {"unknown", "c", "cc", "pas", "java", "py", "c", "cc", "cc", "cc", "py"};
+#define LANG_KOTLIN            11
+const char languages[][10] = {"unknown", "gcc11", "g++11", "pascal", "java", "python2.7", "gcc99", "g++98", "g++14", "g++17", "python3", "kotlin"};
+const char lang_ext[][10] = {"unknown", "c", "cc", "pas", "java", "py", "c", "cc", "cc", "cc", "py", "kt"};
 
 #endif  // SRC_JUDGE_CORE_H_

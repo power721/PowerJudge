@@ -197,6 +197,45 @@ static int SC_PYTHON[512] = {
   SYS_write,            SYSCALLS_INFINITE,
   SYSCALLS_END
 };
+
+// Kotlin
+static int SC_KOTLIN[512] = {
+  295,                  SYSCALLS_INFINITE,
+  SYS_access,           SYSCALLS_INFINITE,
+  SYS_brk,              SYSCALLS_INFINITE,
+  SYS_clone,            SYSCALLS_INFINITE,
+  SYS_close,            SYSCALLS_INFINITE,
+  SYS_close,            SYSCALLS_INFINITE,
+  SYS_execve,           SYSCALLS_INFINITE,
+  SYS_exit_group,       SYSCALLS_INFINITE,
+  SYS_fcntl64,          SYSCALLS_INFINITE,
+  SYS_fstat64,          SYSCALLS_INFINITE,
+  SYS_futex,            SYSCALLS_INFINITE,
+  SYS_getdents64,       SYSCALLS_INFINITE,
+  SYS_getegid32,        SYSCALLS_INFINITE,
+  SYS_geteuid32,        SYSCALLS_INFINITE,
+  SYS_getgid32,         SYSCALLS_INFINITE,
+  SYS_getrlimit,        SYSCALLS_INFINITE,
+  SYS_getuid32,         SYSCALLS_INFINITE,
+  SYS_mmap2,            SYSCALLS_INFINITE,
+  SYS_mprotect,         SYSCALLS_INFINITE,
+  SYS_munmap,           SYSCALLS_INFINITE,
+  SYS_open,             SYSCALLS_INFINITE,
+  SYS_read,             SYSCALLS_INFINITE,
+  SYS_readlink,         SYSCALLS_INFINITE,
+  SYS_rt_sigaction,     SYSCALLS_INFINITE,
+  SYS_rt_sigprocmask,   SYSCALLS_INFINITE,
+  SYS_set_robust_list,  SYSCALLS_INFINITE,
+  SYS_set_thread_area,  SYSCALLS_INFINITE,
+  SYS_set_tid_address,  SYSCALLS_INFINITE,
+  SYS_sigprocmask,      SYSCALLS_INFINITE,
+  SYS_stat64,           SYSCALLS_INFINITE,
+  SYS_ugetrlimit,       SYSCALLS_INFINITE,
+  SYS_uname,            SYSCALLS_INFINITE,
+  SYS_uname,            SYSCALLS_INFINITE,
+  SYSCALLS_END
+};
+
 #else
 // http://blog.rchapman.org/post/36801038863/linux-system-call-table-for-x86-64
 
@@ -392,6 +431,58 @@ static int SC_PYTHON[512] = {
         SYS_write, SYSCALLS_INFINITE,
         SYSCALLS_END
 };
+
+// Kotlin
+static int SC_KOTLIN[512] = {
+        110, SYSCALLS_INFINITE,
+        111, SYSCALLS_INFINITE,
+        13, SYSCALLS_INFINITE,
+        16, SYSCALLS_INFINITE,
+        22, SYSCALLS_INFINITE,
+        33, SYSCALLS_INFINITE,
+        39, SYSCALLS_INFINITE,
+        6, SYSCALLS_INFINITE,
+        61, SYSCALLS_INFINITE,
+        79, SYSCALLS_INFINITE,
+        8, SYSCALLS_INFINITE,
+        SYS_access, 16,
+        SYS_arch_prctl, 16,
+        SYS_brk, SYSCALLS_INFINITE,
+        SYS_clock_gettime, SYSCALLS_INFINITE,
+        SYS_clone, 16,
+        SYS_close, SYSCALLS_INFINITE,
+        SYS_execve, SYSCALLS_INFINITE,
+        SYS_exit_group, 1,
+        SYS_get_thread_area, 1,
+        SYS_fcntl, SYSCALLS_INFINITE,
+        SYS_fstat, SYSCALLS_INFINITE,
+        SYS_futex, SYSCALLS_INFINITE,
+        SYS_getdents64, 2,
+        SYS_getegid, SYSCALLS_INFINITE,
+        SYS_geteuid, SYSCALLS_INFINITE,
+        SYS_getgid, SYSCALLS_INFINITE,
+        SYS_getrlimit, SYSCALLS_INFINITE,
+        SYS_openat, 1,
+        SYS_getuid, SYSCALLS_INFINITE,
+        SYS_mmap, SYSCALLS_INFINITE,
+        SYS_mprotect, SYSCALLS_INFINITE,
+        SYS_munmap, SYSCALLS_INFINITE,
+        SYS_open, SYSCALLS_INFINITE,
+        SYS_read, SYSCALLS_INFINITE,
+        SYS_readlink, 2,
+        SYS_rt_sigaction, 16,
+        SYS_rt_sigprocmask, SYSCALLS_INFINITE,
+        SYS_set_robust_list, 1,
+        SYS_set_thread_area, 1,
+        SYS_set_tid_address, 1,
+        SYS_time, SYSCALLS_INFINITE,
+        SYS_stat, SYSCALLS_INFINITE,
+        SYS_sysinfo, 4,
+        SYS_uname, 16,
+        SYS_write, SYSCALLS_INFINITE,
+        SYSCALLS_END
+};
+
 #endif
 
 // 根据 SC_* 数组来初始化syscalls
@@ -418,6 +509,9 @@ int init_syscalls(int lang) {
     case LANG_PYTHON27:
     case LANG_PYTHON3:
       p = SC_PYTHON;
+      break;
+    case LANG_KOTLIN:
+      p = SC_KOTLIN;
       break;
     default:
       FM_LOG_FATAL("unknown language id: %d", lang);

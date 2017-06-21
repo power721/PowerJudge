@@ -34,7 +34,7 @@ function init()
   mkdir temp/1005
   cp code/1000/1000.py temp/1005/Main.py
   
-  cp ../java.policy temp/
+  cp ../config/java.policy temp/
   mkdir temp/100040
   cp code/1000/1000_AC.java temp/100040/Main.java
   mkdir temp/100041
@@ -60,6 +60,9 @@ function init()
   cp code/1000/1000_OLE.py temp/100056/Main.py
   mkdir temp/100057
   cp code/1000/1000_CE.py temp/100057/Main.py
+
+  mkdir temp/100060
+  cp code/1000/1000.kt temp/100060/Main.kt
 
   mkdir temp/100010
   cp code/1000/1000.c temp/100010/Main.c
@@ -158,6 +161,9 @@ runTest 3 "Python MLE" "../bin/powerjudge -s 100053 -p 1000 -D ./data -d ./temp 
 runTest 5 "Python RE"  "../bin/powerjudge -s 100055 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
 runTest 6 "Python OLE" "../bin/powerjudge -s 100056 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
 runTest 7 "Python CE"  "../bin/powerjudge -s 100057 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
+
+# test kotlin
+runTest 0 "Kotlin AC"  "../bin/powerjudge -s 100060 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 6"
 
 # test int64
 runTest 0 "long long" "../bin/powerjudge -s 6420 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
