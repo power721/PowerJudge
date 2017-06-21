@@ -151,13 +151,9 @@ void check_arguments(void) {
     case LANG_CPP17:
     case LANG_PASCAL:
     case LANG_JAVA:
-<<<<<<< HEAD
-    case LANG_PYTHON:
-    case LANG_KOTLIN:
-=======
     case LANG_PYTHON27:
     case LANG_PYTHON3:
->>>>>>> master
+    case LANG_KOTLIN:
       break;
     default:
       FM_LOG_FATAL("Unknown language id: %d", oj_solution.lang);
@@ -325,11 +321,7 @@ void compile(void) {
 }
 
 void set_compile_limit(void) {
-<<<<<<< HEAD
-  if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON || oj_solution.lang == LANG_KOTLIN) return;
-=======
-  if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON27 || oj_solution.lang == LANG_PYTHON3) return;
->>>>>>> master
+  if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON27 || oj_solution.lang == LANG_PYTHON3 || oj_solution.lang == LANG_KOTLIN) return;
 
   struct rlimit lim;
 
@@ -469,13 +461,9 @@ bool judge(const char *input_file,
     if (oj_solution.lang == LANG_JAVA) {
       print_executor(EXEC_J);
       execvp(EXEC_J[0], (char *const *) EXEC_J);
-<<<<<<< HEAD
     } else if (oj_solution.lang == LANG_KOTLIN) {
       print_executor(EXEC_KT);
       execvp(EXEC_KT[0], (char *const *) EXEC_KT);
-    } else if (oj_solution.lang == LANG_PYTHON) {
-      print_executor(EXEC_PY);
-=======
     } else if (oj_solution.lang == LANG_PYTHON27) {
       print_executor(EXEC_PY27);
 #ifdef FAST_JUDGE
@@ -485,7 +473,6 @@ bool judge(const char *input_file,
 #endif
     } else if (oj_solution.lang == LANG_PYTHON3) {
       print_executor(EXEC_PY3);
->>>>>>> master
 #ifdef FAST_JUDGE
       execvp(EXEC_PY3[0], (char * const *) EXEC_PY3);
 #else
