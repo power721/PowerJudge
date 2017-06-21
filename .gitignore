@@ -21,3 +21,5 @@ test/temp/
 spj
 *.log
 *.class
+*.cbp
+*.layout

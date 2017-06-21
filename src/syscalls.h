@@ -149,6 +149,9 @@ static int SC_JAVA[512] =
 
 // Python
 static int SC_PYTHON[512] = {
+  32,			SYSCALLS_INFINITE,
+  131,			SYSCALLS_INFINITE,
+  318,                  SYSCALLS_INFINITE,
   102,                  SYSCALLS_INFINITE,
   117,                  SYSCALLS_INFINITE,
   146,                  SYSCALLS_INFINITE,
@@ -265,7 +268,7 @@ static int SC_C[512] =
                 SYS_writev, SYSCALLS_INFINITE,
                 SYS_lseek, SYSCALLS_INFINITE,
                 SYSCALLS_END
-        
+
 	};
 
 // C++
@@ -381,6 +384,9 @@ static int SC_JAVA[512] =
 
 // Python
 static int SC_PYTHON[512] = {
+	32,  SYSCALLS_INFINITE,
+	131, SYSCALLS_INFINITE,
+	318, SYSCALLS_INFINITE,
         102, SYSCALLS_INFINITE,
         117, SYSCALLS_INFINITE,
         146, SYSCALLS_INFINITE,
@@ -484,10 +490,14 @@ int init_syscalls(int lang) {
   int i;
   int *p = NULL;
   switch (lang) {
-    case LANG_C:
+    case LANG_C11:
+    case LANG_C99:
       p = SC_C;
       break;
-    case LANG_CPP:
+    case LANG_CPP98:
+    case LANG_CPP11:
+    case LANG_CPP14:
+    case LANG_CPP17:
       p = SC_CPP;
       break;
     case LANG_PASCAL:
@@ -496,7 +506,8 @@ int init_syscalls(int lang) {
     case LANG_JAVA:
       p = SC_JAVA;
       break;
-    case LANG_PYTHON:
+    case LANG_PYTHON27:
+    case LANG_PYTHON3:
       p = SC_PYTHON;
       break;
     case LANG_KOTLIN:
