@@ -105,14 +105,25 @@ char result_str[][10] = {
 
 // 程序语言
 #define LANG_UNKNOWN           0
-#define LANG_C                 1
-#define LANG_CPP               2
+#define LANG_C11               1
+#define LANG_CPP11             2
 #define LANG_PASCAL            3
 #define LANG_JAVA              4
+<<<<<<< HEAD
 #define LANG_PYTHON            5
 #define LANG_KOTLIN            6
 
 const char languages[][10] = {"unknown", "c", "c++", "pascal", "java", "python", "kotlin"};
 const char lang_ext[][10] = {"unknown", "c", "cc", "pas", "java", "py", "kt"};
+=======
+#define LANG_PYTHON27          5
+#define LANG_C99               6
+#define LANG_CPP98             7
+#define LANG_CPP14             8
+#define LANG_CPP17             9
+#define LANG_PYTHON3           10
+const char languages[][10] = {"unknown", "gcc11", "g++11", "pascal", "java", "python2.7", "gcc99", "g++98", "g++14", "g++17", "python3"};
+const char lang_ext[][10] = {"unknown", "c", "cc", "pas", "java", "py", "c", "cc", "cc", "cc", "py"};
+>>>>>>> master
 
 #endif  // SRC_JUDGE_CORE_H_
