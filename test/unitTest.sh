@@ -163,7 +163,7 @@ runTest 6 "Python OLE" "../bin/powerjudge -s 100056 -p 1000 -D ./data -d ./temp 
 runTest 7 "Python CE"  "../bin/powerjudge -s 100057 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 5"
 
 # test kotlin
-runTest 0 "Kotlin AC"  "../bin/powerjudge -s 100060 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 6"
+runTest 0 "Kotlin AC"  "../bin/powerjudge -s 100060 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 11"
 
 # test int64
 runTest 0 "long long" "../bin/powerjudge -s 6420 -p 1000 -D ./data -d ./temp -t 1000 -m 65535 -l 2"
