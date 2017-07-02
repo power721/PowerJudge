@@ -1,0 +1,72 @@
+# depslib dependency file v1.0
+1498987562 source:/mnt/f/PowerJudge/src/judge.c
+	"judge.h"
+
+1498986999 /mnt/f/PowerJudge/src/judge.h
+	<sys/wait.h>
+	<sys/user.h>
+	<sys/time.h>
+	<sys/resource.h>
+	<sys/syscall.h>
+	<sys/ptrace.h>
+	<sys/reg.h>
+	<dirent.h>
+	"log.h"
+	"misc.h"
+	"syscalls.h"
+
+1498980957 /mnt/f/PowerJudge/src/log.h
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<string.h>
+	<stdarg.h>
+	<unistd.h>
+	<error.h>
+	<sys/file.h>
+	<sys/time.h>
+
+1498980957 /mnt/f/PowerJudge/src/misc.h
+	<ctype.h>
+	<libgen.h>
+	"judge_core.h"
+
+1498980957 /mnt/f/PowerJudge/src/judge_core.h
+	<stdint.h>
+	<unistd.h>
+	<errno.h>
+	<pwd.h>
+	<sys/resource.h>
+	<sys/signal.h>
+	<sys/types.h>
+	<sys/time.h>
+	<sys/stat.h>
+	<sys/wait.h>
+
+1498983880 /mnt/f/PowerJudge/src/syscalls.h
+	"log.h"
+	"judge_core.h"
+
+1498980957 source:/mnt/f/PowerJudge/src/judged.cpp
+	<bits/stdc++.h>
+	"log.h"
+	"judged.h"
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	<bsd/libutil.h>
+	<curl/curl.h>
+	<unistd.h>
+	<sys/types.h>
+	<sys/wait.h>
+	<sys/file.h>
+	<sys/stat.h>
+	"thread_safe_queue.h"
+
+1498980957 /mnt/f/PowerJudge/src/judged.h
+	<bits/stdc++.h>
+
+1498980957 /mnt/f/PowerJudge/src/thread_safe_queue.h
+	<bits/stdc++.h>
+	<mutex>
+

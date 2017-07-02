@@ -233,6 +233,7 @@ static int SC_KOTLIN[512] = {
   SYS_ugetrlimit,       SYSCALLS_INFINITE,
   SYS_uname,            SYSCALLS_INFINITE,
   SYS_uname,            SYSCALLS_INFINITE,
+  SYS_rt_sigaction,     SYSCALLS_INFINITE,
   SYSCALLS_END
 };
 
@@ -480,6 +481,7 @@ static int SC_KOTLIN[512] = {
         SYS_sysinfo, 4,
         SYS_uname, 16,
         SYS_write, SYSCALLS_INFINITE,
+        SYS_rt_sigaction, SYSCALLS_INFINITE,
         SYSCALLS_END
 };
 
