@@ -236,6 +236,7 @@ static int SC_KOTLIN[512] = {
   SYS_socket,           4,
   SYS_connect,          4,
   SYS_access,           SYSCALLS_INFINITE,
+  SYS_gettimeofday,	SYSCALLS_INFINITE,
   SYSCALLS_END
 };
 
@@ -486,6 +487,7 @@ static int SC_KOTLIN[512] = {
         SYS_rt_sigaction, SYSCALLS_INFINITE,
         SYS_socket, 4,
         SYS_connect, 4,
+	SYS_gettimeofday,SYSCALLS_INFINITE,
         SYS_access, SYSCALLS_INFINITE,
         SYSCALLS_END
 };
