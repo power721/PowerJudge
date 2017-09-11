@@ -22,7 +22,7 @@
 const char *CP_C11[] = {"gcc", "Main.c", "-fno-asm", "-lm", "-static", "-Wall",
                       "-std=gnu11", "-O4", "-pipe", "-march=native", "-DONLINE_JUDGE", "-o", "Main", NULL};
 const char *CP_C99[] = {"gcc", "Main.c", "-fno-asm", "-lm", "-static", "-Wall",
-                      "-std=gnu98", "-O4", "-pipe", "-march=native", "-DONLINE_JUDGE", "-o", "Main", NULL};
+                      "-std=gnu99", "-O4", "-pipe", "-march=native", "-DONLINE_JUDGE", "-o", "Main", NULL};
 const char *CP_CC11[] = {"g++", "Main.cc", "-fno-asm", "-lm", "-static", "-Wall",
                        "-std=gnu++11", "-O4", "-pipe", "-march=native", "-DONLINE_JUDGE", "-o", "Main", NULL};
 const char *CP_CC14[] = {"g++", "Main.cc", "-fno-asm", "-lm", "-static", "-Wall",
