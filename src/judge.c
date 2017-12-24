@@ -6,6 +6,7 @@
 
 int main(int argc, char *argv[], char *envp[]) {
   if (nice(10) == -1) {  // increase nice value(decrease pripority)
+    puts("nice!");
     FM_LOG_WARNING("increase nice value failed: %s", strerror(errno));
   }
 
@@ -630,7 +631,7 @@ bool judge(const char *input_file,
   }
 
   oj_solution.time_usage += (rused.ru_utime.tv_sec * 1000 + rused.ru_utime.tv_usec / 1000);
-  oj_solution.time_usage += (rused.ru_stime.tv_sec * 1000 + rused.ru_stime.tv_usec / 1000);
+
   if (oj_solution.time_usage > oj_solution.time_limit) {
     oj_solution.result = OJ_TLE;
     FM_LOG_TRACE("Time Limit Exceeded");
