@@ -6,7 +6,6 @@
 
 int main(int argc, char *argv[], char *envp[]) {
   if (nice(10) == -1) {  // increase nice value(decrease pripority)
-    puts("nice!");
     FM_LOG_WARNING("increase nice value failed: %s", strerror(errno));
   }
 
