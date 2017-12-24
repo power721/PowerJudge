@@ -126,8 +126,8 @@ int main(int argc, char *argv[], char *envp[]) {
     t.detach();
   }
   FM_LOG_NOTICE("thread count: %d", oj_config.thread_num);
-  
-  thread(SendWork).detach();  
+
+  thread(SendWork).detach();
 
   while (isRunning) {
     int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
@@ -419,6 +419,9 @@ void update_result(oj_solution_t &oj_solution) {
     p = buffer;
   } else if (oj_solution.result == OJ_SE || oj_solution.result == OJ_RF) {
     snprintf(buffer, BUFF_SIZE, "%s/%s/error.txt", oj_solution.work_dir, oj_solution.sid);
+    p = buffer;
+  } else if (oj_solution.result == OJ_WA || oj_solution.result == OJ_PE) {
+    snprintf(buffer, BUFF_SIZE, "%s/%s/diff.out", oj_solution.work_dir, oj_solution.sid);
     p = buffer;
   }
 

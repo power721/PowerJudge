@@ -370,7 +370,8 @@ void run_solution(void) {
   struct dirent **namelist;
   int num_of_test;
 
-  num_of_test = scandir(oj_solution.data_dir, &namelist, data_filter, versionsort);
+//  num_of_test = scandir(oj_solution.data_dir, &namelist, data_filter, versionsort);
+  num_of_test = scandir(oj_solution.data_dir, &namelist, data_filter, alphasort);
   if (num_of_test < 0) {
     FM_LOG_FATAL("scan data directory failed: %s", strerror(errno));
     exit(EXIT_PRE_JUDGE_DAA);
