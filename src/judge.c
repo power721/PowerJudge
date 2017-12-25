@@ -637,7 +637,7 @@ bool judge(const char *input_file,
     FM_LOG_TRACE("Time Limit Exceeded");
   }
 
-  if (oj_solution.result != OJ_AC && oj_solution.result != OJ_PE) {
+  if (oj_solution.result != OJ_AC) {
     if (oj_solution.judge_type == ACM) {
       FM_LOG_NOTICE("not AC/PE, no need to continue");
     }
