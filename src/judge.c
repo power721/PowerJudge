@@ -24,8 +24,9 @@ int main(int argc, char *argv[], char *envp[]) {
     }
     FM_LOG_DEBUG("\n\x1b[31m----- Power Judge 1.0 -----\x1b[0m");
 
+    judge_time_limit += oj_solution.time_limit;
+    judge_time_limit *= get_num_of_test();
 
-    judge_time_limit += oj_solution.time_limit * get_num_of_test();
     if (EXIT_SUCCESS != malarm(ITIMER_REAL, judge_time_limit)) {
         FM_LOG_FATAL("set alarm for judge failed: %s", strerror(errno));
         exit(EXIT_VERY_FIRST);
@@ -439,7 +440,7 @@ bool judge(const char *input_file,
         // set memory, time and file size limit etc.
         set_limit(fsize);  // must after set_security_option()
 
-        FM_LOG_DEBUG("time limit: %d,, time limit addtion: %d",
+        FM_LOG_DEBUG("time limit: %d, time limit addtion: %d",
                      oj_solution.time_limit, time_limit_addtion);
 
 
@@ -747,7 +748,7 @@ void set_limit(off_t fsize) {
     struct rlimit lim;
 
     // Set CPU time limit round up, raise SIGXCPU
-    lim.rlim_max = (oj_solution.time_limit - oj_solution.time_usage + 999) / 1000 + 1;
+    lim.rlim_max = (oj_solution.time_limit + 999) / 1000 + 1;
     lim.rlim_cur = lim.rlim_max;
     if (setrlimit(RLIMIT_CPU, &lim) < 0) {
         FM_LOG_FATAL("setrlimit RLIMIT_CPU failed: %s", strerror(errno));

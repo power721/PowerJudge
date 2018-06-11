@@ -46,10 +46,10 @@ const char *EXEC_KT[] = {"kotlin", "-DONLINE_JUDGE=true", "MainKt", NULL};
 
 // configruation
 // judge本身的时限(ms)
-static unsigned int judge_time_limit = 15347;
+static uint64_t judge_time_limit = 15347;
 
 // 编译限制(ms)
-static unsigned int compile_time_limit = 5347;
+static uint64_t compile_time_limit = 5347;
 
 // 编译限制(MB)
 static unsigned int compile_memory_limit = 1024;
