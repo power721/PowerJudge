@@ -161,4 +161,6 @@ static bool judge(const char *input_file,
                   const char *stdout_file_executive,
                   const char *stderr_file_executive);
 
+static int get_num_of_test();
+
 #endif  // SRC_JUDGE_H_

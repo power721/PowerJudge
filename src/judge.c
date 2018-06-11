@@ -24,7 +24,8 @@ int main(int argc, char *argv[], char *envp[]) {
     }
     FM_LOG_DEBUG("\n\x1b[31m----- Power Judge 1.0 -----\x1b[0m");
 
-    judge_time_limit += oj_solution.time_limit;
+
+    judge_time_limit += oj_solution.time_limit * get_num_of_test();
     if (EXIT_SUCCESS != malarm(ITIMER_REAL, judge_time_limit)) {
         FM_LOG_FATAL("set alarm for judge failed: %s", strerror(errno));
         exit(EXIT_VERY_FIRST);
@@ -770,7 +771,7 @@ void set_limit(off_t fsize) {
     }
 
     // Output file size limit, raise SIGXFSZ
-    lim.rlim_cur = lim.rlim_max = (rlim_t) (4 * MAX_LOG_FILE_SIZE);
+    lim.rlim_cur = lim.rlim_max = (rlim_t)(4 * MAX_LOG_FILE_SIZE);
     if (setrlimit(RLIMIT_FSIZE, &lim) < 0) {
         FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed: %s", strerror(errno));
         exit(EXIT_SET_LIMIT);
@@ -1013,4 +1014,20 @@ void output_acm_result(int result, int time_usage, int memory_usage, int test) {
     FILE *fp = fopen("result.txt", "w");
     fprintf(fp, "%d %d %d %d", result, time_usage, memory_usage, test);
     fclose(fp);
+}
+
+int get_num_of_test() {
+    struct dirent **namelist;
+    int num_of_test;
+    num_of_test = scandir(oj_solution.data_dir, &namelist, data_filter, alphasort);
+    if (num_of_test < 0) {
+        FM_LOG_FATAL("scan data directory failed: %s", strerror(errno));
+        exit(EXIT_PRE_JUDGE_DAA);
+    }
+    for (int i = 0; i < num_of_test; ++i) {
+        free(namelist[i]);
+    }
+    free(namelist);
+    return num_of_test;
+
 }
