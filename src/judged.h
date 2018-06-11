@@ -7,6 +7,7 @@
 #define SRC_JUDGED_H_
 
 #include<bits/stdc++.h>
+#include <netinet/in.h>
 
 #define OJ_AC       0
 #define OJ_PE       1
@@ -96,7 +97,7 @@ uint16_t DEFAULT_THREAD_NUM = 1;
 const char *DEFAULT_CFG_FILE = "/etc/judged.conf";
 const char *PID_FILE = "/var/run/judged.pid";
 const char *LOG_FILE = "/var/log/judged.log";
-
+extern bool isRunning;
 
 void signal_handler(int signo);
 

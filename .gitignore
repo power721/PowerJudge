@@ -24,3 +24,8 @@ spj
 *.cbp
 *.layout
 *.depend
+
+cmake-build-debug/
+cmake-build-release/
+
+.idea/

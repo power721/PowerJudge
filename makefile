@@ -1,6 +1,6 @@
 LD=g++
 CXX=g++
-CXXFLAGS=-g -Wall -O2 -std=c++11 -DBIG_JOINS=1 -fno-strict-aliasing -DNDEBUG
+CXXFLAGS=-Wall -O2 -std=c++11 -DBIG_JOINS=1 -fno-strict-aliasing -DNDEBUG
 LDFLAGS=
 LIBS=-lbsd -L/usr/lib/x86_64-linux-gnu -lcurl -lm -lpthread
 TARGET=bin/powerjudge
