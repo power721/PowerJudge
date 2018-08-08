@@ -91,6 +91,7 @@ void parse_arguments(int argc, char *argv[]) {
                 break;
             case 'c':  // Contest ID
                 oj_solution.cid = atoi(optarg);
+                break;
             default:
                 fprintf(stderr, "unknown option provided: -%c %s\n", opt, optarg);
                 exit(EXIT_BAD_PARAM);
