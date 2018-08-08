@@ -1,11 +1,13 @@
+INC=-I/usr/include/mysql
 LD=g++
 CXX=g++
-CXXFLAGS=-Wall -O2 -std=c++11 -DBIG_JOINS=1 -fno-strict-aliasing -DNDEBUG
+CFLAGS=${INC}
+CXXFLAGS=${INC} -Wall -O2 -std=c++11 -DBIG_JOINS=1 -fno-strict-aliasing -DNDEBUG
 LDFLAGS=
-LIBS=-lbsd -L/usr/lib/x86_64-linux-gnu -lcurl -lm -lpthread
+LIBS=-lbsd -L/usr/lib/x86_64-linux-gnu -lcurl -lmysqlclient -lm -lpthread
 TARGET=bin/powerjudge
 OBJECTS=bin/judge.o
-TARGETD=bin/powerjudged
+TARGETD=bin/powerjcd xudged
 OBJECTSD=bin/judged.o
 
 ifdef LOG_LEVEL

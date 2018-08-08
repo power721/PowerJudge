@@ -3,6 +3,7 @@
  * PowerOJ GPLv2
  */
 #include "judge.h"
+#include <mysql.h>
 
 int main(int argc, char *argv[], char *envp[]) {
     if (nice(10) == -1) {  // increase nice value(decrease pripority)
@@ -55,7 +56,7 @@ void parse_arguments(int argc, char *argv[]) {
     int opt;
     extern char *optarg;
 
-    while ((opt = getopt(argc, argv, "s:p:t:m:l:w:d:D:j:")) != -1) {
+    while ((opt = getopt(argc, argv, "s:p:t:m:l:w:d:D:j:c:")) != -1) {
         switch (opt) {
             case 's':  // Solution ID
                 oj_solution.sid = atoi(optarg);
@@ -88,6 +89,8 @@ void parse_arguments(int argc, char *argv[]) {
                     exit(EXIT_BAD_PARAM);
                 }
                 break;
+            case 'c':  // Contest ID
+                oj_solution.cid = atoi(optarg);
             default:
                 fprintf(stderr, "unknown option provided: -%c %s\n", opt, optarg);
                 exit(EXIT_BAD_PARAM);
@@ -383,10 +386,40 @@ void run_solution(void) {
     char output_file_std[PATH_SIZE];
     char stdout_file_executive[PATH_SIZE];
     char stderr_file_executive[PATH_SIZE];
+
+    MYSQL mysql;
+    mysql_init(&mysql);
+    int value = 1;
+    bool mysqlOK = true;
+    mysql_options(&mysql, MYSQL_OPT_RECONNECT, (char *) &value);
+    if (!mysql_real_connect(&mysql, oj_config.db_host, oj_config.db_user, oj_config.db_password, oj_config.db_database,
+                            oj_config.db_port, NULL, 0)) {
+        FM_LOG_FATAL("connect mysql fail!");
+        mysqlOK = false;
+    }
+
+    mysql_close(&mysql);
+    mysql_library_end();
+
     snprintf(stderr_file_executive, PATH_SIZE, "%s/stderr_executive.txt", oj_solution.work_dir);
 
     FM_LOG_DEBUG("start run solution (%d cases)", num_of_test);
+
+    read_config(DEFAULT_CFG_FILE);
+
+
     for (int i = 0; i < num_of_test; ++i) {
+        if (mysqlOK) {
+            if (oj_solution.cid > 0) {
+                char buf[1024];
+                sprintf(buf, "update contest_solution set test=%d where sid=%d", i + 1, oj_solution.sid);
+                mysql_query(&mysql, buf);
+            } else {
+                char buf[1024];
+                sprintf(buf, "update solution set test=%d where sid=%d", i + 1, oj_solution.sid);
+                mysql_query(&mysql, buf);
+            }
+        }
         prepare_files(namelist[i]->d_name, input_file, output_file_std, stdout_file_executive);
 
         FM_LOG_TRACE("run case: %d", i + 1);
@@ -772,7 +805,7 @@ void set_limit(off_t fsize) {
     }
 
     // Output file size limit, raise SIGXFSZ
-    lim.rlim_cur = lim.rlim_max = (rlim_t)(4 * MAX_LOG_FILE_SIZE);
+    lim.rlim_cur = lim.rlim_max = (rlim_t) (4 * MAX_LOG_FILE_SIZE);
     if (setrlimit(RLIMIT_FSIZE, &lim) < 0) {
         FM_LOG_FATAL("setrlimit RLIMIT_FSIZE failed: %s", strerror(errno));
         exit(EXIT_SET_LIMIT);
@@ -787,7 +820,7 @@ void set_security_option(void) {
 #ifdef FAST_JUDGE
         && oj_solution.lang != LANG_PYTHON3 && oj_solution.lang != LANG_PYTHON27
 #endif
-        ) {
+            ) {
         char cwd[PATH_SIZE];
         char *tmp = getcwd(cwd, PATH_SIZE - 1);
         if (tmp == NULL) {
@@ -1031,4 +1064,88 @@ int get_num_of_test() {
     free(namelist);
     return num_of_test;
 
+}
+
+size_t split(char *line, char **key, char **value) {
+    int index = 0;
+    size_t val_len = 0;
+    for (char *p = line; *p; p++, index++) {
+        if (*p == '=') {
+            line[index] = '\0';
+            *key = trim(line);
+            *value = trim(line + index + 1);
+            val_len = strlen(*value);
+            break;
+        }
+    }
+
+    return val_len;
+}
+
+void read_config(const char *cfg_file) {
+    FM_LOG_NOTICE("config file: %s", cfg_file);
+    FILE *fp = fopen(cfg_file, "r");
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    if (fp == NULL) {
+        fatal_error("cannot open configuration file");
+    }
+
+    char *key;
+    char *value;
+    while ((read = getline(&line, &len, fp)) != -1) {
+        if (read > 0) {
+            size_t val_len = split(line, &key, &value);
+            if (val_len == 0) {
+                continue;
+            }
+
+            if (strcmp("ip", key) == 0) {
+                strncpy(oj_config.ip, value, val_len);
+            } else if (strcmp("port", key) == 0) {
+                oj_config.port = (uint16_t) atoi(value);
+            } else if (strcmp("thread", key) == 0) {
+                oj_config.thread_num = (uint16_t) atoi(value);
+            } else if (strcmp("backlog", key) == 0) {
+                oj_config.backlog = atoi(value);
+            } else if (strcmp("password", key) == 0) {
+                strncpy(oj_config.password, value, val_len);
+            } else if (strcmp("data.dir", key) == 0) {
+                strncpy(oj_config.data_dir, value, val_len);
+            } else if (strcmp("temp.dir", key) == 0) {
+                strncpy(oj_config.temp_dir, value, val_len);
+            } else if (strcmp("db.host", key) == 0) {
+                strncpy(oj_config.db_host, value, val_len);
+            } else if (strcmp("db.port", key) == 0) {
+                oj_config.db_port = (uint16_t) atoi(value);
+            } else if (strcmp("db.user", key) == 0) {
+                strncpy(oj_config.db_user, value, val_len);
+            } else if (strcmp("db.password", key) == 0) {
+                strncpy(oj_config.db_password, value, val_len);
+            } else if (strcmp("db.database", key) == 0) {
+                strncpy(oj_config.db_database, value, val_len);
+            } else if (strcmp("api.url", key) == 0) {
+                strncpy(oj_config.api_url, value, val_len);
+            } else if (strcmp("user.agent", key) == 0) {
+                strncpy(oj_config.user_agent, value, val_len);
+            }
+        }
+    }
+
+    if (oj_config.port <= 0) {
+        oj_config.port = DEFAULT_PORT;
+    }
+    if (oj_config.backlog <= 0) {
+        oj_config.backlog = DEFAULT_BACKLOG;
+    }
+    if (oj_config.thread_num <= 0) {
+        oj_config.thread_num = DEFAULT_THREAD_NUM;
+    }
+
+    fclose(fp);
+    if (line) {
+        free(line);
+    }
 }

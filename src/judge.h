@@ -87,6 +87,7 @@ static char work_dir_root[PATH_SIZE] = ".";
 static char data_dir_root[PATH_SIZE];
 
 struct oj_solution_t {
+    int cid;           // contest id
     int sid;           // solution id
     int pid;           // problem id
     int lang;          // language id
@@ -163,4 +164,32 @@ static bool judge(const char *input_file,
 
 static int get_num_of_test();
 
+
+struct oj_config_t {
+    char ip[20];
+    uint16_t port;
+    int backlog;
+
+    char password[256];
+    char data_dir[PATH_SIZE];
+    char temp_dir[PATH_SIZE];
+
+    char db_host[256];
+    uint16_t db_port;
+    char db_user[256];
+    char db_password[256];
+    char db_database[256];
+    char api_url[256];
+    char user_agent[256];
+    uint16_t thread_num;
+} oj_config;
+
+const char *DEFAULT_CFG_FILE = "/etc/judged.conf";
+uint16_t DEFAULT_PORT = 55555;
+int MAX_UPLOAD_FILE_SIZE = 4096;
+uint16_t DEFAULT_THREAD_NUM = 1;
+int DEFAULT_BACKLOG = 100;
+
+size_t split(char *line, char **key, char **value);
+void read_config(const char *cfg_file);
 #endif  // SRC_JUDGE_H_

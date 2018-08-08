@@ -225,6 +225,7 @@ void run(oj_solution_t &oj_solution) {
               "-m", oj_solution.memory_limit,
               "-w", oj_solution.work_dir,
               "-D", oj_config.data_dir,
+              "-c", oj_solution.cid,
               NULL);
         stderr = freopen(stderr_file, "a+", stderr);
         FM_LOG_FATAL("exec error: %s", strerror(errno));
