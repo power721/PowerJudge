@@ -7,7 +7,7 @@ LDFLAGS=
 LIBS=-lbsd -L/usr/lib/x86_64-linux-gnu -lcurl -lmysqlclient -lm -lpthread
 TARGET=bin/powerjudge
 OBJECTS=bin/judge.o
-TARGETD=bin/powerjcd xudged
+TARGETD=bin/powerjudged
 OBJECTSD=bin/judged.o
 
 ifdef LOG_LEVEL
