@@ -1,10 +1,9 @@
 INC=-I/usr/include/mysql
 LD=g++
 CXX=g++
-CFLAGS=${INC}
-CXXFLAGS=${INC} -Wall -O2 -std=c++11 -DBIG_JOINS=1 -fno-strict-aliasing -DNDEBUG
+CXXFLAGS=$(INC) -Wall -O2 -std=c++11 -DBIG_JOINS=1 -fno-strict-aliasing -DNDEBUG
 LDFLAGS=
-LIBS=-lbsd -L/usr/lib/x86_64-linux-gnu -lcurl -lmysqlclient -lm -lpthread
+LIBS=-lbsd -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lcurl -lm -lpthread
 TARGET=bin/powerjudge
 OBJECTS=bin/judge.o
 TARGETD=bin/powerjudged
@@ -21,7 +20,7 @@ endif
 .PHONY: test check install sim clean
 all: $(TARGET) $(TARGETD)
 $(TARGET): $(OBJECTS)
-	$(LD) -o $@ $(LDFLAGS) $(OBJECTS)
+	$(LD) -o $@ $(LDFLAGS) $(OBJECTS) $(LIBS)
 
 $(TARGETD): $(OBJECTSD)
 	$(LD) -o $@ $(LDFLAGS) $(OBJECTSD) $(LIBS)
