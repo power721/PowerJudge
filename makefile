@@ -27,7 +27,7 @@ $(TARGETD): $(OBJECTSD)
 	sudo chown root:root $(TARGETD)
 	sudo chmod 4755 $(TARGETD)
 
-bin/%.o: src/%.c src/*.h
+bin/%.o: src/judge.cpp src/*.h
 	$(CXX) -o $@ $(CXXFLAGS) -c $<
 
 bin/judged.o: src/judged.cpp src/*.h

@@ -392,6 +392,7 @@ void run_solution(void) {
     mysql_init(&mysql);
     int value = 1;
     bool mysqlOK = true;
+    read_config(DEFAULT_CFG_FILE);
     mysql_options(&mysql, MYSQL_OPT_RECONNECT, (char *) &value);
     if (!mysql_real_connect(&mysql, oj_config.db_host, oj_config.db_user, oj_config.db_password, oj_config.db_database,
                             oj_config.db_port, NULL, 0)) {
@@ -399,15 +400,10 @@ void run_solution(void) {
         mysqlOK = false;
     }
 
-    mysql_close(&mysql);
-    mysql_library_end();
 
     snprintf(stderr_file_executive, PATH_SIZE, "%s/stderr_executive.txt", oj_solution.work_dir);
 
     FM_LOG_DEBUG("start run solution (%d cases)", num_of_test);
-
-    read_config(DEFAULT_CFG_FILE);
-
 
     for (int i = 0; i < num_of_test; ++i) {
         if (mysqlOK) {
@@ -435,7 +431,8 @@ void run_solution(void) {
             break;
         }
     }
-
+    mysql_close(&mysql);
+    mysql_library_end();
     for (int i = 0; i < num_of_test; ++i) {
         free(namelist[i]);
     }
