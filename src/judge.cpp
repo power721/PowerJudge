@@ -1,9 +1,25 @@
-/*
- * Copyright 2014 power <power0721#gmail.com>
- * PowerOJ GPLv2
- */
+//
+// Created by w703710691d on 18-8-24.
+//
+
+#include <unistd.h>
+#include <cerrno>
+#include <cstring>
+#include <cstdlib>
+#include <sys/time.h>
+#include <csignal>
+#include <wait.h>
+#include <sys/resource.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <sys/user.h>
+#include <sys/ptrace.h>
+#include <algorithm>
 #include "judge.h"
-#include <mysql.h>
+#include "log.h"
+#include "misc.h"
+#include "syscalls.h"
+#include "db_updater.h"
 
 int main(int argc, char *argv[], char *envp[]) {
     if (nice(10) == -1) {  // increase nice value(decrease pripority)
@@ -37,15 +53,15 @@ int main(int argc, char *argv[], char *envp[]) {
         FM_LOG_FATAL("cannot handle SIGALRM");
         exit(EXIT_VERY_FIRST);
     }
-
+    init_connet();
     compile();
 
     run_solution();
-
+    close_connet();
     return 0;
 }
 
-void init(void) {
+void init() {
     oj_solution.result = OJ_AC;  // this is the result of empty data directory
     oj_solution.time_limit = 1000;
     oj_solution.memory_limit = 65536;
@@ -54,7 +70,6 @@ void init(void) {
 
 void parse_arguments(int argc, char *argv[]) {
     int opt;
-    extern char *optarg;
 
     while ((opt = getopt(argc, argv, "s:p:t:m:l:w:d:D:j:c:")) != -1) {
         switch (opt) {
@@ -78,13 +93,13 @@ void parse_arguments(int argc, char *argv[]) {
                 break;
             case 'w':
             case 'd':  // Work directory
-                if (realpath(optarg, work_dir_root) == NULL) {
+                if (realpath(optarg, work_dir_root) == nullptr) {
                     fprintf(stderr, "resolve work dir failed:%s\n", strerror(errno));
                     exit(EXIT_BAD_PARAM);
                 }
                 break;
             case 'D':  // Data directory
-                if (realpath(optarg, data_dir_root) == NULL) {
+                if (realpath(optarg, data_dir_root) == nullptr) {
                     fprintf(stderr, "resolve data dir failed: %s\n", strerror(errno));
                     exit(EXIT_BAD_PARAM);
                 }
@@ -134,7 +149,7 @@ void parse_arguments(int argc, char *argv[]) {
     print_solution();
 }
 
-void check_arguments(void) {
+void check_arguments() {
     if (oj_solution.sid == 0) {
         FM_LOG_FATAL("Miss parameter: solution id");
         exit(EXIT_MISS_PARAM);
@@ -143,7 +158,7 @@ void check_arguments(void) {
         FM_LOG_FATAL("Miss parameter: problem id");
         exit(EXIT_MISS_PARAM);
     }
-    if (data_dir_root == NULL) {
+    if (strlen(data_dir_root) == 0) {
         FM_LOG_FATAL("Miss parameter: data directory");
         exit(EXIT_MISS_PARAM);
     }
@@ -167,7 +182,7 @@ void check_arguments(void) {
     }
 }
 
-void print_solution(void) {
+void print_solution() {
     FM_LOG_DEBUG("-- Solution Information --");
     FM_LOG_MONITOR("solution id %d", oj_solution.sid);
     FM_LOG_TRACE("problem id    %d", oj_solution.pid);
@@ -195,7 +210,8 @@ void timeout_hander(int signo) {
  * #include <../../../etc/passwd>
  * egrep '^\s*#include\s*[<"][./].*[>"]' Main.cc
  */
-void compile(void) {
+void compile() {
+    update_solution_status(oj_solution.cid, oj_solution.sid, OJ_COM, 0);
     char stdout_compiler[PATH_SIZE];
     char stderr_compiler[PATH_SIZE];
     snprintf(stdout_compiler, PATH_SIZE, "%s/stdout_compiler.txt", oj_solution.work_dir);
@@ -214,7 +230,7 @@ void compile(void) {
 
         stdout = freopen(stdout_compiler, "w", stdout);
         stderr = freopen(stderr_compiler, "w", stderr);
-        if (stdout == NULL || stderr == NULL) {
+        if (stdout == nullptr || stderr == nullptr) {
             FM_LOG_FATAL("error freopen: stdout(%p), stderr(%p)", stdout, stderr);
             exit(EXIT_COMPILE_IO);
         }
@@ -326,13 +342,12 @@ void compile(void) {
     }
 }
 
-void set_compile_limit(void) {
+void set_compile_limit() {
     if (oj_solution.lang == LANG_JAVA || oj_solution.lang == LANG_PYTHON27 || oj_solution.lang == LANG_PYTHON3 ||
         oj_solution.lang == LANG_KOTLIN)
         return;
 
-    struct rlimit lim;
-
+    rlimit lim{};
     lim.rlim_cur = lim.rlim_max = compile_time_limit / 1000;
     if (setrlimit(RLIMIT_CPU, &lim) < 0) {
         FM_LOG_FATAL("setrlimit RLIMIT_CPU failed: %s", strerror(errno));
@@ -359,7 +374,7 @@ void set_compile_limit(void) {
     FM_LOG_DEBUG("set compile limit ok");
 }
 
-void run_solution(void) {
+void run_solution() {
     FM_LOG_DEBUG("run_solution");
 #ifndef FAST_JUDGE
     if (oj_solution.lang == LANG_PYTHON27) {
@@ -388,35 +403,12 @@ void run_solution(void) {
     char stdout_file_executive[PATH_SIZE];
     char stderr_file_executive[PATH_SIZE];
 
-    MYSQL mysql;
-    mysql_init(&mysql);
-    int value = 1;
-    bool mysqlOK = true;
-    read_config(DEFAULT_CFG_FILE);
-    mysql_options(&mysql, MYSQL_OPT_RECONNECT, (char *) &value);
-    if (!mysql_real_connect(&mysql, oj_config.db_host, oj_config.db_user, oj_config.db_password, oj_config.db_database,
-                            oj_config.db_port, NULL, 0)) {
-        FM_LOG_FATAL("connect mysql fail!");
-        mysqlOK = false;
-    }
-
-
     snprintf(stderr_file_executive, PATH_SIZE, "%s/stderr_executive.txt", oj_solution.work_dir);
-
     FM_LOG_DEBUG("start run solution (%d cases)", num_of_test);
 
     for (int i = 0; i < num_of_test; ++i) {
-        if (mysqlOK) {
-            if (oj_solution.cid > 0) {
-                char buf[1024];
-                sprintf(buf, "update contest_solution set test=%d where sid=%d", i + 1, oj_solution.sid);
-                mysql_query(&mysql, buf);
-            } else {
-                char buf[1024];
-                sprintf(buf, "update solution set test=%d where sid=%d", i + 1, oj_solution.sid);
-                mysql_query(&mysql, buf);
-            }
-        }
+        update_solution_status(oj_solution.cid, oj_solution.sid, OJ_RUN, i + 1);
+
         prepare_files(namelist[i]->d_name, input_file, output_file_std, stdout_file_executive);
 
         FM_LOG_TRACE("run case: %d", i + 1);
@@ -431,8 +423,7 @@ void run_solution(void) {
             break;
         }
     }
-    mysql_close(&mysql);
-    mysql_library_end();
+
     for (int i = 0; i < num_of_test; ++i) {
         free(namelist[i]);
     }
@@ -451,7 +442,7 @@ bool judge(const char *input_file,
            const char *output_file_std,
            const char *stdout_file_executive,
            const char *stderr_file_executive) {
-    struct rusage rused;
+    rusage rused{};
     pid_t executor = fork();  // create a child process for executor
 
     if (executor < 0) {
@@ -520,7 +511,7 @@ bool judge(const char *input_file,
     } else {
         // Judger
         int status = 0;
-        struct user_regs_struct regs;
+        user_regs_struct regs{};
         stderr = freopen("error.txt", "a+", stderr);
 
         init_syscalls(oj_solution.lang);
@@ -540,9 +531,7 @@ bool judge(const char *input_file,
                     int result;
                     if (oj_solution.spj) {
                         // use SPJ
-                        result = oj_compare_output_spj(input_file,
-                                                       output_file_std,
-                                                       stdout_file_executive,
+                        result = oj_compare_output_spj(input_file, output_file_std, stdout_file_executive,
                                                        oj_solution.spj_exe_file);
                     } else {
                         // compare file
@@ -601,7 +590,7 @@ bool judge(const char *input_file,
                     default:
                         oj_solution.result = OJ_RE;
                         FILE *fp = fopen(stderr_file_executive, "a+");
-                        if (fp == NULL) {
+                        if (fp == nullptr) {
                             fprintf(stderr, "%s\n", strsignal(signo));
                             FM_LOG_WARNING("Runtime Error: %s", strsignal(signo));
                         } else {
@@ -614,7 +603,7 @@ bool judge(const char *input_file,
                 break;
             }  // end of  "if (WIFSIGNALED(status) ...)"
 
-            oj_solution.memory_usage = max(oj_solution.memory_usage, rused.ru_maxrss);
+            oj_solution.memory_usage = std::max(oj_solution.memory_usage, (unsigned long) rused.ru_maxrss);
             // TODO(power): check why memory exceed too much
             if (oj_solution.memory_usage > oj_solution.memory_limit) {
                 oj_solution.result = OJ_MLE;
@@ -630,9 +619,9 @@ bool judge(const char *input_file,
             }
             int syscall_id = 0;
 #ifdef __i386__
-            syscall_id = regs.orig_eax;
+            syscall_id = (int)regs.orig_eax;
 #else
-            syscall_id = regs.orig_rax;
+            syscall_id = (int) regs.orig_rax;
 #endif
             if (syscall_id > 0 && !is_valid_syscall(syscall_id)) {
                 oj_solution.result = OJ_RF;
@@ -649,14 +638,15 @@ bool judge(const char *input_file,
         }  // end of while
     }  // end of fork for judge process
 
-    oj_solution.memory_usage = max(oj_solution.memory_usage, rused.ru_maxrss);
+    oj_solution.memory_usage = std::max(oj_solution.memory_usage, (unsigned long) rused.ru_maxrss);
     if (oj_solution.memory_usage > oj_solution.memory_limit) {
         oj_solution.result = OJ_MLE;
         FM_LOG_NOTICE("memory limit exceeded: %d (fault: %d * %d)",
                       oj_solution.memory_usage, rused.ru_minflt, page_size);
     }
 
-    oj_solution.time_usage = max(oj_solution.time_usage, rused.ru_utime.tv_sec * 1000 + rused.ru_utime.tv_usec / 1000);
+    oj_solution.time_usage = std::max(oj_solution.time_usage,
+                                      (unsigned long) rused.ru_utime.tv_sec * 1000 + rused.ru_utime.tv_usec / 1000);
 
     if (oj_solution.time_usage > oj_solution.time_limit) {
         oj_solution.result = OJ_TLE;
@@ -683,7 +673,7 @@ bool judge(const char *input_file,
     return true;
 }
 
-void check_spj(void) {
+void check_spj() {
     snprintf(oj_solution.spj_exe_file, PATH_SIZE, "%s/spj", oj_solution.data_dir);
     if (access(oj_solution.spj_exe_file, F_OK) != -1) {  // spj file exists
         oj_solution.spj = true;
@@ -710,7 +700,7 @@ bool check_spj_source(const char *name) {
 }
 
 void compile_spj(const char *source, char *target) {
-    int status = execute_cmd("g++ -lm -static -w -std=c++11 -O2 -o %s %s", target, source);
+    int status = execute_cmd("g++ -lm -static -w -std=gnu++17 -O4 -o %s %s", target, source);
     if (status == -1) {
         FM_LOG_WARNING("compile spj failed: %s", strerror(errno));
     }
@@ -736,10 +726,7 @@ int data_filter(const struct dirent *dirp) {
     return 0;
 }
 
-void prepare_files(const char *filename,
-                   char *infile,
-                   char *outfile,
-                   char *userfile) {
+void prepare_files(const char *filename, char *infile, char *outfile, char *userfile) {
     size_t namelen = strlen(filename) - 3;
     char fname[PATH_SIZE];
     strncpy(fname, filename, namelen);
@@ -760,15 +747,13 @@ void prepare_files(const char *filename,
     FM_LOG_DEBUG("user output file: %s", userfile);
 }
 
-void io_redirect(const char *input_file,
-                 const char *stdout_file,
-                 const char *stderr_file) {
+void io_redirect(const char *input_file, const char *stdout_file, const char *stderr_file) {
     // io_redirect
     stdin = freopen(input_file, "r", stdin);
     stdout = freopen(stdout_file, "w", stdout);
     stderr = freopen(stderr_file, "a+", stderr);
 
-    if (stdin == NULL || stdout == NULL || stderr == NULL) {
+    if (stdin == nullptr || stdout == nullptr || stderr == nullptr) {
         FM_LOG_FATAL("error freopen: stdin(%p) stdout(%p), stderr(%p)", stdin, stdout, stderr);
         exit(EXIT_PRE_JUDGE);
     }
@@ -776,7 +761,7 @@ void io_redirect(const char *input_file,
 }
 
 void set_limit(off_t fsize) {
-    struct rlimit lim;
+    rlimit lim{};
 
     // Set CPU time limit round up, raise SIGXCPU
     lim.rlim_max = (oj_solution.time_limit + 999) / 1000 + 1;
@@ -813,7 +798,7 @@ void set_limit(off_t fsize) {
     FM_LOG_TRACE("set execute limit ok");
 }
 
-void set_security_option(void) {
+void set_security_option() {
     if (oj_solution.lang != LANG_JAVA && oj_solution.lang != LANG_KOTLIN
 #ifdef FAST_JUDGE
         && oj_solution.lang != LANG_PYTHON3 && oj_solution.lang != LANG_PYTHON27
@@ -821,7 +806,7 @@ void set_security_option(void) {
             ) {
         char cwd[PATH_SIZE];
         char *tmp = getcwd(cwd, PATH_SIZE - 1);
-        if (tmp == NULL) {
+        if (tmp == nullptr) {
             FM_LOG_FATAL("getcwd failed: %s", strerror(errno));
             exit(EXIT_SET_SECURITY);
         }
@@ -894,13 +879,13 @@ int oj_compare_output_spj(const char *file_in,    // std input file
 int oj_compare_output(const char *file_out, const char *file_user) {
     FM_LOG_TRACE("start compare");
     FILE *fp_std = fopen(file_out, "r");
-    if (fp_std == NULL) {
+    if (fp_std == nullptr) {
         FM_LOG_FATAL("open standard output file (%s) failed: %s", file_out, strerror(errno));
         exit(EXIT_COMPARE);
     }
 
     FILE *fp_exe = fopen(file_user, "r");
-    if (fp_exe == NULL) {
+    if (fp_exe == nullptr) {
         FM_LOG_FATAL("open user output file (%s) failed: %s", file_user, strerror(errno));
         exit(EXIT_COMPARE);
     }
@@ -1038,13 +1023,13 @@ int fix_gcc_result(const char *stderr_compiler) {
 }
 
 // Output result
-void output_acm_result(int result, int time_usage, int memory_usage, int test) {
+void output_acm_result(int result, long time_usage, long memory_usage, int test) {
     FM_LOG_MONITOR("result(%d): %s, time: %d ms, memory: %d KB",
                    result, result_str[result], time_usage, memory_usage);
     // this is judge result for Web app
-    printf("%d %d %d %d\n", result, time_usage, memory_usage, test);
+    printf("%d %ld %ld %d\n", result, time_usage, memory_usage, test);
     FILE *fp = fopen("result.txt", "w");
-    fprintf(fp, "%d %d %d %d", result, time_usage, memory_usage, test);
+    fprintf(fp, "%d %ld %ld %d", result, time_usage, memory_usage, test);
     fclose(fp);
 }
 
@@ -1062,88 +1047,4 @@ int get_num_of_test() {
     free(namelist);
     return num_of_test;
 
-}
-
-size_t split(char *line, char **key, char **value) {
-    int index = 0;
-    size_t val_len = 0;
-    for (char *p = line; *p; p++, index++) {
-        if (*p == '=') {
-            line[index] = '\0';
-            *key = trim(line);
-            *value = trim(line + index + 1);
-            val_len = strlen(*value);
-            break;
-        }
-    }
-
-    return val_len;
-}
-
-void read_config(const char *cfg_file) {
-    FM_LOG_NOTICE("config file: %s", cfg_file);
-    FILE *fp = fopen(cfg_file, "r");
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
-
-    if (fp == NULL) {
-        fatal_error("cannot open configuration file");
-    }
-
-    char *key;
-    char *value;
-    while ((read = getline(&line, &len, fp)) != -1) {
-        if (read > 0) {
-            size_t val_len = split(line, &key, &value);
-            if (val_len == 0) {
-                continue;
-            }
-
-            if (strcmp("ip", key) == 0) {
-                strncpy(oj_config.ip, value, val_len);
-            } else if (strcmp("port", key) == 0) {
-                oj_config.port = (uint16_t) atoi(value);
-            } else if (strcmp("thread", key) == 0) {
-                oj_config.thread_num = (uint16_t) atoi(value);
-            } else if (strcmp("backlog", key) == 0) {
-                oj_config.backlog = atoi(value);
-            } else if (strcmp("password", key) == 0) {
-                strncpy(oj_config.password, value, val_len);
-            } else if (strcmp("data.dir", key) == 0) {
-                strncpy(oj_config.data_dir, value, val_len);
-            } else if (strcmp("temp.dir", key) == 0) {
-                strncpy(oj_config.temp_dir, value, val_len);
-            } else if (strcmp("db.host", key) == 0) {
-                strncpy(oj_config.db_host, value, val_len);
-            } else if (strcmp("db.port", key) == 0) {
-                oj_config.db_port = (uint16_t) atoi(value);
-            } else if (strcmp("db.user", key) == 0) {
-                strncpy(oj_config.db_user, value, val_len);
-            } else if (strcmp("db.password", key) == 0) {
-                strncpy(oj_config.db_password, value, val_len);
-            } else if (strcmp("db.database", key) == 0) {
-                strncpy(oj_config.db_database, value, val_len);
-            } else if (strcmp("api.url", key) == 0) {
-                strncpy(oj_config.api_url, value, val_len);
-            } else if (strcmp("user.agent", key) == 0) {
-                strncpy(oj_config.user_agent, value, val_len);
-            }
-        }
-    }
-
-    if (oj_config.port <= 0) {
-        oj_config.port = DEFAULT_PORT;
-    }
-    if (oj_config.backlog <= 0) {
-        oj_config.backlog = DEFAULT_BACKLOG;
-    }
-    if (oj_config.thread_num <= 0) {
-        oj_config.thread_num = DEFAULT_THREAD_NUM;
-    }
-
-    fclose(fp);
-    if (line) {
-        free(line);
-    }
 }

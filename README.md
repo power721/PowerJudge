@@ -4,7 +4,7 @@ Judge Core for PowerOJ on Linux platform.
 Based on UESTC and HUST judge core.
 
 ##Features##
-auto get data files from data directory and sort by version.
+auto get data files from data directory and sort by name.
 
 set process limit for compiler, executor and spj.
 

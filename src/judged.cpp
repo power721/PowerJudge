@@ -1,30 +1,32 @@
+//
+// Created by w703710691d on 18-8-27.
+//
 /*
  * Copyright 2015 power <power0721#gmail.com>
  * PowerOJ GPLv2
  * modify to run multi-thread 2016 w703710691d <w703710691d#163.com>
  */
-#include<bits/stdc++.h>
-#include "log.h"
-#include "judged.h"
-#include <sys/socket.h>
+#include <unistd.h>
 #include <netinet/in.h>
+#include <strings.h>
 #include <arpa/inet.h>
 #include <bsd/libutil.h>
+#include <csignal>
+#include <thread>
+#include <cstring>
 #include <curl/curl.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/file.h>
-#include <sys/stat.h>
-#include "thread_safe_queue.h"
-
-using namespace std;
+#include <wait.h>
+#include "judged.h"
+#include "misc.h"
+#include "log.h"
+#include "thread_safe_queue.hpp"
+#include "read_config.h"
 
 struct pidfh *pfh;
 bool isRunning = true;
 
 ThreadSafeQueue<oj_solution_t> ProcessQueue;
-ThreadSafeQueue<pair<int, oj_solution_t> > SendQueue;
+ThreadSafeQueue<std::pair<int, oj_solution_t> > SendQueue;
 
 void ThreadWork() {
     while (isRunning) {
@@ -37,7 +39,7 @@ void ThreadWork() {
 
 void SendWork() {
     while (isRunning) {
-        pair<int, oj_solution_t> item = SendQueue.GetFrontAndPop();
+        auto item = SendQueue.GetFrontAndPop();
         pthread_t ptid = pthread_self();
         FM_LOG_TRACE("Send thread id: %d", ptid);
         if (item.first == EXIT_OK) {
@@ -55,8 +57,8 @@ int main(int argc, char *argv[], char *envp[]) {
 
     int sockfd;
     socklen_t clilen;
-    struct sockaddr_in serv_addr;
-    struct sockaddr_in cli_addr;
+    struct sockaddr_in serv_addr{};
+    struct sockaddr_in cli_addr{};
     const char *cfg_file;
 
     if (argc > 1) {
@@ -111,23 +113,23 @@ int main(int argc, char *argv[], char *envp[]) {
 
     pidfile_write(pfh);
 
-    struct sigaction sa;
+    struct sigaction sa{};
     sa.sa_handler = signal_handler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
-    if (sigaction(SIGTERM, &sa, NULL) == -1) {   // install signal hander for timeout
+    if (sigaction(SIGTERM, &sa, nullptr) == -1) {   // install signal hander for timeout
         FM_LOG_FATAL("cannot handle SIGTERM");
         exit(EXIT_FAILURE);
     } else {
         FM_LOG_DEBUG("set signal_handler");
     }
     for (int i = 0; i < oj_config.thread_num; i++) {
-        thread t(ThreadWork);
+        std::thread t(ThreadWork);
         t.detach();
     }
     FM_LOG_NOTICE("thread count: %d", oj_config.thread_num);
 
-    thread(SendWork).detach();
+    std::thread(SendWork).detach();
 
     while (isRunning) {
         int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
@@ -174,7 +176,7 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
             return;
         }
         FM_LOG_NOTICE("Here is the message: %s(%d)", buffer, n);
-        oj_solution_t oj_solution;
+        oj_solution_t oj_solution{};
         if (parse_arguments(buffer, oj_solution) < 0) {
             FM_LOG_WARNING("Missing some parameters.");
             n = write(newsockfd, "Missing some parameters.", 24);
@@ -187,7 +189,6 @@ void work(int newsockfd, struct sockaddr_in cli_addr) {
 
             close(newsockfd);
             ProcessQueue.push(oj_solution);
-            // mysql_close(con);
             return;
         }
     } else {
@@ -214,7 +215,7 @@ void run(oj_solution_t &oj_solution) {
     pid_t pid = fork();
     if (pid < 0) {
         FM_LOG_FATAL("fork judger failed: %s", strerror(errno));
-        SendQueue.push(make_pair(EXIT_FORK_ERROR, oj_solution));
+        SendQueue.push(std::make_pair(EXIT_FORK_ERROR, oj_solution));
     } else if (pid == 0) {
         execl("/usr/local/bin/powerjudge",
               "/usr/local/bin/powerjudge",
@@ -225,11 +226,11 @@ void run(oj_solution_t &oj_solution) {
               "-m", oj_solution.memory_limit,
               "-w", oj_solution.work_dir,
               "-D", oj_config.data_dir,
-              "-c", to_string(oj_solution.cid).c_str(),
+              "-c", std::to_string(oj_solution.cid).c_str(),
               NULL);
         stderr = freopen(stderr_file, "a+", stderr);
         FM_LOG_FATAL("exec error: %s", strerror(errno));
-        SendQueue.push(make_pair(EXIT_EXEC_ERROR, oj_solution));
+        SendQueue.push(std::make_pair(EXIT_EXEC_ERROR, oj_solution));
     } else {
         int status = 0;
         FM_LOG_TRACE("process ID=%d", pid);
@@ -241,31 +242,31 @@ void run(oj_solution_t &oj_solution) {
         {
             if (EXIT_SUCCESS == WEXITSTATUS(status)) {
                 FM_LOG_DEBUG("judge succeeded");
-                SendQueue.push(make_pair(EXIT_OK, oj_solution));
+                SendQueue.push(std::make_pair(EXIT_OK, oj_solution));
             } else if (EXIT_COMPILE_ERROR == WEXITSTATUS(status)) {
                 FM_LOG_TRACE("compile error");
-                SendQueue.push(make_pair(EXIT_OK, oj_solution));
+                SendQueue.push(std::make_pair(EXIT_OK, oj_solution));
             } else if (EXIT_JUDGE == WEXITSTATUS(status)) {
                 FM_LOG_TRACE("judge error");
-                SendQueue.push(make_pair(OJ_SE, oj_solution));
+                SendQueue.push(std::make_pair(OJ_SE, oj_solution));
             } else {
                 FM_LOG_TRACE("judge error");
-                SendQueue.push(make_pair(WEXITSTATUS(status), oj_solution));
+                SendQueue.push(std::make_pair(WEXITSTATUS(status), oj_solution));
             }
         } else {
             if (WIFSIGNALED(status))    // killed by signal
             {
                 int signo = WTERMSIG(status);
                 FM_LOG_WARNING("judger killed by signal: %s", strsignal(signo));
-                SendQueue.push(make_pair(signo, oj_solution));
+                SendQueue.push(std::make_pair(signo, oj_solution));
             } else if (WIFSTOPPED(status))      // stopped by signal
             {
                 int signo = WSTOPSIG(status);
                 FM_LOG_FATAL("judger stopped by signal: %s\n", strsignal(signo));
-                SendQueue.push(make_pair(signo, oj_solution));
+                SendQueue.push(std::make_pair(signo, oj_solution));
             } else {
                 FM_LOG_FATAL("judger stopped with unknown reason, status(%d)", status);
-                SendQueue.push(make_pair(EXIT_UNKNOWN, oj_solution));
+                SendQueue.push(std::make_pair(EXIT_UNKNOWN, oj_solution));
             }
         }
     }
@@ -276,7 +277,7 @@ void check_pid() {
 
     FM_LOG_NOTICE("pid file: %s", PID_FILE);
     pfh = pidfile_open(PID_FILE, 0644, &otherpid);
-    if (pfh == NULL) {
+    if (pfh == nullptr) {
         if (errno == EEXIST) {
             FM_LOG_FATAL("Daemon already running, pid: %jd", (intmax_t) otherpid);
             exit(EXIT_FAILURE);
@@ -285,90 +286,6 @@ void check_pid() {
         /* If we cannot create pidfile from other reasons, only warn. */
         FM_LOG_WARNING("Cannot open or create pidfile");
     }
-}
-
-void read_config(const char *cfg_file) {
-    FM_LOG_NOTICE("config file: %s", cfg_file);
-    FILE *fp = fopen(cfg_file, "r");
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
-
-    if (fp == NULL) {
-        fatal_error("cannot open configuration file");
-    }
-
-    char *key;
-    char *value;
-    while ((read = getline(&line, &len, fp)) != -1) {
-        if (read > 0) {
-            size_t val_len = split(line, &key, &value);
-            if (val_len == 0) {
-                continue;
-            }
-
-            if (strcmp("ip", key) == 0) {
-                strncpy(oj_config.ip, value, val_len);
-            } else if (strcmp("port", key) == 0) {
-                oj_config.port = (uint16_t) atoi(value);
-            } else if (strcmp("thread", key) == 0) {
-                oj_config.thread_num = (uint16_t) atoi(value);
-            } else if (strcmp("backlog", key) == 0) {
-                oj_config.backlog = atoi(value);
-            } else if (strcmp("password", key) == 0) {
-                strncpy(oj_config.password, value, val_len);
-            } else if (strcmp("data.dir", key) == 0) {
-                strncpy(oj_config.data_dir, value, val_len);
-            } else if (strcmp("temp.dir", key) == 0) {
-                strncpy(oj_config.temp_dir, value, val_len);
-            } else if (strcmp("db.host", key) == 0) {
-                strncpy(oj_config.db_host, value, val_len);
-            } else if (strcmp("db.port", key) == 0) {
-                oj_config.db_port = (uint16_t) atoi(value);
-            } else if (strcmp("db.user", key) == 0) {
-                strncpy(oj_config.db_user, value, val_len);
-            } else if (strcmp("db.password", key) == 0) {
-                strncpy(oj_config.db_password, value, val_len);
-            } else if (strcmp("db.database", key) == 0) {
-                strncpy(oj_config.db_database, value, val_len);
-            } else if (strcmp("api.url", key) == 0) {
-                strncpy(oj_config.api_url, value, val_len);
-            } else if (strcmp("user.agent", key) == 0) {
-                strncpy(oj_config.user_agent, value, val_len);
-            }
-        }
-    }
-
-    if (oj_config.port <= 0) {
-        oj_config.port = DEFAULT_PORT;
-    }
-    if (oj_config.backlog <= 0) {
-        oj_config.backlog = DEFAULT_BACKLOG;
-    }
-    if (oj_config.thread_num <= 0) {
-        oj_config.thread_num = DEFAULT_THREAD_NUM;
-    }
-
-    fclose(fp);
-    if (line) {
-        free(line);
-    }
-}
-
-size_t split(char *line, char **key, char **value) {
-    int index = 0;
-    size_t val_len = 0;
-    for (char *p = line; *p; p++, index++) {
-        if (*p == '=') {
-            line[index] = '\0';
-            *key = trim(line);
-            *value = trim(line + index + 1);
-            val_len = strlen(*value);
-            break;
-        }
-    }
-
-    return val_len;
 }
 
 int check_password(char *password, char *message) {
@@ -395,7 +312,7 @@ void update_result(oj_solution_t &oj_solution) {
     char buffer[BUFF_SIZE];
     snprintf(buffer, BUFF_SIZE, "%s/%s/result.txt", oj_solution.work_dir, oj_solution.sid);
     FILE *fp = fopen(buffer, "r");
-    if (fp == NULL) {
+    if (fp == nullptr) {
         FM_LOG_WARNING("cannot open file %s", buffer);
         update_system_error(ERROR_READ_FILE, oj_solution);
         return;
@@ -410,7 +327,7 @@ void update_result(oj_solution_t &oj_solution) {
         return;
     }
 
-    char *p = NULL;
+    char *p = nullptr;
     if (oj_solution.result == OJ_CE) {
         snprintf(buffer, BUFF_SIZE, "%s/%s/stderr_compiler.txt", oj_solution.work_dir, oj_solution.sid);
         p = buffer;
@@ -454,9 +371,9 @@ void send_multi_result(char *file_path, oj_solution_t &oj_solution) {
     CURLM *multi_handle;
     int still_running = 1;
 
-    struct curl_httppost *formpost = NULL;
-    struct curl_httppost *lastptr = NULL;
-    struct curl_slist *headerlist = NULL;
+    struct curl_httppost *formpost = nullptr;
+    struct curl_httppost *lastptr = nullptr;
+    struct curl_slist *headerlist = nullptr;
     static const char buf[] = "Expect:";
     const size_t size = 25;
     char data[size] = {0};
@@ -535,7 +452,7 @@ void send_multi_result(char *file_path, oj_solution_t &oj_solution) {
         curl_multi_perform(multi_handle, &still_running);
 
         do {
-            struct timeval timeout;
+            struct timeval timeout{};
             int rc; /* select() return code */
             CURLMcode mc; /* curl_multi_fdset() return code */
 
@@ -612,55 +529,3 @@ void send_multi_result(char *file_path, oj_solution_t &oj_solution) {
     }
 }
 
-void fatal_error(const char *msg) {
-    perror(msg);
-    exit(1);
-}
-
-char *trim(char *str) {
-    char *end;
-
-    // Trim leading space
-    while (isspace(*str)) str++;
-
-    if (*str == 0)  // All spaces?
-        return str;
-
-    // Trim trailing space
-    end = str + strlen(str) - 1;
-    while (end > str && isspace(*end)) end--;
-
-    // Write new null terminator
-    *(end + 1) = 0;
-
-    return str;
-}
-
-off_t file_size(const char *filename) {
-    struct stat st;
-
-    if (!stat(filename, &st)) {
-        return st.st_size;
-    }
-
-    return 0;
-}
-
-void print_word_dir() {
-    char cwd[PATH_SIZE];
-    char *tmp = getcwd(cwd, PATH_SIZE - 1);
-    if (tmp == NULL) {
-        FM_LOG_WARNING("getcwd failed: %s", strerror(errno));
-    } else {
-        FM_LOG_NOTICE(cwd);
-    }
-}
-
-void print_user_group() {
-    uid_t ruid, euid, suid;
-    gid_t rgid, egid, sgid;
-    getresuid(&ruid, &euid, &suid);
-    getresgid(&rgid, &egid, &sgid);
-    FM_LOG_DEBUG("ruid=%d euid=%d suid=%d rgid=%d egid=%d sgid=%d",
-                 ruid, euid, suid, rgid, egid, sgid);
-}
