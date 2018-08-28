@@ -1,8 +1,9 @@
+INC=-I/usr/include/mysql
 LD=g++
 CXX=g++
-CXXFLAGS=-g -Wall -O2 -std=c++11 -DBIG_JOINS=1 -fno-strict-aliasing -DNDEBUG
+CXXFLAGS=$(INC) -Wall -O4 -std=c++17 -DBIG_JOINS=1 -fno-strict-aliasing -DNDEBUG
 LDFLAGS=
-LIBS=-lbsd -L/usr/lib/x86_64-linux-gnu -lcurl -lm -lpthread
+LIBS=-lbsd -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lcurl -lm -lpthread
 TARGET=bin/powerjudge
 OBJECTS=bin/judge.o
 TARGETD=bin/powerjudged
@@ -18,19 +19,14 @@ endif
 
 .PHONY: test check install sim clean
 all: $(TARGET) $(TARGETD)
-$(TARGET): $(OBJECTS)
-	$(LD) -o $@ $(LDFLAGS) $(OBJECTS)
+$(TARGET): src/judge.cpp src/log.cpp src/syscalls.cpp src/read_config.cpp src/misc.cpp src/db_updater.cpp
+	$(LD) -o $@ $(LDFLAGS) $^ $(LIBS) ${INC}
 
-$(TARGETD): $(OBJECTSD)
-	$(LD) -o $@ $(LDFLAGS) $(OBJECTSD) $(LIBS)
+$(TARGETD): src/judged.cpp src/thread_safe_queue.hpp src/log.cpp src/read_config.cpp src/misc.cpp
+	$(LD) -o $@ $(LDFLAGS) $^ $(LIBS)
 	sudo chown root:root $(TARGETD)
 	sudo chmod 4755 $(TARGETD)
 
-bin/%.o: src/%.c src/*.h
-	$(CXX) -o $@ $(CXXFLAGS) -c $<
-
-bin/judged.o: src/judged.cpp src/*.h
-	$(CXX) -o $@ $(CXXFLAGS) -c $<
 
 test: all
 	sudo chown judge:judge $(TARGET)

@@ -1,21 +1,14 @@
+//
+// Created by w703710691d on 18-8-24.
+//
 /*
  * Copyright 2014 power <power0721#gmail.com>
  * PowerOJ GPLv2
  */
-#ifndef SRC_JUDGE_CORE_H_
-#define SRC_JUDGE_CORE_H_
+#ifndef POWERJUDGE_JUDGE_CORE_H
+#define POWERJUDGE_JUDGE_CORE_H
 
-
-#include <stdint.h>
-#include <unistd.h>
-#include <errno.h>
-#include <pwd.h>
-#include <sys/resource.h>
-#include <sys/signal.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
+#include <cstdint>
 
 // OJ结果代码
 #define OJ_AC       0
@@ -31,41 +24,25 @@
 #define OJ_VE       10
 #define OJ_WAIT     11
 #define OJ_RUN      12
+#define OJ_REJUDGE  13
+#define OJ_SIM      14
+#define OJ_COM      15
+#define OJ_QUE      16
 
-char result_str[][10] = {
-        "AC",
-        "PE",
-        "TLE",
-        "MLE",
-        "WA",
-        "RE",
-        "OLE",
-        "CE",
-        "RF",
-        "SE",
-        "VE",
-        "WAIT",
-        "Running"
-};
-
+const char result_str[][10] = {"AC", "PE", "TLE", "MLE", "WA", "RE", "OLE", "CE", "RF", "SE", "VE", "WAIT", "Running"};
 
 // 常量
 #define STD_KB 1024
 #define STD_MB 1048576
 #define PATH_SIZE 4096
 #define BUFF_SIZE 8192
-#define bool char
-#define false 0
-#define true  1
 #define MAX_LOG_FILE_SIZE (STD_MB << 4)
-
 
 // judge 类型
 #define ACM 0
 #define OI 1
 #define TC 2
 #define CF 3
-
 
 // 退出原因
 #define EXIT_OK                0
@@ -95,7 +72,8 @@ char result_str[][10] = {
 #define EXIT_COMPARE_SPJ_FORK  31
 #define EXIT_TIMEOUT           36
 #define EXIT_UNKNOWN           127
-
+#define ERROR_READ_FILE        40
+#define ERROR_READ_RESULT      41
 #define GCC_COMPILE_ERROR      1
 
 #define SPJ_AC                 0
@@ -116,7 +94,11 @@ char result_str[][10] = {
 #define LANG_CPP17             9
 #define LANG_PYTHON3           10
 #define LANG_KOTLIN            11
-const char languages[][10] = {"unknown", "gcc11", "g++11", "pascal", "java", "python2.7", "gcc99", "g++98", "g++14", "g++17", "python3", "kotlin"};
+const char languages[][10] = {"unknown", "gcc11", "g++11", "pascal", "java", "python2.7", "gcc99", "g++98", "g++14",
+                              "g++17", "python3", "kotlin"};
 const char lang_ext[][10] = {"unknown", "c", "cc", "pas", "java", "py", "c", "cc", "cc", "cc", "py", "kt"};
 
-#endif  // SRC_JUDGE_CORE_H_
+
+//extern oj_config_t oj_config;
+
+#endif //POWERJUDGE_JUDGE_CORE_H
